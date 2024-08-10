@@ -1,38 +1,46 @@
-Local environment setup
+## About
 
-VSCode
-EditorConfig
+This package is intended to be used as a template for different sports league websites. It uses ASP.NET Core Razor Pages with Entity Framework Core and SQLite.
 
-This package is intended to fail or work in a degraded state if run on its own. This package contains the logic but no content. It's used to initialize a site, but the content must be imported into this package from a league-specific repo. The steps to achieve this are TBD. In production, it's expected that this repo would be pulled into a folder per site, merged with site-specific content, then built and deployed.
+League-specific settings are specified in appsettings.json.
 
-To replace:
 
-appsettings.json
-- Port numbers [for hosting]
-- ConnectionString [for DB]
-- League name [for titles]
-- News config
-  - Max age (days)
-  - Min items
-- About Blurb
-- Executive links
-- Scoring
-  - Sport [for stats systems]
-  - Point systems
-  - Tiebreakers
+## Local environment setup:
 
-appsettings.Development.json
-- ConnectionString [for DB for local testing]
+- Install VSCode
+- Install the following extensions:
+  - EditorConfig
 
-Static content
+- Save a local copy of the league database, and update the path in appsettings.Development.json.
+
+## Implementations
+
+### Site settings
+
+- appsettings.json
+  - Port numbers [for hosting]
+  - ConnectionString [for DB]
+  - Authentication providers [for OAuth login]
+  - League name [for titles]
+  - (Optional) League short name/abbreviation
+  - Home page:
+    - News config
+      - Max age (days)
+      - Min items
+    - About Blurb
+    - League executives
+    - League socials
+    - League links (e.g. sister leagues)
+    - Useful files (e.g. rules, scoresheets, waiver form, etc.)
+  - TBD:
+    - Scoring
+      - Sport [for stats systems]
+      - Point systems
+      - Tiebreakers
+
+### Static content
 - League logo
 - Team logos
 - Files (e.g. printable scoresheets, league rules, waiver forms)
 
-Data
-- Teams
-- Users
-  - Site admin/League execs
-  - Team managers/scorers
-- Locations
-
+A first user should be invited as a webmaster, who can set up teams and locations, and invite owners for each team to register.
