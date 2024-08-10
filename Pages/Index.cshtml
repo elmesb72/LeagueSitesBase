@@ -1,10 +1,116 @@
 ﻿@page
+@inject IConfiguration config
 @model IndexModel
 @{
-    ViewData["Title"] = "Home page";
+    var siteName = config["Site:Name"];
+    ViewData["Title"] = siteName;
 }
+<div class="row row-home home-main">
+@if (Model.IsPlayoffs) {
+    <div class="section mobile-only">
+        <a href="/Playoffs"><h1 title="Overdue (unscored), Recent (last 7 days), Upcoming (7 days)">Playoffs</h1>
+        <h2>Click here to view brackets and games</h2></a>
+    </div>
+}
+    <div class="section home-main-left home-left">
+        <h1 title="Overdue (unscored), Recent (last 7 days), Upcoming (7 days)">Games</h1>
+        <div class="home-games">
+@if (Model.Games.Count() == 0) {
+            <span>&raquo; There are no recently played or upcoming games.</span>
+}
+else {
+    @foreach (var day in Model.Games.GroupBy(g => g.Date.Date))
+    {
+            <div class="subsection home-day">
+                <h2>@day.Key.ToString("dddd, MMMM d")</h2>
+        @foreach (var game in day) {
+                <partial name="_HomepageGamePartial" model="game" />
+        }
+            </div>
+    }
+}
+        </div>
+    </div>
+    <div class="section home-main-middle home-middle">
+        <h1>News and Game Recaps</h1>
+@if (Model.News.Count() == 0) {
+    var news = new News() {
+        Title = "Placeholder Post",
+        Contents = $"<p>Welcome to the news section for the {siteName} website. This section will show news posts made within the last {config["Site:Home:NewsMaxAgeDays"]} days or the {config["Site:Home:NewsMinItems"]} most recent posts.</p>",
+        Date = DateTime.Now,
+        Source = string.Empty
+    };
+        <partial name="_HomepageNewsPartial" model="news" />
+}
+else {
+    @foreach (var news in Model.News) {
+        <partial name="_HomepageNewsPartial" model="news" />
+    }
+}
+    </div>
+    <div class="section home-main-right home-right">
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+@if (Model.IsPlayoffs) {
+        <div class="home-playoffs desktop-only">
+            <a href="/Playoffs"><h1 title="Overdue (unscored), Recent (last 7 days), Upcoming (7 days)">Playoffs</h1>
+            Playoffs are now live! Click here to view the brackets, matchups, and games!</a>
+        </div>
+}
+@if (Model.Standings.Count > 0)
+{
+    <partial name="_HomepageStandingsPartial" model="Model.Standings" />
+}
+        <div>
+            <h1>About</h1>
+            <p>@Html.Raw(config["Site:Home:AboutBlurb"])</p>
+        </div>
+@{
+    var executives = config.GetSection("Site:Home:Executives").GetChildren();
+}
+@if (executives.Count() != 0) {
+        <div>
+            <h1>League Executives</h1>
+            <ul>
+    @foreach (var executive in executives) {
+                <li>@executive.Key: @executive.Value</li>
+    }
+            </ul>
+        </div>
+}
+    </div>
+</div>
+<div class="row row-home home-low">
+    <div class="section home-low-left home-left">
+        <h1>Follow us!</h1>
+        <p class="socials">
+@{
+    var socials = config.GetSection("Site:Home:Socials").GetChildren();
+}
+@foreach (var social in socials) {
+            <a href="@social.Value"><img src="/images/social/@(social.Key).webp"></a>
+}
+        </p>
+    </div>
+    <div class="section home-low-middle home-middle">
+        <h1>Links</h1>
+@{
+    var links = config.GetSection("Site:Home:Links").GetChildren();
+}
+        <ul>
+@foreach (var link in links) {
+            <li><a href="@link.Value">@link.Key</a></li>
+}
+        </ul>
+    </div>
+    <div class="section home-low-right home-right">
+        <h1>Information</h1>
+@{
+    var information = config.GetSection("Site:Home:Information").GetChildren();
+}
+        <ul>
+@foreach (var info in information) {
+            <li><a href="@info.Value"><partial name="_HomepageInformationIconPartial" model="info.Value" />@info.Key</a></li>
+}
+        </ul>
+    </div>
 </div>

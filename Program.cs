@@ -1,3 +1,5 @@
+global using Newtonsoft.Json;
+global using static LeagueSitesBase.Models.Extensions;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.HttpOverrides;

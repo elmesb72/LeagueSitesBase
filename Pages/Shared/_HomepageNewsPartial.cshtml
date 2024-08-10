@@ -1,0 +1,7 @@
+@model News
+<div class="home-news">
+            <div class="home-news-header"><div class="home-news-title">@Model.Title</div><div class="home-news-date">@Model.Date.ToString("MMM d, yyyy")</div></div>
+            <div class="home-news-post">
+                @Html.Raw(Model.Contents)
+            </div>
+        </div>

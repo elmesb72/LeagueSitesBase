@@ -1,0 +1,168 @@
+a:link,
+a:visited,
+a:hover,
+a:active {
+    text-decoration: none;
+}
+
+a:link,
+a:visited,
+a:active {
+    color: var(--link);
+}
+
+a:hover {
+    color: var(--link-hover);
+}
+
+.scorecard-table {
+    margin-top: 3px;
+    border-collapse: collapse;
+}
+
+.scorecard-table th,
+.scorecard-table td {
+    padding: 0;
+    border: var(--table-border);
+    box-sizing: border-box;
+    border-collapse: collapse;
+}
+
+.scorecard-table th {
+    height: 30px;
+}
+
+.scorecard-table .row-name {
+    width: 30px;
+    padding: 3px !important;
+    text-align: center;
+    font-weight: bold;
+}
+
+.scorecard-table input[type="number"] {
+    width: 60px;
+    height: 30px;
+    text-align: center;
+    outline: none;
+    border: 0;
+    padding: 0;
+    background-color: var(--section-background-color);
+    color: var(--text);
+}
+
+.scorecard-table input[type="number"]:active,
+.scorecard-table input[type="number"]:focus {
+    outline: none;
+    border: 2px var(--h2) solid;
+    box-sizing: border-box;
+}
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+    /* display: none; <- Crashes Chrome on hover */
+    -webkit-appearance: none;
+    margin: 0;
+    /* <-- Apparently some margin are still there even though it's hidden */
+}
+
+input[type=number] {
+    -moz-appearance: textfield;
+    /* Firefox */
+}
+
+.game-edit-header-row th:first-child {
+    text-align: left;
+    padding: 0 10px;
+}
+
+.game-edit-player-row td {
+    height: 60px;
+}
+
+.game-edit-player {
+    width: 250px;
+    vertical-align: middle !important;
+    display: flex;
+    padding: 0 10px;
+    box-sizing: border-box;
+    align-items: baseline;
+}
+
+.game-edit-player-row .player-position {
+    margin-left: 5px;
+}
+
+.player-number {
+    font-family: 'righteous';
+}
+.game-edit-player-row .player-number {
+    display: inline-block;
+    width: 30px;
+    text-align: center;
+}
+
+.player-substituted {
+    text-decoration: line-through !important;
+}
+
+.player-substitution-inning {
+    font-size: 12px;
+    margin-left: 3px;
+    align-self: start;
+}
+
+.game-edit-player-PA svg {
+    vertical-align: bottom;
+    overflow: visible;
+}
+
+.boxscore-text {
+    font-family: 'Asap Condensed';
+    font-size: 20px;
+    fill: var(--text);
+}
+
+.boxscore-text-small {
+    font-family: 'Asap Condensed';
+    fill: var(--text);
+    stroke: none;
+}
+
+.boxscore-diamond-outline {
+    fill: none;
+    stroke: var(--text);
+    stroke-dasharray: 3;
+}
+
+.boxscore-progress {
+    stroke: var(--text);
+    stroke-width: 4;
+    fill: none;
+}
+
+.boxscore-out {
+    stroke: var(--text);
+    stroke-width: 4;
+    fill: none;
+}
+
+.boxscore-progress-run {
+    fill: var(--text);
+    stroke: var(--text);
+    stroke-width: 1;
+}
+
+.empty-box {
+    stroke-opacity: 0.25;
+}
+
+.boxscore-out-circle {
+    fill: none;
+    stroke: var(--text);
+    stroke-width: 1.5;
+}
+
+.inning-end-line {
+    stroke: var(--text);
+    stroke-width: 3;
+}

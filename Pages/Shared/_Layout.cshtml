@@ -1,51 +1,72 @@
-﻿<!DOCTYPE html>
+﻿@inject IConfiguration config
+@{
+    var siteName = config["Site:Name"];
+}
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - LeagueSitesBase</title>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/LeagueSitesBase.styles.css" asp-append-version="true" />
+    <title>@ViewData["Title"]</title>
+    <link rel="stylesheet" href="~/css/site.css?0.8102" media="all" />
+    <link rel="stylesheet" href="~/css/site-mobile.css?0.8101" media="(max-width: 480px)" />
+    <link href="//fonts.googleapis.com/css?family=Asap:200,400,700|Asap+Condensed:700|Righteous&display=swap" rel="stylesheet">
+    <link rel="icon" href="~/favicon.png" type="image/png" sizes="16x16">
 </head>
 <body>
     <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container">
-                <a class="navbar-brand" asp-area="" asp-page="/Index">LeagueSitesBase</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-page="/Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-page="/Privacy">Privacy</a>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-        </nav>
+        <div class="container">
+            <ul class="header-section header-primary">
+                <li class="header-item">
+                    <a class="header-link" href="/"><object data="/images/logo.webp" style="vertical-align: middle">@siteName</object></a>
+                </li>
+                <li class="header-item">
+                    <a class="header-link" asp-area="" asp-page="/Standings">Standings</a>
+                </li>
+                <li class="header-item">
+                    <a class="header-link" asp-area="" asp-page="/Scores">Scores</a>
+                </li>
+                <li class="header-item">
+                    <a class="header-link" asp-area="" asp-page="/Schedule">Schedule</a>
+                </li>
+                <li class="header-item">
+                    <a class="header-link" asp-area="" asp-page="/Playoffs">Playoffs</a>
+                </li>
+                <li class="header-item">
+                    <a class="header-link" asp-area="" asp-page="/History">History</a>
+                </li>
+                <li class="header-item">
+                    <a class="header-link" asp-area="" asp-page="/Locations">Locations</a>
+                </li>
+            </ul>
+            @await Component.InvokeAsync("HeaderTeams")
+            <ul class="header-section header-login">
+        @if (User.Identity is not null && !User.Identity.IsAuthenticated) {
+                <li><a class="header-link" href="/Login"><span class="desktop-only">Log In</span><i class="mobile-only far fa-user-circle"></i></a></li>
+        }
+        else {
+                <li><a class="header-link" href="/User"><span class="desktop-only">@User.Identity?.Name</span><i class="mobile-only fas fa-user-circle"></i></a></li>
+        }
+            </ul>
+        </div>
     </header>
     <div class="container">
-        <main role="main" class="pb-3">
+        <main>
             @RenderBody()
         </main>
+        <footer>
+            <div class="theme-switch-wrapper">
+                <label class="theme-switch" for="checkbox">
+                    <input type="checkbox" id="checkbox" />
+                    <div class="slider round"></div>
+            </label>
+                <em><span title="Toggle Light/Dark Mode" class="fas fa-lightbulb"></span></em>
+            </div>
+            <p>&copy; 2020-@DateTime.Now.Year - @siteName</p>
+            <p class="hidden-footer">Designed & developed by Brandon Elmes</p>
+        </footer>
     </div>
-
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2024 - LeagueSitesBase - <a asp-area="" asp-page="/Privacy">Privacy</a>
-        </div>
-    </footer>
-
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" crossorigin="anonymous" async defer></script><!-- https://fontawesome.com/icons?d=listing&m=free -->
     <script src="~/js/site.js" asp-append-version="true"></script>
-
-    @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

@@ -1,0 +1,10 @@
+@model string
+@{
+    var extension = Model.Split(".").LastOrDefault();
+}
+@if (extension == "pdf") {
+    <i class="fas fa-file-pdf"></i>
+}
+@if (extension == "doc" || extension == "docx") {
+    <i class="fas fa-file-word"></i>
+}

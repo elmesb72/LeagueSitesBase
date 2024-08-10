@@ -1,0 +1,27 @@
+@page
+@inject IConfiguration config
+@model LoginModel
+@{
+    var siteName = config["Site:Name"];
+    var shortName = config["Site:ShortName"] ?? string.Join(string.Empty, siteName.Split(' ').Select(w => w[0]));
+    ViewData["Title"] = $"{shortName} » Log In";
+}
+@if (!String.IsNullOrEmpty(Model.Error)) {
+<div class="row">
+    <div class="section login-error">
+        <h1>Error</h1>
+        <p>@Html.Raw(Model.Error)</p>
+    </div>
+</div>
+}
+<div class="row">
+    <div class="section login-providers">
+        <h1>Select a Provider</h1>
+        <partial name="_LoginProvidersPartial" model="new { CallbackUrlBase = Model.CallbackUrlBase, IsAuthenticated = User.Identity.IsAuthenticated }" />
+    </div>
+    <div class="section login-privacy">
+        <h1>Privacy Policy</h1>
+        <p>The @siteName website requires your name and email address for use throughout the site. Provider prompts will reflect the minimum available level of access that includes both name and email address. No other data is accessed and only name and email address are stored. No stored data will be used or made available for any purpose outside this website.</p>
+        <p>Access to social media login functions is included solely for the purpose of acting as an authentication method, eliminating the need for creating and remembering additional usernames or passwords.</p>
+    </div>
+</div>

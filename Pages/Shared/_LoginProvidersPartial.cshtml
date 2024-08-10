@@ -1,0 +1,39 @@
+@model dynamic
+@inject IConfiguration config
+@{
+    var authenticationMethods = config.GetSection("Authentication").GetChildren();
+}
+@if (authenticationMethods.Count() == 0) {
+    <span>No authentication providers have been configured. Contact the webmaster to set up authentication via a valid provider.</span>
+}
+@{
+    // https://console.developers.google.com/apis/credentials?project=church-league-fastball
+    var googleAuthenticationExists = authenticationMethods.FirstOrDefault(m => m.Key == "Google") is not null;
+}
+@if (googleAuthenticationExists) {
+<a class="oauth-provider-link" href="https://accounts.google.com/o/oauth2/v2/auth?scope=profile email&client_id=@config["Authentication:Google:ClientID"]&redirect_uri=@Model.CallbackUrlBase/Google&response_type=code">
+    <div class="oauth-provider-image"><img src="/images/social/Google.webp"></div>
+    <div class="oauth-provider-text">Sign in with Google</div>
+</a>
+}
+
+@{
+    // https://portal.azure.com/#blade/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/Overview/appId/87bddcc6-b0da-40f0-b738-65e17287e89d/isMSAApp/true
+    var microsoftAuthenticationExists = authenticationMethods.FirstOrDefault(m => m.Key == "Microsoft") is not null;
+}
+@if (microsoftAuthenticationExists) {
+<a class="oauth-provider-link" href="https://login.microsoftonline.com/common/oauth2/v2.0/authorize?client_id=@config["Authentication:Microsoft:ClientID"]&response_type=code&redirect_uri=@Model.CallbackUrlBase/Microsoft&scope=User.Read&prompt=consent">
+    <div class="oauth-provider-image"><img src="/images/social/Microsoft.webp"></div>
+    <div class="oauth-provider-text">Sign in with Microsoft</div>
+</a>
+}
+@{
+    // https://developers.facebook.com/apps/515903335765782/dashboard/
+    var facebookAuthenticationExists = authenticationMethods.FirstOrDefault(m => m.Key == "Facebook") is not null;
+}
+@if (facebookAuthenticationExists) {
+<a class="oauth-provider-link" href="https://www.facebook.com/v6.0/dialog/oauth?scope=email&client_id=@config["Authentication:Facebook:ClientID"]&redirect_uri=@Model.CallbackUrlBase/Facebook">
+    <div class="oauth-provider-image"><img src="/images/social/Facebook.webp"></div>
+    <div class="oauth-provider-text">Sign in with Facebook</div>
+</a>
+}

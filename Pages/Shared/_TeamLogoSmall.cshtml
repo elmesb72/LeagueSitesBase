@@ -1,0 +1,4 @@
+@model Team
+<object data="/images/teams/@(Model.ID)-sm.webp">
+    <div style="height: 24px; width: 24px; border-radius: 14px; background-color: #@Model.BackgroundColor !important; border: 2px solid black; color: #@Model.Color !important; line-height: 24px !important; text-align: center; font-size: 16px;">@Model.Abbreviation[0]</div>
+</object>

@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
@@ -12,16 +13,43 @@ public class ErrorModel : PageModel
 
     public bool ShowRequestId => !string.IsNullOrEmpty(RequestId);
 
-    private readonly ILogger<ErrorModel> _logger;
+    readonly ILogger<ErrorModel> _logger;
+    readonly LeagueSitesContext _context;
+    readonly IConfiguration _config;
+    readonly IWebHostEnvironment _environment;
 
-    public ErrorModel(ILogger<ErrorModel> logger)
+    public ErrorModel(ILogger<ErrorModel> logger, LeagueSitesContext context, IConfiguration config, IWebHostEnvironment environment)
     {
         _logger = logger;
+        _context = context;
+        _config = config;
+        _environment = environment;
     }
 
     public void OnGet()
     {
         RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier;
+
+        long uid = -1;
+        var identity = HttpContext.User.Identity;
+        if (identity is not null && identity.IsAuthenticated)
+        {
+            uid = Convert.ToInt64(HttpContext.User.Claims.First(c => c.Type == "UserID").Value);
+        }
+
+        var exceptionHandlerPathFeature = HttpContext.Features.Get<IExceptionHandlerPathFeature>();
+        var source = exceptionHandlerPathFeature?.Path ?? "Unknown error path";
+        var error = exceptionHandlerPathFeature?.Error ?? new Exception("Unknown error");
+
+        try
+        {
+            // Add exception to DB
+            _context.Events.Add(Event.Log(EventType.Error, uid, source, error.GetType().Name, error.ToString()));
+            _context.SaveChanges();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError("An error occurred when trying to write another error adding to database: {ex}", ex);
+        }
     }
 }
-

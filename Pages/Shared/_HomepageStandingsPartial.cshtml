@@ -1,0 +1,42 @@
+@model Standings
+<div class="home-standings">
+            <h1><a href="/Standings">Standings</a></h1>
+            <table class="home-standings-table">
+                <tr>
+                    <th>Team</th>
+                    <th>GP</th>
+                    <th>W</th>
+                    <th>L</th>
+                    <th>T</th>
+                    <th>Pts</th>
+                    <th>RF</th>
+                    <th>RA</th>
+                    <th>Diff</th>
+                </tr>
+    @foreach(var t in Model)
+    {
+                <tr>
+                    <td><a href="/Team/@t.Key.Abbreviation" class="home-standings-link"><partial name="_TeamLogoSmall" model="t.Key" />@t.Key.Abbreviation</a></td>
+                    <td>@t.Value.GamesPlayed</td>
+                    <td>@t.Value.Wins</td>
+                    <td>@t.Value.Losses</td>
+                    <td>@t.Value.Ties</td>
+                    <td>@t.Value.Points</td>
+                    <td>@t.Value.RunsScored</td>
+                    <td>@t.Value.RunsAllowed</td>
+        @if(t.Value.RunDifferential > 0)
+        {
+                    <td class="green">+@t.Value.RunDifferential</td>
+        }
+        else if (t.Value.RunDifferential == 0)
+        {
+                    <td>0</td>
+        }
+        else if (t.Value.RunDifferential < 0)
+        {
+                    <td class="red">@t.Value.RunDifferential</td>
+        }
+                </tr>
+    }
+            </table>
+        </div>

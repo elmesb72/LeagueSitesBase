@@ -1,0 +1,13 @@
+@model Team
+<li class="header-item">
+                    <a id="header-team-@Model.Abbreviation" class="header-link" href="/Team/@Model.Abbreviation" title="@Model.FullName"><partial name="_TeamLogoSmall" model="Model" /><span class="header-team-abbreviation">@Model.Abbreviation</span></a>
+                    <style>
+                        #header-team-@(Model.Abbreviation) {
+                            color: #@(Model.BackgroundColor)00;
+                        }
+                        #header-team-@(Model.Abbreviation):hover {
+                            background-color: #@(Model.BackgroundColor);
+                            color: #@(Model.Color)FF;
+                        }
+                    </style>
+                </li>

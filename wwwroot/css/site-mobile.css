@@ -1,0 +1,359 @@
+body {
+    min-width: 100vw;
+    width: 100vw;
+    max-width: 100vw;
+}
+
+.desktop-only {
+    display: none;
+}
+.mobile-only {
+    display: initial;
+}
+
+
+header {
+    margin-bottom: 2vw;
+}
+
+.container {
+    min-width: 100vw;
+    width: 100vw;
+    max-width: 100vw;
+}
+
+header .container {
+    height: unset;
+    padding: 0 1vw;
+}
+
+.header-primary > li:not(:first-child) {
+    display: none;
+}
+.header-primary img {
+    height: 28px;
+}
+
+.header-primary {
+    padding-left: unset;
+}
+
+.header-primary li {
+    padding-right: unset;
+}
+.header-teams li {
+    padding: 0 0.5vw;
+}
+.header-team-abbreviation {
+    display: none;
+}
+[id^="header-team-"] {
+    padding: 12px 0;
+    transition: unset;
+}
+
+[id^="header-team-"]:hover {
+  transition: unset;
+  background-color: unset !important;
+  padding: unset;
+}
+
+.header-login {
+    padding-right: unset;
+}
+
+.header-login li {
+    padding-left: unset;
+}
+
+
+main {
+    padding: 0 2vw;
+}
+
+.row {
+    flex-direction: column;
+    margin-bottom: unset;
+}
+
+.home-left {
+    margin: unset;
+}
+
+.home-right {
+    margin-left: unset;
+}
+
+.section {
+    margin-bottom: 4vw;
+}
+
+.home-news-header {
+    flex-direction: column;
+    align-items: baseline;
+    height: unset;
+    margin-bottom: 1.5vw;
+}
+.home-news-date {
+    align-self: baseline;
+    font-size: 14px;
+}
+
+.home-main-left {
+    order: 1;
+}
+.home-main-right {
+    order: 2;
+}
+.home-main-middle {
+    order: 3;
+}
+
+/* STANDINGS PAGE */
+
+.standings-section {
+    width: unset;
+}
+.standings th {
+    font-family: 'Asap';
+    font-size: 11px;
+}
+.standings td {
+    padding: 1px 0;
+    font-family: 'Asap';
+}
+
+.standings td:not(:first-child) {
+    width: unset;
+    padding: 1px 0;
+    text-align: center;
+    font-size: 11px;
+}
+
+/* USER PAGE */
+
+.user-logins {
+    margin: unset;
+    margin-bottom: 4vw;
+}
+
+.user-login-details {
+    white-space: nowrap;
+    overflow: scroll;
+}
+
+
+/* INVITATION FORM */
+
+.invitation-form-main {
+    flex-direction: column;
+}
+
+.invitation-form-player {
+    margin-right: unset;
+}
+
+.invitation-form-player-name > div:nth-child(1) {
+    margin-right: 5px;
+}
+
+.invitation-form input[type="text"] {
+    width: 100%;
+}
+
+.invitation-form-user .selectize-control {
+    box-sizing: border-box;
+    width: 100%;
+}
+
+
+/* TEAM PAGE */
+
+.team-header {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+}
+.team-header-logo {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+.team-header-main {
+    max-width: calc(100vw - 225px);
+    margin: unset;
+}
+.team-header-main p {
+    text-align: center;
+}
+.team-header-details {
+    font-size: 30px;
+}
+p.team-header-record {
+    padding-left: unset;
+}
+.team-header-manager {
+    display: none;
+}
+
+
+.team-schedule {
+    margin-right: unset;
+}
+
+.team-schedule table {
+    font-size: 14px;
+}
+.team-schedule td {
+    padding: 0 4px;
+    vertical-align: middle;
+}
+
+.team-schedule th:nth-child(3), .team-schedule td:nth-child(3) {
+    text-align: center;
+    padding: 0;
+}
+
+.team-schedule td:nth-child(3) a {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.team-schedule td:nth-child(3) img {
+    display: flex;
+    flex-direction: row;
+    align-self: center;
+    font-size: 0;
+    line-height: 0;
+    margin: auto;
+}
+
+.team-stats, .team-stats .section, .team-edit, .team-edit .section  {
+    width: unset;
+}
+
+.team-edit h1 {
+    width: unset;
+}
+.team-edit .section-row {
+    flex-direction: column;
+}
+.team-edit-basic {
+    padding-right: unset;
+}
+
+.team-edit .form-field {
+    margin-right: unset;
+    margin-bottom: 1vw;
+}
+#team-edit-form input[type="text"] {
+    box-sizing: border-box;
+    width: 100%;
+    height: 32px;
+}
+
+/* GAME PAGE */
+
+.game-row {
+    margin-bottom: 4vw;
+}
+
+.game-header > div {
+    margin: 2vw 0;
+  }
+
+.stats-row {
+    flex-direction: column;
+}
+
+/* GAME EDIT PAGE */
+
+.game-row select, .game-row input[type="text"] {
+    box-sizing: border-box;
+    height: 32px;
+}
+
+.game-row input[id^="score"] {
+    width: 50px;
+    height: 50px;
+}
+
+
+
+/* PLAYOFFS PAGE */
+
+.playoff-section {
+    width: unset;
+}
+
+.tournament {
+    overflow-x: auto;
+}
+
+.tournament-series-team {
+    width: 75px;
+    box-shadow: none;
+    border: var(--table-border);
+    justify-content: center;
+}
+.tournament-series-winner {
+    outline: none;
+}
+
+.tournament-series-team-name {
+    display: none;
+  }
+.tournament-items-game {
+    overflow-x: auto;
+}
+.tournament-items-game-team img {
+    display: none;
+}
+.tournament-items-game-park, .tournament-items-game-lead {
+    display: none;
+}
+
+
+
+/* PARK PAGE */
+
+.park-row .section {
+    box-sizing: border-box;
+}
+.park-row .inner-row {
+    flex-direction: column;
+}
+
+.park-details {
+    width: 100%;
+}
+.park-details-right {
+    order: 0;
+    margin-left: unset;
+}
+.park-details-left {
+    margin-right: unset;
+}
+.park-games {
+    order: 1;
+}
+.park-map {
+    height: 250px;
+    width: 100%;
+}
+
+
+/* PLAYER PAGE */
+
+.player-info {
+    width: unset;
+}
+.player-photo {
+    max-width: 100%;
+}
+.player-stats-section {
+    margin-left: unset;
+    width: unset;
+}

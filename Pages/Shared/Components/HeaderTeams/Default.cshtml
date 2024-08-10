@@ -1,0 +1,7 @@
+@model IEnumerable<Team>
+            <ul class="header-section header-teams">
+    @foreach (var team in Model)
+    {
+                <partial name="_HeaderTeamPartial" model="team" />
+    }
+            </ul>

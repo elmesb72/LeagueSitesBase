@@ -1,0 +1,100 @@
+@model Game
+@if (Model.VisitingTeam is null || Model.HostTeam is null || Model.Status is null || Model.Location is null) return;
+@if (Model.Status.Name == "Upcoming") {
+<div class="game">
+                    <div class="visitor">
+                        <div class="team-logo"><partial name="_TeamLogoSmall" model="Model.VisitingTeam" /></div>
+                        <div class="team">
+                            <a href="/Team/@(Model.VisitingTeam.Abbreviation)">
+                                <p class="team-location">@(Model.VisitingTeam.Location)</p>
+                                <p class="team-name">@(Model.VisitingTeam.Name)</p>
+                            </a>
+                        </div>
+                        <div class="time"><a href="/Game/@(Model.ID)">@(Model.Date.ToString("h:mmtt"))</a></div>
+                    </div>
+                    <div class="home">
+                        <div class="team-logo"><partial name="_TeamLogoSmall" model="Model.HostTeam" /></div>
+                        <div class="team">
+                            <a href="/Team/@(Model.HostTeam.Abbreviation)">
+                                <p class="team-location">@(Model.HostTeam.Location)</p>
+                                <p class="team-name">@(Model.HostTeam.Name)</p>
+                            </a>
+                        </div>
+                        <div class="location"><a href="/Locations/#@(Model.Location.Name)">@(Model.Location.Name)</a></div>
+                    </div>
+                </div>
+}
+@if (Model.Status.Name == "Cancelled") {}
+@if (Model.Status.Name == "Postponed") {
+<div class="game">
+                    <div class="visitor">
+                        <div class="team-logo"><partial name="_TeamLogoSmall" model="Model.VisitingTeam" /></div>
+                        <div class="team">
+                                <a href="/Team/@(Model.VisitingTeam.Abbreviation)">
+                                    <p class="team-location">@(Model.VisitingTeam.Location)</p>
+                                    <p class="team-name">@(Model.VisitingTeam.Name)</p>
+                                </a>
+                        </div>
+                        <div class="postponed"><a href="/Game/@(Model.ID)"><p>(PPD)</p></a></div>
+                    </div>
+                    <div class="home">
+                        <div class="team-logo"><partial name="_TeamLogoSmall" model="Model.HostTeam" /></div>
+                        <div class="team">
+                            <a href="/Team/@(Model.HostTeam.Abbreviation)">
+                                <p class="team-location">@(Model.HostTeam.Location)</p>
+                                <p class="team-name">@(Model.HostTeam.Name)</p>
+                            </a>
+                        </div>
+                        <div class="postponed"></div>
+                    </div>
+                </div>
+}
+@if (Model.Status.Name == "Deleted") {}
+@if(Model.Status.Name == "Played") {
+<div class="game" title="@(Model.Location.Name), @(Model.Date.ToString("h:mm tt"))">
+                    <div class="visitor">
+                        <div class="team-logo"><partial name="_TeamLogoSmall" model="Model.VisitingTeam" /></div>
+                        <div class="team">
+                            <a href="/Team/@(Model.VisitingTeam.Abbreviation)">
+                                <p class="team-location">@(Model.VisitingTeam.Location)</p>
+                                <p class="team-name">@(Model.VisitingTeam.Name)</p>
+                            </a>
+                        </div>
+                        <div class="score"><a href="/Game/@(Model.ID)">@(Model.ScoreVisitor)</a></div>
+                    </div>
+                    <div class="home">
+                        <div class="team-logo"><partial name="_TeamLogoSmall" model="Model.HostTeam" /></div>
+                        <div class="team">
+                            <a href="/Team/@(Model.HostTeam.Abbreviation)">
+                                <p class="team-location">@(Model.HostTeam.Location)</p>
+                                <p class="team-name">@(Model.HostTeam.Name)</p>
+                            </a>
+                        </div>
+                        <div class="score"><a href="/Game/@(Model.ID)">@(Model.ScoreHost)</a></div>
+                    </div>
+                </div>
+}
+@if(Model.Status.Name == "Forfeit") {
+<div class="game" title="@(Model.Location.Name), @(Model.Date.ToString("h:mm tt"))">
+                    <div class="visitor">
+                        <div class="team-logo"><partial name="_TeamLogoSmall" model="Model.VisitingTeam" /></div>
+                        <div class="team">
+                            <a href="/Team/@(Model.VisitingTeam.Abbreviation)">
+                                <p class="team-location">@(Model.VisitingTeam.Location)</p>
+                                <p class="team-name">@(Model.VisitingTeam.Name)</p>
+                            </a>
+                        </div>
+                        <div class="score"><a href="/Game/@(Model.ID)">@Html.Raw(Model.ScoreVisitor is null || (long)Model.ScoreVisitor == 0 ? "0 (FF)" : Model.ScoreVisitor.ToString())</a></div>
+                    </div>
+                    <div class="home">
+                        <div class="team-logo"><partial name="_TeamLogoSmall" model="Model.HostTeam" /></div>
+                        <div class="team">
+                            <a href="/Team/@(Model.HostTeam.Abbreviation)">
+                                <p class="team-location">@(Model.HostTeam.Location)</p>
+                                <p class="team-name">@(Model.HostTeam.Name)</p>
+                            </a>
+                        </div>
+                        <div class="score"><a href="/Game/@(Model.ID)">@Html.Raw(Model.ScoreHost is null || (long)Model.ScoreHost == 0 ? "0 (FF)" : Model.ScoreHost.ToString())</a></div>
+                    </div>
+                </div>
+}

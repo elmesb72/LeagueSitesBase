@@ -7,5 +7,32 @@ This package is intended to fail or work in a degraded state if run on its own. 
 
 To replace:
 
-Port numbers in appsettings.json and launchSettings.json
-DBContext
+appsettings.json
+- Port numbers [for hosting]
+- ConnectionString [for DB]
+- League name [for titles]
+- News config
+  - Max age (days)
+  - Min items
+- About Blurb
+- Executive links
+- Scoring
+  - Sport [for stats systems]
+  - Point systems
+  - Tiebreakers
+
+appsettings.Development.json
+- ConnectionString [for DB for local testing]
+
+Static content
+- League logo
+- Team logos
+- Files (e.g. printable scoresheets, league rules, waiver forms)
+
+Data
+- Teams
+- Users
+  - Site admin/League execs
+  - Team managers/scorers
+- Locations
+
