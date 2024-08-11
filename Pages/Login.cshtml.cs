@@ -8,12 +8,12 @@ namespace LeagueSitesBase.Pages;
 
 public class LoginModel : PageModel
 {
-    public String CallbackUrlBase { get; set; }
-    public String Error { get; set; }
+    public required string CallbackUrlBase { get; set; }
+    public required string Error { get; set; }
 
     public IActionResult OnGet()
     {
-        if (User.Identity.IsAuthenticated)
+        if (User.Identity is not null && User.Identity.IsAuthenticated)
         {
             return RedirectToPage("/User", new { });
         }
@@ -22,8 +22,8 @@ public class LoginModel : PageModel
 
         if (Request.Query.ContainsKey("error"))
         {
-            String error = Request.Query["error"];
-            String errorDetails = null;
+            string error = Request.Query["error"]!;
+            string? errorDetails = null;
             if (Request.Query.ContainsKey("error_details"))
             {
                 errorDetails = HttpUtility.UrlDecode(Request.Query["error_details"]);

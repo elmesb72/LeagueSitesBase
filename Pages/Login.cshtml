@@ -2,7 +2,7 @@
 @inject IConfiguration config
 @model LoginModel
 @{
-    var siteName = config["Site:Name"];
+    var siteName = config["Site:Name"] ?? string.Empty;
     var shortName = config["Site:ShortName"] ?? string.Join(string.Empty, siteName.Split(' ').Select(w => w[0]));
     ViewData["Title"] = $"{shortName} » Log In";
 }
@@ -17,7 +17,7 @@
 <div class="row">
     <div class="section login-providers">
         <h1>Select a Provider</h1>
-        <partial name="_LoginProvidersPartial" model="new { CallbackUrlBase = Model.CallbackUrlBase, IsAuthenticated = User.Identity.IsAuthenticated }" />
+        <partial name="_LoginProvidersPartial" model="new { CallbackUrlBase = Model.CallbackUrlBase, IsAuthenticated = User.Identity is not null && User.Identity.IsAuthenticated }" />
     </div>
     <div class="section login-privacy">
         <h1>Privacy Policy</h1>

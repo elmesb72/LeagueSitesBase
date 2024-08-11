@@ -33,6 +33,7 @@ League-specific settings are specified in appsettings.json.
     - League links (e.g. sister leagues)
     - Useful files (e.g. rules, scoresheets, waiver form, etc.)
   - TBD:
+    - Theme
     - Scoring
       - Sport [for stats systems]
       - Point systems
