@@ -20,7 +20,7 @@ public class APITeamPlayersController : ControllerBase
             .Where(i => i.TeamID == (long)id)
             .Where(i => i.PlayerID != null)
             .Select(i => i.Player!)
-            .Where(p => !String.IsNullOrEmpty(p.Number))
+            .Where(p => !string.IsNullOrEmpty(p.Number))
             .ToListAsync();
 
         if (Request.Query.ContainsKey("exclude"))

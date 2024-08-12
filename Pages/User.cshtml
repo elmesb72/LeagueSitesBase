@@ -1,0 +1,100 @@
+@page
+@inject IConfiguration config
+@model UserModel
+@{
+    var siteName = config["Site:Name"] ?? string.Empty;
+    var shortName = config["Site:ShortName"] ?? string.Join(string.Empty, siteName.Split(' ').Select(w => w[0]));
+    var username = string.Empty;
+    if (User.Identity is not null) {
+        username = User.Identity.Name;
+    }
+    ViewData["Title"] = $"{shortName} » {username}";
+}
+@if (!String.IsNullOrEmpty(Model.Error)) {
+<div class="row">
+    <div class="section login-error">
+        <h1>Error</h1>
+        <p>@Html.Raw(Model.Error)</p>
+    </div>
+</div>
+}
+<div class="row user-main">
+    <div class="section user-invitations">
+        <h1>Your Profile</h1>
+@if(Model.SiteUser!.UserRoles.Count(ur => ur.Role!.Name == "Webmaster") == 1) {
+        <div class="subsection user-role">
+            <h2><i title="Webmaster" class="fas fa-tools header-icon"></i>Webmaster</h2>
+            <ul>
+                <li><a href="/Webmaster">Site Administration</a></li>
+                <li><a href="/Executive">League Administration</a></li>
+            </ul>
+        </div>
+}
+@if(Model.SiteUser.UserRoles.Count(ur => ur.Role!.Name == "Executive") == 1) {
+        <div class="subsection user-role">
+            <h2><i title="League Executive" class="fas fa-user-tie header-icon"></i>League Executive</h2>
+            <ul>
+                <li><a href="/Executive">League Administration</a></li>
+            </ul>
+        </div>
+}
+@foreach(var invitation in Model.SiteUser.Invitations) {
+        <div class="subsection">
+            <h2>Team</h2>
+            <div class="user-invitation">
+                <a class="user-invitation-link" href="/Team/@(invitation.Team!.Abbreviation)">
+                    <div>
+                        <partial name="_TeamLogoSmall" model="invitation.Team" />
+                    </div>
+                    <div class="user-invitation-link-name">
+                        @invitation.Team.Location @invitation.Team.Name
+                    </div>
+                </a>
+    @if(invitation.Player != null) {
+                <a class="user-invitation-link" href="/Player/@(invitation.Player.ShortCode)">
+                    <div>
+                        <i class="fas fa-baseball-ball"></i>
+                    </div>
+                    <div class="user-invitation-link-name">
+                        @invitation.Player.Name
+                    </div>
+                </a>
+    }
+    @if(invitation.InvitationRoles.Count() > 0) {
+                <div class="user-invitation-roles">
+        @if (invitation.InvitationRoles.Count(ir => ir.Role!.Name == "Manager") == 1) {
+                    <i title="Manager" class="fas fa-users"></i>
+        }
+        else if (invitation.InvitationRoles.Count(ir => ir.Role!.Name == "Scorer") == 1) {
+                    <i title="Scorer" class="fas fa-clipboard-list"></i>
+        }
+                </div>
+    }
+            </div>
+            <p>
+                
+                
+        </div>
+}
+    </div>
+    <div class="section user-logins">
+        <h1>Authorization Providers</h1>
+        <div class="subsection">
+            <h2>Existing</h2>
+@foreach(var login in Model.SiteUser.UserLogins.OrderByDescending(l => l.IsPrimary)) {
+            <partial name="_UserLoginPartial" model="login" />
+}
+        </div>
+        <div class="subsection">
+            <h2>Add Other Accounts</h2>
+            <partial name="_LoginProvidersPartial" model="new { CallbackUrlBase = Model.CallbackUrlBase, IsAuthenticated = true }" />
+        </div>
+        <div class="subection user-logout">
+            <h2>Log Out</h2>
+            <ul>
+                <li><a href="/Logout">Click here to log out!</a></li>
+            </ul>
+        </div>
+    </div>
+</div>
+<script src="~/js/user.js"></script>

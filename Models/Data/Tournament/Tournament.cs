@@ -24,7 +24,7 @@ public partial class Tournament
                 {
                     // Parse spot details
                     var spots = series.Matchup.Split("-");
-                    series.Spots = (new TournamentSeriesSpot(spots[0][0], Int32.Parse(spots[0][1..])), new TournamentSeriesSpot(spots[1][0], Int32.Parse(spots[1][1..])));
+                    series.Spots = (new TournamentSeriesSpot(spots[0][0], int.Parse(spots[0][1..])), new TournamentSeriesSpot(spots[1][0], int.Parse(spots[1][1..])));
 
                     // Associate Game object (if exists)
                     foreach (var game in series.Games)

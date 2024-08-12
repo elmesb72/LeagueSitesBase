@@ -5,7 +5,8 @@ public class Standings : Dictionary<Team, TeamResultSet>
         var teamGamesSet = new Dictionary<Team, List<Game>>();
         foreach (var g in games)
         {
-            if (g.HostTeam is null || g.VisitingTeam is null) {
+            if (g.HostTeam is null || g.VisitingTeam is null)
+            {
                 throw new Exception("Game object missing Team data");
             }
             if (!teamGamesSet.ContainsKey(g.HostTeam))
@@ -30,7 +31,7 @@ public class Standings : Dictionary<Team, TeamResultSet>
                     .ThenByDescending(r => r.Value.RunDifferential)
                 .ThenBy(r => r.Key.FullName))
         {
-            this.Add(row.Key, row.Value);
+            Add(row.Key, row.Value);
         }
     }
 

@@ -1,0 +1,20 @@
+@model UserLogin
+@{
+    var socialSource = "Unknown";
+    if (Model.LoginSource is not null) {
+        socialSource = Model.LoginSource.Source;
+    }
+}
+<div class="user-login">
+    <div class="user-login-source"><img src="/images/social/@(socialSource).webp"></div>
+    <div class="user-login-details">@Model.Name (@Model.Email)</div>
+    <div class="user-login-update">
+@if (Model.IsPrimary) {
+        <i title="Primary login" class="fas fa-star"></i>
+}
+else {
+        <i onclick="forget(@Model.ID)" title="Forget connection" class="fas fa-trash-alt link"></i>
+        <i onclick="favourite(@Model.ID)" title="Make this connection primary" class="far fa-star link"></i>
+}
+    </div>
+</div>

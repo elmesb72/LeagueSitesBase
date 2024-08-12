@@ -1,3 +1,11 @@
 {
-    "dotnet.defaultSolution": "LeagueSitesBase.sln"
+    "dotnet.defaultSolution": "LeagueSitesBase.sln",
+    "sqltools.connections": [
+        {
+            "previewLimit": 50,
+            "driver": "SQLite",
+            "name": "This",
+            "database": "Empty.db"
+        }
+    ]
 }
