@@ -4,15 +4,14 @@ using Microsoft.EntityFrameworkCore;
 
 namespace LeagueSitesBase.Pages;
 
-public class UserModel : PageModel
+public class UserModel(LeagueSitesContext context) : PageModel
 {
     public required string CallbackUrlBase { get; set; }
     public required string Error { get; set; }
 
     public User? SiteUser { get; set; }
 
-    readonly LeagueSitesContext dbContext;
-    public UserModel(LeagueSitesContext context) => dbContext = context;
+    readonly LeagueSitesContext dbContext = context;
 
     public async Task<IActionResult> OnGetAsync()
     {
@@ -29,24 +28,7 @@ public class UserModel : PageModel
             Error = error!;
         }
 
-        var uid = Convert.ToInt64(User.Claims.First(c => c.Type == "UserID").Value);
-        SiteUser = await dbContext.Users
-            .Include(u => u.Invitations)
-                .ThenInclude(i => i.InvitationEmails)
-            .Include(u => u.Invitations)
-                .ThenInclude(i => i.InvitationRoles)
-                    .ThenInclude(r => r.Role)
-            .Include(u => u.Invitations)
-                .ThenInclude(i => i.Player)
-            .Include(u => u.Invitations)
-                    .ThenInclude(p => p.Status)
-            .Include(u => u.Invitations)
-                .ThenInclude(i => i.Team)
-            .Include(u => u.UserLogins)
-                .ThenInclude(l => l.LoginSource)
-            .Include(u => u.UserRoles)
-                .ThenInclude(r => r.Role)
-            .FirstOrDefaultAsync(u => u.ID == uid);
+        SiteUser = await GetSiteUser(User, dbContext);
 
         return Page();
     }
@@ -82,19 +64,18 @@ public class UserModel : PageModel
 
     public static List<string> GetUserPermissions(User user, List<Team>? teams = null)
     {
-        var permissions = new List<string>();
+        if (user is null)
+        {
+            return [];
+        }
+        var permissions = new List<string>
+        {
+            "User"
+        };
+        permissions.AddRange(user.UserRoles.Select(ur => ur.Role?.Name ?? "Unknown"));
+        permissions.Add(user.UserLogins.First(ul => ul.IsPrimary).Name);
 
-        if (user != null)
-        {
-            permissions.Add("User");
-            permissions.AddRange(user.UserRoles.Select(ur => ur.Role?.Name ?? "Unknown"));
-            permissions.Add(user.UserLogins.First(ul => ul.IsPrimary).Name);
-        }
-        else
-        {
-            return permissions;
-        }
-        if (teams != null)
+        if (teams is not null)
         {
             foreach (var team in teams)
             {

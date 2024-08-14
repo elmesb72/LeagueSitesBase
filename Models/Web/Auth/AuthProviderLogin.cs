@@ -1,6 +1,6 @@
 using Newtonsoft.Json.Linq;
 
-public abstract class AuthProviderLogin : IAuthProviderLogin
+public abstract class AuthProviderLogin(IQueryCollection qc, HttpClient hc, IConfiguration cfg, string cu) : IAuthProviderLogin
 {
 
     public SocialUserProfile? Profile { get; set; }
@@ -16,18 +16,10 @@ public abstract class AuthProviderLogin : IAuthProviderLogin
     protected string profileNameKey = "name";
     protected string profileEmailKey = "email";
 
-    protected readonly IQueryCollection query;
-    protected readonly HttpClient client;
-    protected readonly IConfiguration configuration;
-    protected readonly string callbackUrl;
-
-    public AuthProviderLogin(IQueryCollection qc, HttpClient hc, IConfiguration cfg, string cu)
-    {
-        query = qc;
-        client = hc;
-        configuration = cfg;
-        callbackUrl = cu;
-    }
+    protected readonly IQueryCollection query = qc;
+    protected readonly HttpClient client = hc;
+    protected readonly IConfiguration configuration = cfg;
+    protected readonly string callbackUrl = cu;
 
     protected virtual HttpRequestMessage GenerateTokenRequest() => new(accessTokenHttpMethod, accessTokenEndpointUrl + "?" + string.Join('&', accessTokenEndpointParameters.Select(p => p.Key + "=" + p.Value)));
 

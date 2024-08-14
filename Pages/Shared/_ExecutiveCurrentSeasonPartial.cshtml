@@ -1,0 +1,49 @@
+@model Season?
+@{
+    int gamesScheduled = 0;
+    int gamesPlayed = 0;
+    if (Model is not null) {
+        gamesScheduled = Model.Games.Count(game => game.Status!.Name == "Upcoming" || game.Status.Name == "Played" || game.Status.Name.StartsWith("Forfeit"));
+        gamesPlayed = Model.Games.Count(game => game.Status!.Name == "Played" || game.Status.Name.StartsWith("Forfeit"));
+    }
+    var gamesPlayedPct = gamesScheduled != 0 ? ((float)gamesPlayed / (float)gamesScheduled) : 0f;
+}
+            <h2>Regular Season</h2>
+            <div class="season-progress">
+                <div>Progress (@gamesScheduled games):&nbsp;</div>
+                <div class="season-progress-bar">
+@if (gamesScheduled > 0) {
+                    <div style="flex: 0 0 @((100*(gamesPlayedPct)).ToString("0.0"))%; background-color: var(--h1); " title="Games played">@gamesPlayed GP</div>
+                    <div style="flex: 1 0 0; color: var(--text-inverted); background-color: var(--h2);" title="Games remaining">@(gamesScheduled-gamesPlayed) GR</div>
+}
+else {
+                    <div style="flex: 1 0 0; color: var(--text-inverted); background-color: var(--h2);" title="Games scheduled">No games scheduled</div>
+}
+                </div>
+            </div>
+            <br />
+@if (Model is null) {
+            <li><a href="/Executive/Create/Season">Create season</a></li>
+}
+else {
+            <li><a href="/Schedule">Edit schedule</a></li>
+}
+@if (Model is not null) {
+            <br />
+            <h2>Tournaments</h2>
+            <li><a href="/Executive/Create/Tournament/@Model.ID">Add mid-season tournament</a></li>
+    @foreach(var tournament in Model.Tournaments) {
+            <li>Season Tournament @(tournament.ID): <br />
+                <ul>
+        @foreach(var bracket in tournament.Brackets) {
+                    <li><a href="/Executive/Edit/TournamentBracket/@bracket.ID">Update Bracket <i>@bracket.Name</i></a></li>
+        }
+        @foreach(var rr in tournament.RoundRobins) {
+                    <li><a href="/Executive/Edit/TournamentRoundRobin/@rr.ID">Update Round Robin <i>@rr.Name</i></a></li>
+        }
+                </ul>
+            </li>
+            <li><a href="/Executive/Create/TournamentBracket/@(tournament.ID)">Add Bracket</a></li>
+            <li><a href="/Executive/Create/TournamentRoundRobin/@(tournament.ID)">Add Round Robin</a></li>
+    }
+}

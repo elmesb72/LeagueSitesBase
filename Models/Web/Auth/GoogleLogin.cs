@@ -1,12 +1,7 @@
 using Microsoft.Extensions.Primitives;
 
-public class GoogleLogin : AuthProviderLogin
+public class GoogleLogin(IQueryCollection qc, HttpClient hc, IConfiguration cfg, string cu) : AuthProviderLogin(qc, hc, cfg, cu)
 {
-
-    // https://console.developers.google.com/apis/credentials?project=church-league-fastball
-
-    public GoogleLogin(IQueryCollection qc, HttpClient hc, IConfiguration cfg, string cu) : base(qc, hc, cfg, cu) { }
-
     public override async Task GetProfileDataAsync()
     {
         var clientId = configuration["Authentication:Google:ClientId"];

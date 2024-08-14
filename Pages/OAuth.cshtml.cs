@@ -8,21 +8,14 @@ using Microsoft.EntityFrameworkCore;
 
 namespace LeagueSitesBase.Pages;
 
-public class OAuthModel : PageModel
+public class OAuthModel(IHttpClientFactory clientFactory, IConfiguration configuration, LeagueSitesContext dbContext) : PageModel
 {
-    readonly IHttpClientFactory clientFactory;
-    readonly IConfiguration configuration;
-    readonly LeagueSitesContext dbContext;
+    readonly IHttpClientFactory clientFactory = clientFactory;
+    readonly IConfiguration configuration = configuration;
+    readonly LeagueSitesContext dbContext = dbContext;
 
     public required string CallbackUrlBase { get; set; }
     public required new User User { get; set; }
-
-    public OAuthModel(IHttpClientFactory clientFactory, IConfiguration configuration, LeagueSitesContext dbContext)
-    {
-        this.clientFactory = clientFactory;
-        this.configuration = configuration;
-        this.dbContext = dbContext;
-    }
 
     public async Task<IActionResult> OnGetAsync(string source)
     {

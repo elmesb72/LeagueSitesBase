@@ -1,12 +1,7 @@
 using Microsoft.Extensions.Primitives;
 
-public class FacebookLogin : AuthProviderLogin
+public class FacebookLogin(IQueryCollection qc, HttpClient hc, IConfiguration cfg, string cu) : AuthProviderLogin(qc, hc, cfg, cu)
 {
-
-    // https://developers.facebook.com/apps/515903335765782/dashboard/
-
-    public FacebookLogin(IQueryCollection qc, HttpClient hc, IConfiguration cfg, string cu) : base(qc, hc, cfg, cu) { }
-
     public override async Task GetProfileDataAsync()
     {
         var clientId = configuration["Authentication:Facebook:ClientId"];

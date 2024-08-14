@@ -7,24 +7,16 @@ namespace LeagueSitesBase.Pages;
 
 [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
 [IgnoreAntiforgeryToken]
-public class ErrorModel : PageModel
+public class ErrorModel(ILogger<ErrorModel> logger, LeagueSitesContext context, IConfiguration config, IWebHostEnvironment environment) : PageModel
 {
     public string? RequestId { get; set; }
 
     public bool ShowRequestId => !string.IsNullOrEmpty(RequestId);
 
-    readonly ILogger<ErrorModel> _logger;
-    readonly LeagueSitesContext _context;
-    readonly IConfiguration _config;
-    readonly IWebHostEnvironment _environment;
-
-    public ErrorModel(ILogger<ErrorModel> logger, LeagueSitesContext context, IConfiguration config, IWebHostEnvironment environment)
-    {
-        _logger = logger;
-        _context = context;
-        _config = config;
-        _environment = environment;
-    }
+    readonly ILogger<ErrorModel> _logger = logger;
+    readonly LeagueSitesContext _context = context;
+    readonly IConfiguration _config = config;
+    readonly IWebHostEnvironment _environment = environment;
 
     public void OnGet()
     {

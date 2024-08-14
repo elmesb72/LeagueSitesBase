@@ -1,13 +1,8 @@
 using Microsoft.Extensions.Primitives;
 using Newtonsoft.Json.Linq;
 
-public class MicrosoftLogin : AuthProviderLogin
+public class MicrosoftLogin(IQueryCollection qc, HttpClient hc, IConfiguration cfg, string cu) : AuthProviderLogin(qc, hc, cfg, cu)
 {
-
-    // https://portal.azure.com/#blade/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/Overview/appId/87bddcc6-b0da-40f0-b738-65e17287e89d/isMSAApp/true
-
-    public MicrosoftLogin(IQueryCollection qc, HttpClient hc, IConfiguration cfg, string cu) : base(qc, hc, cfg, cu) { }
-
     public override async Task GetProfileDataAsync()
     {
         var clientId = configuration["Authentication:Microsoft:ClientId"];

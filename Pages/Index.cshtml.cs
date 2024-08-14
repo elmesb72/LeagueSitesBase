@@ -4,20 +4,15 @@ using Microsoft.EntityFrameworkCore;
 
 namespace LeagueSitesBase.Pages;
 
-public class IndexModel : PageModel
+public class IndexModel(LeagueSitesContext context, IConfiguration config) : PageModel
 {
     public required IEnumerable<Game> Games { get; set; }
     public required IEnumerable<News> News { get; set; }
     public required Standings Standings { get; set; }
     public bool IsPlayoffs { get; set; }
 
-    readonly LeagueSitesContext _context;
-    readonly IConfiguration _config;
-    public IndexModel(LeagueSitesContext context, IConfiguration config)
-    {
-        _context = context;
-        _config = config;
-    }
+    readonly LeagueSitesContext _context = context;
+    readonly IConfiguration _config = config;
 
     public async Task<IActionResult> OnGetAsync()
     {

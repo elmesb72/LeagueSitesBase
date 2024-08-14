@@ -1,14 +1,8 @@
 using System.Diagnostics.CodeAnalysis;
 
-public class SocialUserProfile
+[method: SetsRequiredMembers]
+public class SocialUserProfile(string name, string email)
 {
-    public required string Name { get; set; }
-    public required string Email { get; set; }
-
-    [SetsRequiredMembers]
-    public SocialUserProfile(string name, string email)
-    {
-        Name = name;
-        Email = email;
-    }
+    public required string Name { get; set; } = name;
+    public required string Email { get; set; } = email;
 }

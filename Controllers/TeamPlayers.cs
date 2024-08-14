@@ -3,10 +3,9 @@ using Microsoft.EntityFrameworkCore;
 
 [ApiController]
 [Route("api")]
-public class APITeamPlayersController : ControllerBase
+public class APITeamPlayersController(LeagueSitesContext context) : ControllerBase
 {
-    readonly LeagueSitesContext dbContext;
-    public APITeamPlayersController(LeagueSitesContext context) => dbContext = context;
+    readonly LeagueSitesContext dbContext = context;
 
     /// Returns a dictionary of names and jersey numbers for active players on the given team
     /// Optional parameters via Querystring: 

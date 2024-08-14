@@ -1,0 +1,66 @@
+@page
+@inject IConfiguration config
+@model ExecutiveModel
+@{
+    var siteName = config["Site:Name"] ?? string.Empty;
+    var shortName = config["Site:ShortName"] ?? string.Join(string.Empty, siteName.Split(' ').Select(w => w[0]));
+    ViewData["Title"] = $"{shortName} » League Administration";
+}
+<div class="row">
+    <div class="section executive-section">
+        <h1>@DateTime.Now.Year Season</h1>
+        <partial name="_ExecutiveCurrentSeasonPartial" model="Model.CurrentSeason" />
+@if (Model.CurrentSeason is not null && Model.CurrentPlayoffs is null) {
+        <li><a href="/Executive/Create/Playoffs/@Model.CurrentSeason.ID">Set up year-end playoffs</a></li>
+}
+@if (Model.CurrentPlayoffs is not null) {
+        <partial name="_ExecutiveCurrentPlayoffsPartial" model="Model.CurrentPlayoffs" />
+}
+    </div>
+</div>
+
+<div class="row">
+    <div class="section executive-section executive-league">
+        <h1>League Settings</h1>
+        <div>
+@{
+    var activeTeamsCount = Model.CurrentSeason?.Games.GroupBy(game => game.HostTeamID).Count() ?? 0;
+}
+            <h2>Teams (@activeTeamsCount active)</h2>
+            <table>
+@foreach(var team in Model.Teams) {
+                <tr>
+                    <td><a href="/Team/@team.ID">@team.FullName</a></td>
+                    <td>@Html.Raw(team.Active ? $"Active <a href=\"/Executive/Edit/Status/Team/{team.ID}\">(deactivate)</a>" : $"Inactive <a href=\"/Executive/Edit/Status/Team/{team.ID}\">(activate)</a>")</td>
+                    <td><i title="Delete team" class="fas fa-trash-alt"></i></td>
+                </tr>
+}
+                <tr>
+                    <td><li><a href="/Executive/Create/Team">Add new team</a></li></td>
+                </tr>
+            </table>
+            <p><i>* Only active teams are listed in the site header and can be selected in drop-down lists (e.g. the Edit Game page). Teams not playing in the current season should be set to inactive.</i></p>
+        </div>
+        <br />
+        <div>
+@{
+    var activeLocationsCount = Model.CurrentSeason?.Games.GroupBy(game => game.LocationID).Count() ?? 0;
+}
+            <h2>Locations (@activeLocationsCount active)</h2>
+            <table>
+@foreach(var location in Model.Locations) {
+                <tr>
+                    <td>@location.Name</td>
+                    <td>@location.FormalName</td>
+                    <td>@Html.Raw(location.Active ? $"Active <a href=\"/Executive/Edit/Status/Location/{location.ID}\">(deactivate)</a>" : $"Inactive <a href=\"/Executive/Edit/Status/Location/{location.ID}\">(activate)</a>")</td>
+                    <td><i title="Delete location" class="fas fa-trash-alt"></i></td>
+                </tr>
+}
+                <tr>
+                    <td colspan=3><li><a href="/Executive/Create/Location">Add new location</a></li></td>
+                </tr>
+            </table>
+            <p><i>* Only active locations are listed on the Locations page and can be selected in drop-down lists (e.g. the Edit Game page). Locations not being used in the current season should be set to inactive.</i></p>
+        </div>
+    </div>
+</div>

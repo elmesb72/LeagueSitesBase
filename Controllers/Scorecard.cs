@@ -3,10 +3,9 @@ using Microsoft.EntityFrameworkCore;
 
 [ApiController]
 [Route("api")]
-public class APIScorecardController : ControllerBase
+public class APIScorecardController(LeagueSitesContext context) : ControllerBase
 {
-    public readonly LeagueSitesContext dbContext;
-    public APIScorecardController(LeagueSitesContext context) => dbContext = context;
+    public readonly LeagueSitesContext dbContext = context;
 
     /// Returns a list of batting events and lineup for each team given a game ID.
     [HttpGet("Scorecard/{id}")]

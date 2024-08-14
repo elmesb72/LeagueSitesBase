@@ -1,0 +1,17 @@
+@model Season
+            <br />
+            <h2>Playoffs</h2>
+@foreach(var tournament in Model.Tournaments) {
+            <li>Playoffs Tournament @(tournament.ID): <br />
+                <ul>
+    @foreach(var bracket in tournament.Brackets) {
+                    <li><a href="/Executive/Edit/TournamentBracket/@bracket.ID">Update Bracket <i>@bracket.Name</i></a></li>
+    }
+    @foreach(var rr in tournament.RoundRobins) {
+                    <li><a href="/Executive/Edit/TournamentRoundRobin/@rr.ID">Update Round Robin <i>@rr.Name</i></a></li>
+    }
+                </ul>
+            </li>
+            <li><a href="/Executive/Create/TournamentBracket/@(tournament.ID)">Add Bracket</li>
+            <li><a href="/Executive/Create/TournamentRoundRobin/@(tournament.ID)">Add Round Robin</a></li>
+}

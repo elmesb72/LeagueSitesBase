@@ -1,0 +1,16 @@
+@page
+@inject IConfiguration config
+@model CreateSeasonModel
+@{
+    var siteName = config["Site:Name"] ?? string.Empty;
+    var shortName = config["Site:ShortName"] ?? string.Join(string.Empty, siteName.Split(' ').Select(w => w[0]));
+    ViewData["Title"] = $"{shortName} » Create Season";
+}
+<div class="row">
+    <div class="section">
+        <h1>Create Season</h1>
+        <p>@Model.Result</p>
+        <br />
+        <a href="/Executive">Click here to return to the League Administration page.</a>
+    </div>
+</div>

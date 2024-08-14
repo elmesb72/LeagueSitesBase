@@ -3,10 +3,9 @@ using Microsoft.EntityFrameworkCore;
 
 [ApiController]
 [Route("api/UserLogin")]
-public class APIUserLoginSourceController : ControllerBase
+public class APIUserLoginSourceController(LeagueSitesContext context) : ControllerBase
 {
-    public readonly LeagueSitesContext dbContext;
-    public APIUserLoginSourceController(LeagueSitesContext context) => dbContext = context;
+    public readonly LeagueSitesContext dbContext = context;
 
     /// Deletes the provided UserLogin if not primary
     [HttpDelete("Delete/{id}")]
