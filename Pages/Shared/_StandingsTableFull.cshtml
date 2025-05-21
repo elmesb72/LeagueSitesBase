@@ -17,7 +17,7 @@
 @foreach(var t in Model) 
 {
             <tr>
-                <td><a href="/Team/@t.Key.Abbreviation" class="standings-link"><partial name="_TeamLogoSmall" model="t.Key" /></a></td>
+                <td><a href="/Team/@t.Key.Abbreviation" class="standings-link"><partial name="_TeamLogoSmall" model="t.Key" />@t.Key.FullName</a></td>
                 <td>@t.Value.GamesPlayed</td>
                 <td>@t.Value.Wins</td>
                 <td>@t.Value.Losses</td>
