@@ -5,11 +5,11 @@
 @{
     var siteName = config["Site:Name"] ?? string.Empty;
     var shortName = config["Site:ShortName"] ?? string.Join(string.Empty, siteName.Split(' ').Select(w => w[0]));
-    ViewData["Title"] = $"{shortName} » {Model.CurrentSeason.Year} Playoffs";
+    ViewData["Title"] = $"{shortName} » {Model.CurrentSeason?.Year} Playoffs";
 }
 <div class="row">
     <div class="section playoff-section">
-        <h1>@Model.CurrentSeason.Year Playoffs</h1>
+        <h1>@Model.CurrentSeason?.Year Playoffs</h1>
 @if (Model.Playoffs != null && Model.Playoffs.Tournaments.Any())
 {
         <div class="tournament">
@@ -32,7 +32,7 @@
                             <div class="tournament-series-matchup">
                 @if (series.Spots.Item1.Team != null)
                 {
-                                <div class="tournament-series-team @(series.Winner != null && series.Winner == series.Spots.Item1.Team ? "tournament-series-winner" : "")"><a href="/Team/@(series.Spots.Item1.Team.Abbreviation)"><img src="/images/teams/@(series.Spots.Item1.Team.ID)-sm.webp" height="28"><span class="tournament-series-team-name">@(series.Spots.Item1.Team.Name)</span><sup>@(Model.Seeds.Keys.ToList().IndexOf(series.Spots.Item1.Team)+1)</sup></a></div>
+                                <div class="tournament-series-team @(series.Winner != null && series.Winner == series.Spots.Item1.Team ? "tournament-series-winner" : "")"><a href="/Team/@(series.Spots.Item1.Team.Abbreviation)"><img src="/images/teams/@(series.Spots.Item1.Team.ID)-sm.webp" height="28"><span class="tournament-series-team-name">@(series.Spots.Item1.Team.Name)</span><sup>@(Model.Seeds?.Keys.ToList().IndexOf(series.Spots.Item1.Team)+1)</sup></a></div>
                 }
                 else if (series.Spots.Item1.Source == 'w')
                 {
@@ -48,7 +48,7 @@
                 }
                 @if (series.Spots.Item2.Team != null)
                 {
-                                <div class="tournament-series-team @(series.Winner != null && series.Winner == series.Spots.Item2.Team ? "tournament-series-winner" : "")"><a href="/Team/@(series.Spots.Item2.Team.Abbreviation)"><img src="/images/teams/@(series.Spots.Item2.Team.ID)-sm.webp" height="28"><span class="tournament-series-team-name">@(series.Spots.Item2.Team.Name)</span><sup>@(Model.Seeds.Keys.ToList().IndexOf(series.Spots.Item2.Team)+1)</sup></a></div>
+                                <div class="tournament-series-team @(series.Winner != null && series.Winner == series.Spots.Item2.Team ? "tournament-series-winner" : "")"><a href="/Team/@(series.Spots.Item2.Team.Abbreviation)"><img src="/images/teams/@(series.Spots.Item2.Team.ID)-sm.webp" height="28"><span class="tournament-series-team-name">@(series.Spots.Item2.Team.Name)</span><sup>@(Model.Seeds?.Keys.ToList().IndexOf(series.Spots.Item2.Team)+1)</sup></a></div>
                 }
                 else if (series.Spots.Item2.Source == 'w')
                 {
@@ -89,8 +89,8 @@
                 continue;
             }
         <div class="tournament-items-series">
-            <h2>#@(Model.Seeds.Keys.ToList().IndexOf(series.Spots.Item1.Team)+1) @series.Spots.Item1.Team.Name 
-                vs #@(Model.Seeds.Keys.ToList().IndexOf(series.Spots.Item2.Team)+1) @series.Spots.Item2.Team.Name</h2>
+            <h2>#@(Model.Seeds?.Keys.ToList().IndexOf(series.Spots.Item1.Team)+1) @series.Spots.Item1.Team.Name 
+                vs #@(Model.Seeds?.Keys.ToList().IndexOf(series.Spots.Item2.Team)+1) @series.Spots.Item2.Team.Name</h2>
             @if (series.Winner != null)
             {
             <h3>@series.Winner.FullName win @(results.Values.First().Wins)-@(results.Values.Last().Wins)</h3>
@@ -129,7 +129,7 @@
                     </div>
                     <div class="tournament-items-game-location">
                 @if(game.Game != null) {
-                        <a href="/Locations/#@(game.Game.Location.Name)">@game.Game.Location.Name</a>
+                        <a href="/Locations/#@(game.Game.Location?.Name)">@game.Game.Location?.Name</a>
                 }
                 else
                 {
@@ -138,16 +138,16 @@
                     </div>
                     <div class="tournament-items-game-team">
                 @if (game.Game != null) {
-                    @if (game.Game.Status.Name == "Upcoming")
+                    @if (game.Game.Status?.Name == "Upcoming")
                     {
-                        <a href="/Team/@(game.Game.VisitingTeam.Abbreviation)"><img src="/images/teams/@(game.Game.VisitingTeamID)-md.webp" height="75" width="75">@game.Game.VisitingTeam.Location</a>
+                        <a href="/Team/@(game.Game.VisitingTeam?.Abbreviation)"><img src="/images/teams/@(game.Game.VisitingTeamID)-md.webp" height="75" width="75">@game.Game.VisitingTeam?.Location</a>
                     }
-                    else if (game.Game.Status.Name == "Played")
+                    else if (game.Game.Status?.Name == "Played")
                     {
                             var winner = (game.Game.ScoreHost > game.Game.ScoreVisitor ? game.Game.HostTeam : game.Game.VisitingTeam);
-                        <a class="tournament-items-game-winner" href="/Team/@(winner.Abbreviation)">
-                            <img src="/images/teams/@(winner.ID)-md.webp" height="75" width="75">
-                        @winner.Location 
+                        <a class="tournament-items-game-winner" href="/Team/@(winner?.Abbreviation)">
+                            <img src="/images/teams/@(winner?.ID)-md.webp" height="75" width="75">
+                        @winner?.Location 
                         @(game.Game.ScoreHost > game.Game.ScoreVisitor ? game.Game.ScoreHost : game.Game.ScoreVisitor)
                         </a>
                     }
@@ -167,16 +167,16 @@
                     </div>
                     <div class="tournament-items-game-team">
                 @if (game.Game != null) {
-                    @if (game.Game.Status.Name == "Upcoming")
+                    @if (game.Game.Status?.Name == "Upcoming")
                     {
-                        <a href="/Team/@(game.Game.HostTeam.Abbreviation)"><img src="/images/teams/@(game.Game.HostTeamID)-md.webp" height="75" width="75">@@@game.Game.HostTeam.Location</a>
+                        <a href="/Team/@(game.Game.HostTeam?.Abbreviation)"><img src="/images/teams/@(game.Game.HostTeamID)-md.webp" height="75" width="75">@@@game.Game.HostTeam?.Location</a>
                     }
-                    else if (game.Game.Status.Name == "Played")
+                    else if (game.Game.Status?.Name == "Played")
                     {
                         var loser = (game.Game.ScoreHost < game.Game.ScoreVisitor ? game.Game.HostTeam : game.Game.VisitingTeam);
-                        <a class="tournament-items-game-loser" href="/Team/@(loser.Abbreviation)">
-                            <img src="/images/teams/@(loser.ID)-md.webp" height="75" width="75">
-                            @loser.Location 
+                        <a class="tournament-items-game-loser" href="/Team/@(loser?.Abbreviation)">
+                            <img src="/images/teams/@(loser?.ID)-md.webp" height="75" width="75">
+                            @loser?.Location 
                             @(game.Game.ScoreHost < game.Game.ScoreVisitor ? game.Game.ScoreHost : game.Game.ScoreVisitor)
                         </a>
                     }
@@ -196,7 +196,7 @@
                     </div>
                     <div class="tournament-items-game-lead">
                     @{
-                        var resultsToThisPoint = new Standings(series.Games.Where(g => g.Game != null && g.GameNumber <= game.GameNumber && g.Game.Status.Name == "Played").Select(g => g.Game));
+                        var resultsToThisPoint = new Standings(series.Games.Where(g => g.Game != null && g.GameNumber <= game.GameNumber && g.Game.Status?.Name == "Played").Select(g => g.Game!));
                     }
                     @if (series.Format == "Best of")
                     {
