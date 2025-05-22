@@ -552,10 +552,10 @@ main {
 }
 .home-standings-link object, .home-standings-link div {
   vertical-align: middle;
-  margin-right: 3px;
+  display: inline-block;
 }
-.home-standings-link div {
-    display: inline-block;
+.home-standings-link object {
+  margin-right: 3px;
 }
 
 .home-low > div {
@@ -1130,14 +1130,12 @@ main {
 .standings-link {
   white-space: nowrap;
 }
-.standings-link object {
+.standings-link object, .standings-link div {
   vertical-align: middle;
   display: inline-block;
-  margin-right: 3px;
 }
-.standings-link div {
-  vertical-align: middle;
-  display: inline-block;
+.standings-link object {
+  margin-right: 3px;
 }
 
 
