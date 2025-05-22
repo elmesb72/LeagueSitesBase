@@ -4,10 +4,6 @@
 @{
     var siteName = config["Site:Name"] ?? string.Empty;
     var shortName = config["Site:ShortName"] ?? string.Join(string.Empty, siteName.Split(' ').Select(w => w[0]));
-    var username = string.Empty;
-    if (User.Identity is not null) {
-        username = User.Identity.Name;
-    }
     ViewData["Title"] = $"{shortName} » Standings ({Model.CurrentSeason?.Name})";
 }
 <div class="row">

@@ -1,0 +1,54 @@
+@page "{year:int?}"
+@inject IConfiguration config
+@model ScheduleModel
+@{
+    var siteName = config["Site:Name"] ?? string.Empty;
+    var shortName = config["Site:ShortName"] ?? string.Join(string.Empty, siteName.Split(' ').Select(w => w[0]));
+    ViewData["Title"] = $"{shortName} » Schedule";
+}
+<div class="row">
+    <div class="section schedule-section">
+        <h1>@Model.Year Schedule</h1>
+@if (Model.Games.Any()) {
+        <table class="league-schedule">
+            <tr>
+                <th></th>
+    @foreach (var location in Model.Locations) {
+                <th colspan=2>@location?.Name</th>
+    }
+            </tr>
+
+            <tr>
+                <th>Date</th>
+    @foreach (var location in Model.Locations) {
+                <th>Home</th>
+                <th>Away</th>
+    }
+            </tr>
+    @for (DateTime day = Model.Games.First().Date.Date; day <= Model.Games.Last().Date.Date; day = day.AddDays(1)) {
+            <tr class="@(day.DayOfWeek == DayOfWeek.Saturday || day.DayOfWeek == DayOfWeek.Sunday ? "weekend" : String.Empty)">
+                <td>@day.ToString("dddd, MMMM dd")</td>
+        @foreach (var location in Model.Locations) {
+        var gameDP = Model.Games.FirstOrDefault(g => g.Date.Date == day && g.Location == location);
+            @if(gameDP != default(Game)) {
+                <td class="league-schedule-game league-schedule-game-home"><a href="/Game/@(gameDP?.ID)">@gameDP?.HostTeam?.Name</a></td>
+                <td class="league-schedule-game league-schedule-game-away"><a href="/Game/@(gameDP?.ID)">@gameDP?.VisitingTeam?.Name</a></td>
+            }
+            else {
+                <td></td>
+                <td></td>
+            }
+        }
+            </tr>
+    }
+        </table>
+        <br />
+}
+else
+{
+        <div class="subsection">
+            <p>No games have been added yet for this year. Stay tuned!</p>
+        </div>
+}
+    </div>
+</div>
