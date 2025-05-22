@@ -1130,9 +1130,12 @@ main {
 .standings-link {
   white-space: nowrap;
 }
-.standings-link img {
+.standings-link object, .standings-link div {
   vertical-align: middle;
   margin-right: 3px;
+}
+.standings-link div {
+    display: inline-block;
 }
 
 
