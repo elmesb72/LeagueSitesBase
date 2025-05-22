@@ -1132,8 +1132,10 @@ main {
 }
 .standings-link object, .standings-link div {
   vertical-align: middle;
-  margin-right: 3px;
   display: inline-block;
+}
+.standings-link div {
+  margin-right: 3px;
 }
 
 
