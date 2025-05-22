@@ -1,0 +1,7 @@
+@page "{year:int?}"
+@inject IConfiguration config
+@{
+    var siteName = config["Site:Name"] ?? string.Empty;
+    var shortName = config["Site:ShortName"] ?? string.Join(string.Empty, siteName.Split(' ').Select(w => w[0]));
+    ViewData["Title"] = $"{shortName} » Scores";
+}
