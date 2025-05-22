@@ -311,7 +311,7 @@ p.team-header-record {
 .tournament-items-game-team img {
     display: none;
 }
-.tournament-items-game-park, .tournament-items-game-lead {
+.tournament-items-game-location, .tournament-items-game-lead {
     display: none;
 }
 
