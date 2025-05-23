@@ -1,0 +1,61 @@
+@page "{code}"
+@inject IConfiguration config
+@model PlayerModel
+@{
+    var siteName = config["Site:Name"] ?? string.Empty;
+    var shortName = config["Site:ShortName"] ?? string.Join(string.Empty, siteName.Split(' ').Select(w => w[0]));
+    ViewData["Title"] = $"{shortName} » {Model.Player!.Name}";
+}
+<div class="row player-row">
+    <div class="section player-info">
+        <h1>
+@if (!String.IsNullOrEmpty(Model.Player.Number)) {
+            <span class="player-number">@Model.Player.Number</span>
+}
+            <span>@Model.Player.Name</span>
+        </h1>
+@foreach (var team in Model.Player.Invitations.Select(t => t.Team!).Where(t => !t.Hidden)) {
+        <div class="player-team">
+            <div class="player-team-logo"><img src="/images/teams/@(team.ID)-sm.webp"></div>
+            <div class="player-team-name"><a href="/Team/@(team.Abbreviation)">@team.FullName</a></div>
+        </div>
+}
+        <br />
+        <img src="/images/players/@(Model.Player.ShortCode)-h.webp" onerror="this.style.display='none'" class="player-photo">
+@if (Model.Player.Bio != null)
+{
+        <p><b>Position(s):</b> @Model.Player.Bio.Positions</p>
+        <p><b>Bats:</b> @Model.Player.Bio.Bats &bull; <b>Throws:</b> @Model.Player.Bio.Throws</p>
+        <p>@(Model.Player.Bio.HeightImperial/12)'@(Model.Player.Bio.HeightImperial%12)", @(Model.Player.Bio.WeightImperial)lbs (@(Model.Player.Bio.Height)cm, @(Model.Player.Bio.Weight)kg)</p>
+        <br />
+        <h2>Bio<div class="player-socials">
+    @foreach(var social in Model.Player.Socials) {
+            <a href="@(social?.Platform?.BaseUrl?.ToString() + social?.Account)" target="_blank"><img src="/images/social/@(social?.Platform?.Name).webp"></a> 
+    }
+        </div></h2>
+        <p>From: @Model.Player.Bio.From</p>
+        <p>Age: @(DateTime.Today.Year - Model.Player.Bio.Birthdate.Year + (Model.Player.Bio.Birthdate.Date > DateTime.Today ? 1 : 0))</p>
+        <p>Born: @Model.Player.Bio.Birthdate.ToString("MMMM d, yyyy")</p>
+    @if (!String.IsNullOrEmpty(Model.Player.Bio.ReferredBy)) {
+        <p>Recruited by:
+        @if (Model.ReferredBy != null) {
+            <a href="/Player/@(Model.ReferredBy.ShortCode)">@Model.Player.Bio.ReferredBy</a>
+        }
+        else {
+            @Model.Player.Bio.ReferredBy
+        }
+        </p>
+    }
+}
+        <br />
+    </div>
+    <div class="section player-stats-section">
+        <h1>Stats</h1>
+        <h2>Batting</h2>
+        <p><i title="Coming Soon" class="fas fa-laptop-code"></i> Coming Soon</p>
+        <br />
+        <h2>Pitching</h2>
+        <p><i title="Coming Soon" class="fas fa-laptop-code"></i> Coming Soon</p>
+        <br />
+    </div>
+</div>
