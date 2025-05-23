@@ -46,11 +46,6 @@ public class Year
         CalendarYear = calendarYear;
         ExceptionYearDescription = exceptionYearDescription;
     }
-    public Year(long calendarYear, Team team)
-    {
-        CalendarYear = calendarYear;
-        RegularSeasonWinner = team;
-    }
 
     public bool HasPlayoffs()
     {

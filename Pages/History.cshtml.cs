@@ -29,8 +29,6 @@ public class HistoryModel(LeagueSitesContext context, IConfiguration config) : P
                                     .ToArrayAsync();
 
         Years = [.. seasons.GroupBy(s => s.Year).Select(yg => new Year(yg.Key, [.. yg]))];
-        Console.WriteLine($"Years found in DB: {String.Join(", ", Years.Select(year => year.CalendarYear))}");
-
         foreach (var year in Years)
         {
             if (year.HasPlayoffs() && year.PlayoffsTournament != null && year.Playoffs != null && year.RegularSeasonStandings != null)
@@ -43,9 +41,6 @@ public class HistoryModel(LeagueSitesContext context, IConfiguration config) : P
         var history = config.GetSection("Site:History").Get<List<ConfigurationYear>>() ?? [];
         if (history.Count != 0)
         {
-            Console.WriteLine($"Years found in appsettings: {String.Join(", ", history.Select(year => year.Year))}");
-            var teams = await dbContext.Teams.ToListAsync();
-
             foreach (var year in history)
             {
                 var existingYear = Years.FirstOrDefault(existingYear => existingYear.CalendarYear == year.Year);
@@ -55,16 +50,7 @@ public class HistoryModel(LeagueSitesContext context, IConfiguration config) : P
                 }
                 else
                 {
-                    var knownTeam = teams.FirstOrDefault(team => team.FullName == year.Result);
-                    if (knownTeam != null)
-                    {
-                        Years.Add(new Year(year.Year, knownTeam));
-                    }
-                    else
-                    {
-                        Years.Add(new Year(year.Year, year.Result));
-                    }
-                    
+                    Years.Add(new Year(year.Year, year.Result));
                 }
             }
         }

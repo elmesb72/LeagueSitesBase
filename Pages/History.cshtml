@@ -20,9 +20,13 @@
             <tr>
                 <td><a href="/Standings/@year.CalendarYear">@year.CalendarYear</a></td>
                 <td>
-    @if (year.PlayoffsAreComplete())
+    @if (!String.IsNullOrEmpty(year.ExceptionYearDescription))
     {
-        @if (year.PlayoffsTournament.Brackets.Count() > 1)
+                    <span>@year.ExceptionYearDescription</span>
+    }
+    else if (year.PlayoffsAreComplete())
+    {
+        @if (year.PlayoffsTournament!.Brackets.Count() > 1)
         {
             var winners = year.PlayoffsTournament.Brackets.ToDictionary(b => b.Name, b => b.GetWinner());
             <a href="/Playoffs/@year.CalendarYear">@Html.Raw(String.Join("; ", winners.Select(w => $"{w.Key}: {w.Value.FullName}")))</a>
@@ -31,11 +35,7 @@
         {
             var winner = year.PlayoffsTournament.Brackets.First().GetWinner();
             <a href="/Playoffs/@year.CalendarYear">@winner.FullName</a>
-        }            
-    }
-    else if (!String.IsNullOrEmpty(year.ExceptionYearDescription))
-    {
-                    <span>@year.ExceptionYearDescription</span>
+        }
     }
     else
     {
