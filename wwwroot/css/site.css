@@ -1450,37 +1450,37 @@ main {
 }
 
 
-/* PARKS */
+/* LOCATIONS */
 
 
-.park-row .section {
+.location-row .section {
   width: 100%;
 }
-.park-row .subsection {
+.location-row .subsection {
   flex-basis: 50%;
 }
 
-.park-map {
+.location-map {
   height: 25vw;
   width: 100%;
 }
 
-.park-row .inner-row {
+.location-row .inner-row {
   justify-content: start;
 }
 
-.park-games {
+.location-games {
   align-self: baseline;
 }
 
-.park-details-right {
+.location-details-right {
   margin-left: 5px;
 }
-.park-details-left {
+.location-details-left {
   margin-right: 5px;
 }
 
-.park-diamond-subtitle {
+.location-diamond-subtitle {
   text-decoration: underline;
 }
 
