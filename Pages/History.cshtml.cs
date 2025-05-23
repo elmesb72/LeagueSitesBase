@@ -29,6 +29,7 @@ public class HistoryModel(LeagueSitesContext context, IConfiguration config) : P
                                     .ToArrayAsync();
 
         Years = [.. seasons.GroupBy(s => s.Year).Select(yg => new Year(yg.Key, [.. yg]))];
+        Console.WriteLine($"Years found in DB: {String.Join(", ", Years.Select(year => year.CalendarYear))}");
 
         foreach (var year in Years)
         {
@@ -42,6 +43,7 @@ public class HistoryModel(LeagueSitesContext context, IConfiguration config) : P
         var history = config.GetSection("Site:History").Get<List<ConfigurationYear>>() ?? [];
         if (history.Count != 0)
         {
+            Console.WriteLine($"Years found in appsettings: {String.Join(", ", history.Select(year => year.Year))}");
             var teams = await dbContext.Teams.ToListAsync();
 
             foreach (var year in history)
