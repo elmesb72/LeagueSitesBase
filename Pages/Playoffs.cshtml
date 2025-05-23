@@ -5,7 +5,7 @@
 @{
     var siteName = config["Site:Name"] ?? string.Empty;
     var shortName = config["Site:ShortName"] ?? string.Join(string.Empty, siteName.Split(' ').Select(w => w[0]));
-    ViewData["Title"] = $"{shortName} » {Model.CurrentSeason?.Year} Playoffs";
+    ViewData["Title"] = $"{shortName} » Playoffs ({Model.CurrentSeason?.Year})";
 }
 <div class="row">
     <div class="section playoff-section">

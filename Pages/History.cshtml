@@ -1,0 +1,64 @@
+@page
+@inject IConfiguration config
+@model HistoryModel
+@{
+    var siteName = config["Site:Name"] ?? string.Empty;
+    var shortName = config["Site:ShortName"] ?? string.Join(string.Empty, siteName.Split(' ').Select(w => w[0]));
+    ViewData["Title"] = $"{shortName} » League History";
+}
+<div class="row">
+    <div class="section history-section">
+        <h1>League History</h1>
+        <table>
+            <tr>
+                <th>Year</th>
+                <th>Champion</th>
+                <th>Best Record</th>
+            </tr>
+@foreach (var year in Model.Years)
+{
+            <tr>
+                <td><a href="/Standings/@year.CalendarYear">@year.CalendarYear</a></td>
+                <td>
+    @if (year.PlayoffsAreComplete())
+    {
+        @if (year.PlayoffsTournament.Brackets.Count() > 1)
+        {
+            var winners = year.PlayoffsTournament.Brackets.ToDictionary(b => b.Name, b => b.GetWinner());
+            <a href="/Playoffs/@year.CalendarYear">@Html.Raw(String.Join("; ", winners.Select(w => $"{w.Key}: {w.Value.FullName}")))</a>
+        }
+        else
+        {
+            var winner = year.PlayoffsTournament.Brackets.First().GetWinner();
+            <a href="/Playoffs/@year.CalendarYear">@winner.FullName</a>
+        }            
+    }
+    else if (!String.IsNullOrEmpty(year.ExceptionYearDescription))
+    {
+                    <span>@year.ExceptionYearDescription</span>
+    }
+    else
+    {
+                    <span>-</span>
+    }
+                </td>
+                <td>
+    @if (year.RegularSeasonIsComplete())
+    {
+                    <a href="/Team/@year.RegularSeasonWinner.Abbreviation/@year.CalendarYear">@year.RegularSeasonWinner.FullName @year.RegularSeasonWinnerResults.ToString()</a>
+    }
+    else if (!String.IsNullOrEmpty(year.ExceptionYearDescription))
+    {
+                    <span>&nbsp;</span>
+    }
+    else
+    {
+                    <span>-</span>
+    }
+                </td>
+            <!-- (<a href="/Schedule/@year">Schedule</a>) <a href="/Playoffs/@year">Playoffs</a>) -->
+            </tr>
+}
+        </table>
+    </div>
+</div>
