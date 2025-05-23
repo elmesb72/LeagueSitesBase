@@ -16,7 +16,7 @@
         </h1>
 @foreach (var team in Model.Player.Invitations.Select(t => t.Team!).Where(t => !t.Hidden)) {
         <div class="player-team">
-            <div class="player-team-logo"><img src="/images/teams/@(team.ID)-sm.webp"></div>
+            <div class="player-team-logo"><partial name="_TeamLogoSmall" model="team" /></div>
             <div class="player-team-name"><a href="/Team/@(team.Abbreviation)">@team.FullName</a></div>
         </div>
 }
