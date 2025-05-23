@@ -83,10 +83,7 @@ public partial class Tournament
                     if (series.Spots.Item1.Source == 'l') series.Spots.Item1.Team = allSeries?.FirstOrDefault(s => s.Number == series.Spots.Item1.Seed)?.Loser;
                     if (series.Spots.Item2.Source == 'w') series.Spots.Item2.Team = allSeries?.FirstOrDefault(s => s.Number == series.Spots.Item2.Seed)?.Winner;
                     if (series.Spots.Item2.Source == 'l') series.Spots.Item2.Team = allSeries?.FirstOrDefault(s => s.Number == series.Spots.Item2.Seed)?.Loser;
-                    if (series.Spots.Item1.Team is null || series.Spots.Item2.Team is null) {
-                        continue;
-                    }
-                    if (seeds.Keys.ToList().IndexOf(series.Spots.Item2.Team) < seeds.Keys.ToList().IndexOf(series.Spots.Item1.Team)) // if Team 2 initial rank is higher (aka lower index) than team 1, swap places
+                    if (seeds.Keys.ToList().IndexOf(series.Spots.Item2.Team!) < seeds.Keys.ToList().IndexOf(series.Spots.Item1.Team!)) // if Team 2 initial rank is higher (aka lower index) than team 1, swap places
                     {
                         series.Spots = (series.Spots.Item2, series.Spots.Item1);
                     }
@@ -94,7 +91,7 @@ public partial class Tournament
                     if (series.Spots.Item2.Source == 'r' && remainingTeams.Count > series.Spots.Item2.Seed - 1) series.Spots.Item2.Team = remainingTeams.ElementAt(series.Spots.Item2.Seed - 1).Value;
                 }
 
-                var winners = round.Series.Where(s => s.Winner is not null).Select(s => s.Winner);
+                var winners = round.Series.Where(s => s.Winner != null).Select(s => s.Winner);
                 remainingTeams = remainingTeams.Where(t => winners.Any(w => w?.ID == t.Value?.ID)).ToDictionary(t => t.Key, t => t.Value);
             }
         }
