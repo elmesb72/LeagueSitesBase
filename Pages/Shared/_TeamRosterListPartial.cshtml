@@ -1,0 +1,64 @@
+@model RosterPartialModel
+        <ul class="team-roster-list">
+@if (Model.Invitations.Count == 0) {
+            <li class="team-roster-invitation">
+                <div class="team-roster-invitation-player-info">
+                    (none)
+                </div>
+            </li>
+}
+@foreach(var i in Model.Invitations) {
+            <li class="team-roster-invitation">
+    @if(i.Player != null) {
+        @if(!String.IsNullOrEmpty(i.Player.Number)) {
+                <div class="player-number">@i.Player.Number</div>
+        }
+                <div class="player-name">
+                    <a href="/Player/@i.Player.ShortCode">@i.Player.Name</a>
+        @if(Model.Permissions.Any(p => new List<String>() { "Scorer", "Manager", "Webmaster" }.Contains(p))) {
+                    <a title="Edit Invitation" href="/Invitation/@i.ID"><i class="fas fa-user-edit"></i></a>
+        }
+                </div>
+        
+    }
+    else {
+        @if(i.User != null) {
+                <div class="player-links">
+                    @i.User.UserLogins.First(ul => ul.IsPrimary).Name
+            @if(Model.Permissions.Any(p => new List<String>() { "Scorer", "Manager", "Webmaster" }.Contains(p))) {
+                    <a title="Edit Invitation" href="/Invitation/@i.ID"><i class="fas fa-user-edit"></i></a>
+            }
+                </div>
+        }
+        else {
+                <div>
+                    Invited user: @i.InvitationEmails.Select(ie => ie.Email).First()
+            @if(Model.Permissions.Any(p => new List<String>() { "Scorer", "Manager", "Webmaster" }.Contains(p))) {
+                    <a title="Edit Invitation" href="/Invitation/@i.ID"><i class="fas fa-user-edit"></i></a>
+            }
+                </div>
+        }
+    }
+                <div class="invitation-status">
+    @if(i.User != null && i.User.UserRoles.Any(ir => ir.Role?.Name == "Webmaster")) {
+                    <div><i title="Webmaster" class="fas fa-tools"></i></div>
+    }
+    @if(i.User != null && i.User.UserRoles.Any(ir => ir.Role?.Name == "Executive")) {
+                    <div><i title="League Executive" class="fas fa-user-tie"></i></div>
+    }
+    @if(i.InvitationRoles.Any(ir => ir.Role?.Name == "Manager")) {
+                    <div><i title="Manager" class="fas fa-users"></i></div>
+    }
+    @if(i.InvitationRoles.Any(ir => ir.Role?.Name == "Scorer")) {
+                    <div><i title="Scorer" class="fas fa-clipboard-list"></i></div>
+    }
+    @if(i.User != null && Model.Permissions.Any(p => p == "Webmaster")) {
+                    <div><i title="Registered User" class="fas fa-user-check"></i></div>
+    }
+    @if(i.User == null && i.Player != null && i.InvitationEmails.Count > 0 && Model.Permissions.Any(p => p == "Webmaster")) {
+                    <div><i title="Invited user" class="fas fa-envelope"></i></div>
+    }
+                </div>
+            </li>
+}
+        </ul>

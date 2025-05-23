@@ -43,11 +43,11 @@
     }
                 </td>
                 <td>
-    @if (year.RegularSeasonIsComplete())
+    @if (year != null && year.RegularSeasonIsComplete())
     {
-                    <a href="/Team/@year.RegularSeasonWinner.Abbreviation/@year.CalendarYear">@year.RegularSeasonWinner.FullName @year.RegularSeasonWinnerResults.ToString()</a>
+                    <a href="/Team/@year.RegularSeasonWinner?.Abbreviation/@year.CalendarYear">@year.RegularSeasonWinner?.FullName @year.RegularSeasonWinnerResults?.ToString()</a>
     }
-    else if (!String.IsNullOrEmpty(year.ExceptionYearDescription))
+    else if (year != null && !String.IsNullOrEmpty(year.ExceptionYearDescription))
     {
                     <span>&nbsp;</span>
     }

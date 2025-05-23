@@ -54,7 +54,7 @@ public class Year
 
     public bool RegularSeasonIsComplete()
     {
-        return RegularSeason != null && RegularSeason.Games.Any() && RegularSeason.Games.All(g => g.Status.Name != "Upcoming");
+        return RegularSeason != null && RegularSeason.Games.Any() && RegularSeason.Games.All(g => g.Status?.Name != "Upcoming");
     }
 
     public bool PlayoffsAreComplete()

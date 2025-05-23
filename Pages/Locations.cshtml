@@ -22,15 +22,15 @@
         }
             <div class="subsection location-games">
         @foreach (var diamond in Model.Locations.Where(p => p.City == city.First().City && p.FormalName == location.First().FormalName)) {
-            var recentGames = diamond.Games.Where(g => g.Status.Name == "Played").OrderBy(g => Math.Abs(g.Date.Subtract(DateTime.Now).TotalDays)).Take(5);
-            var upcomingGames = diamond.Games.Where(g => g.Status.Name != "Played" && g.Date.Date >= DateTime.Today.Date).OrderBy(g => Math.Abs(g.Date.Subtract(DateTime.Now).TotalDays)).Take(5);
+            var recentGames = diamond.Games.Where(g => g.Status?.Name == "Played").OrderBy(g => Math.Abs(g.Date.Subtract(DateTime.Now).TotalDays)).Take(5);
+            var upcomingGames = diamond.Games.Where(g => g.Status?.Name != "Played" && g.Date.Date >= DateTime.Today.Date).OrderBy(g => Math.Abs(g.Date.Subtract(DateTime.Now).TotalDays)).Take(5);
             <h2 id="@(diamond.Name)">@diamond.Name</h2>
             @if(recentGames.Count() > 0 || upcomingGames.Count() > 0) {
                 @if(recentGames.Count() > 0) {
                 <p class="location-diamond-subtitle">Recent Games</p>
                 <ul class="location-games-list">
                     @foreach (var game in recentGames) {
-                    <li>@game.Date.ToString("MMM dd, yyyy, h:mm tt"): @game.VisitingTeam.FullName (@game.ScoreVisitor) @@ @game.HostTeam.FullName (@game.ScoreHost)</li>
+                    <li>@game.Date.ToString("MMM dd, yyyy, h:mm tt"): @game.VisitingTeam?.FullName (@game.ScoreVisitor) @@ @game.HostTeam?.FullName (@game.ScoreHost)</li>
                     }
                 <br />
                 </ul>
@@ -39,7 +39,7 @@
                 <p class="location-diamond-subtitle">Upcoming Games</p>
                 <ul class="location-games-list">
                     @foreach (var game in upcomingGames) {
-                    <li>@game.Date.ToString("MMM dd, yyyy, h:mm tt"): @game.VisitingTeam.FullName @@ @game.HostTeam.FullName</li>
+                    <li>@game.Date.ToString("MMM dd, yyyy, h:mm tt"): @game.VisitingTeam?.FullName @@ @game.HostTeam?.FullName</li>
                     }
                 </ul>
                 <br />
