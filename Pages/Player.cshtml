@@ -5,6 +5,7 @@
     var siteName = config["Site:Name"] ?? string.Empty;
     var shortName = config["Site:ShortName"] ?? string.Join(string.Empty, siteName.Split(' ').Select(w => w[0]));
     ViewData["Title"] = $"{shortName} » {Model.Player!.Name}";
+    // TODO - Make sport-generic instead of baseball-specific
 }
 <div class="row player-row">
     <div class="section player-info">
