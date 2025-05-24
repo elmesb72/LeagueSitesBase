@@ -1,0 +1,179 @@
+@model GameModel
+<form name="EditGameForm" method="post">
+<input type="hidden" id="game-id" name="Game.ID" value="@(Model.Game!.ID)" />
+
+<div class="row game-edit-details-row">
+    <div class="section">
+        THIS PAGE IS IN PREVIEW
+    </div>
+    <div class="section game-edit-details-section">
+        <h2>
+            <div>Game Details</div>
+@if(Model.Permissions.Any(p => new List<String>() { "Scorer", "Manager", "Executive", "Webmaster" }.Contains(p)) && Model.Game.Status?.Name != "Deleted") {
+    @if(Model.Game.Status?.Name != "Cancelled") {
+            <a href="#"><i title="Cancel" class="fa-solid fa-ban header-icon"></i></a>
+    }
+    else {
+            <a href="#"><i title="Play" class="fa-solid fa-caret-right header-icon"></i></a>
+    }
+}
+@if(Model.Permissions.Any(p => new List<String>() { "Webmaster" }.Contains(p))) {
+    @if(Model.Game.Status?.Name != "Deleted") {
+            <a href="#"><i title="Delete" class="fas fa-trash header-icon"></i></a>
+    }
+    else {
+            <a href="#"><i title="Restore" class="fas fa-trash-arrow-up header-icon"></i></a>
+    }
+}
+        </h2>
+        <div class="game-season">
+            @Model.Game.Season?.Year @Model.Game.Season?.Subseason
+        </div>
+        <div class="game-edit-matchup">
+            @Html.DropDownListFor(
+                m => m.Game!.VisitingTeamID,
+                new SelectList(
+                    Model.DBContext.Teams.Where(t => t.Active).OrderBy(x => x.Abbreviation),
+                    "ID",
+                    "FullName",
+                    Model.Game.VisitingTeamID
+                ),
+                Model.Game.Status?.Name != "Upcoming" ? new { @class = "form-control", required="true", disabled="disabled" } : new {}
+            ) 
+            @@ 
+            @Html.DropDownListFor(
+                m => m.Game!.HostTeamID,
+                new SelectList(
+                    Model.DBContext.Teams.Where(t => t.Active).OrderBy(x => x.Abbreviation),
+                    "ID",
+                    "FullName",
+                    Model.Game.HostTeamID
+                ),
+                Model.Game.Status?.Name != "Upcoming" ? new { @class = "form-control", required="true", disabled="disabled" } : new {}
+            )
+        </div>
+        <div class="game-edit-time-and-place">
+            @Html.TextBoxFor(m => m.Game!.Date, "{0:yyyy-MM-dd h:mm tt}", Model.Game.Status?.Name != "Upcoming" ? new { @class = "form-control", required="true", disabled="disabled" } : new {})
+            @@
+            @Html.DropDownListFor(
+                m => m.Game!.LocationID,
+                new SelectList(
+                    Model.DBContext.Locations.Where(t => t.Active).OrderBy(x => x.Name),
+                    "ID",
+                    "Name",
+                    Model.Game.LocationID
+                ),
+                Model.Game.Status?.Name != "Upcoming" ? new { @class = "form-control", required="true", disabled="disabled" } : new {}
+            )
+        </div>
+        <div>
+            <br />
+            <input type="@(Model.Game.Status?.Name == "Upcoming" ? "submit" : "hidden")" name="UpdateDetails" value="Update" />
+            <input type="@(Model.Game.Status?.Name == "Played" ? "button" : "hidden")" value="Update Score" />
+            <input type="@(Model.Game.Status?.Name == "Upcoming" ? "button" : "hidden")" value="Postpone" />
+            <input type="@(Model.Game.Status?.Name == "Postponed" ? "button" : "hidden")" value="Reschedule" />
+            <input type="@(Model.Game.Status?.Name == "Upcoming" ? "button" : "hidden")" value="Forfeit" />
+        </div>
+    </div>
+    <div class="section linescore-section">
+        <h2>Line Score</h2>
+        <table>
+            <tr>
+                <th>Team</th>
+                <th>1</th>
+                <th>2</th>
+                <th>3</th>
+                <th>4</th>
+                <th>5</th>
+                <th>6</th>
+                <th>7</th>
+                <th>R</th>
+                <th>H</th>
+                <th>E</th>
+            </tr>
+            <tr>
+                <td><a href="/Team/@(Model.Game.HostTeam?.Abbreviation)"><partial name="_TeamLogoSmall" model="Model.Game.HostTeam" /> @Model.Game.HostTeam?.FullName</a></td>
+                <td><input type="number" min="0" id="runs-host-1" /></td>
+                <td><input type="number" min="0" id="runs-host-2" /></td>
+                <td><input type="number" min="0" id="runs-host-3" /></td>
+                <td><input type="number" min="0" id="runs-host-4" /></td>
+                <td><input type="number" min="0" id="runs-host-5" /></td>
+                <td><input type="number" min="0" id="runs-host-6" /></td>
+                <td><input type="number" min="0" id="runs-host-7" /></td>
+                <td class="bold-border"><input type="number" min="0" id="runs-host-total" value="@Model.Game.ScoreHost" /></td>
+                <td><input type="number" min="0" id="hits-host-total" /></td>
+                <td><input type="number" min="0" id="errors-host-total" /></td>
+            </tr>
+            <tr>
+                <td><a href="/Team/@(Model.Game.VisitingTeam?.Abbreviation)"><partial name="_TeamLogoSmall" model="Model.Game.VisitingTeam" />@Model.Game.VisitingTeam?.FullName</a></td>
+                <td><input type="number" min="0" id="runs-visitor-1" /></td>
+                <td><input type="number" min="0" id="runs-visitor-2" /></td>
+                <td><input type="number" min="0" id="runs-visitor-3" /></td>
+                <td><input type="number" min="0" id="runs-visitor-4" /></td>
+                <td><input type="number" min="0" id="runs-visitor-5" /></td>
+                <td><input type="number" min="0" id="runs-visitor-6" /></td>
+                <td><input type="number" min="0" id="runs-visitor-7" /></td>
+                <td class="bold-border"><input type="number" min="0" id="runs-visitor-total" value="@Model.Game.ScoreVisitor" /></td>
+                <td><input type="number" min="0" id="hits-visitor-total" /></td>
+                <td><input type="number" min="0" id="errors-visitor-total" /></td>
+            </tr>
+        </table>
+    </div>
+</div>
+<div class="row">
+    <div class="section boxscore-section">
+        <div class="inner-row game-edit-tabs">
+            <div class="game-edit-tab tab-active">
+                <a href="#">@Model.Game.HostTeam?.FullName</a>
+            </div>
+            <div class="game-edit-tab">
+                <a href="#">@Model.Game.VisitingTeam?.FullName</a>
+            </div>
+        </div>
+        <h2>Scorecard - @Model.Game.HostTeam?.Abbreviation</h2>
+        <div class="inner-row game-edit-boxscore">
+            <table>
+                <tr class="game-edit-player-row">
+                    <td class="game-edit-player" colspan="2">
+                        <div>
+                            <span class="player-position">LF</span>
+                            <span class="player-number">72</span>
+                            <span class="player-name player-substituted">Brandon Elmes</span>
+                            <span class="player-substitution-inning">(T5)</span>
+                        </div>
+                        <div>
+                            <span class="player-position"></span>
+                            <span class="player-number">15</span>
+                            <span class="player-name">Chris Wilson</span>
+                        </div>
+                    </td>
+                    <td class="game-edit-player-PA">                        
+                        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                            <text class="boxscore-text-small" x="3" y="16">1</text>
+                            <g class="boxscore-diamond-outline">
+                                <path id="1-outline" d="M 50 80 L 80 50 A 25 25 0 0 0 20 50 L 50 80" />
+                                <path id="1-infield" d="M 70 60 L 50 40, 30 60" />
+                            </g>
+                            <g class="boxscore-progress">
+                                <path class="boxscore-progress" id="1-x2" d="M 50 80 L 70 60, 60 50, 65 45, 55 55, 60 50, 55 45, 70 60" />
+                                <path style="display: none" class="boxscore-progress-run" id="1-run" d="M 50 80 L 70 60, 50 40, 30 60, 50 80 Z" />
+                                <text transform="rotate(45,0,0)" class="boxscore-text-small" text-anchor="middle" alignment-baseline="middle" x="80" y="-20">6-4</text>
+                            </g>
+                        </svg>
+                    </td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td class="no-border"></td>
+                </tr>
+                <tr class="game-edit-player-add-row">
+                    <td class="no-border" colspan="10"><a href="#"><i class="fas fa-user-plus"></i>Add Player</a></td>
+                </tr>
+            </table>
+        </div>
+    </div>
+</div>
+</form>

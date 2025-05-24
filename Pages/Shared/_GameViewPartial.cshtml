@@ -1,11 +1,4 @@
-@page "{id}"
-@inject IConfiguration config
 @model GameModel
-@{
-    var siteName = config["Site:Name"] ?? string.Empty;
-    var shortName = config["Site:ShortName"] ?? string.Join(string.Empty, siteName.Split(' ').Select(w => w[0]));
-    ViewData["Title"] = $"{shortName} » {Model.Game?.VisitingTeam?.Abbreviation}@{Model.Game?.HostTeam?.Abbreviation} ({Model.Game?.Date.ToString("MMM d, yyyy")})";
-}
 <div class="row game-row">
     <div class="inner-row">
         <div class="section game-team">
@@ -21,7 +14,7 @@
         Model.Game?.VisitingTeam?.Abbreviation + "-Manager", 
         Model.Game?.VisitingTeam?.Abbreviation + "-Scorer" 
         }.Contains(p))) {
-            <div class="game-edit-link"><a href="/Game/Edit/@(Model.Game?.ID)">Edit Game / Submit Score</a></div>
+            <div class="game-edit-link"><a href="/Game/@(Model.Game?.ID)/Edit">Edit Game / Submit Score</a></div>
     }
     @if (Model.Game?.Status?.Name == "Played") {
             <div class="game-matchup">@Model.Game.VisitingTeam?.Name @(Model.Game.ScoreVisitor), @Model.Game.HostTeam?.Name @(Model.Game.ScoreHost)</div>

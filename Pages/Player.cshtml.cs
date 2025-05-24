@@ -24,7 +24,7 @@ public class PlayerModel(LeagueSitesContext context) : PageModel
             .FirstOrDefaultAsync(p => p.ShortCode == code);
         if (Player == null)
         {
-            return Redirect("/");
+            return Redirect("/Index");
         }
 
         if (Player.Bio != null && !string.IsNullOrEmpty(Player.Bio.ReferredBy))
