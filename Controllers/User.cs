@@ -13,6 +13,7 @@ public class APIUserPermissionsController(LeagueSitesContext context) : Controll
     {
         var permissions = new Dictionary<string, bool>()
             {
+                { "Authenticated", false },
                 { "Webmaster", false },
                 { "Executive", false },
                 { "Manager", false },
@@ -20,6 +21,8 @@ public class APIUserPermissionsController(LeagueSitesContext context) : Controll
             };
         if (User.Identity is not null && User.Identity.IsAuthenticated)
         {
+            permissions["Authenticated"] = true;
+            
             var uid = Convert.ToInt64(User.Claims.First(c => c.Type == "UserID").Value);
             var user = await dbContext.Users
                 .Include(u => u.Invitations)
