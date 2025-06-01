@@ -1,0 +1,15 @@
+@page "{id:int?}"
+@inject IConfiguration config
+@model NewsModel
+@{
+    var siteName = config["Site:Name"] ?? string.Empty;
+    var shortName = config["Site:ShortName"] ?? string.Join(string.Empty, siteName.Split(' ').Select(w => w[0]));
+    ViewData["Title"] = $"{shortName} » News";
+}
+<div class="row">
+    <div class="section">
+        <div class="subsection">
+            <p>This is a placeholder page.</p>
+        </div>
+    </div>
+</div>
