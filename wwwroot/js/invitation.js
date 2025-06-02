@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     var team = $('#TeamID').val();
     getTeamPlayersDictionary(team);
-    getUserPermissionsDictionary(team)
+    getUserPermissionsDictionary(team);
 }, false);
 
 function updateNumber(number) {
@@ -55,7 +55,7 @@ function updateTeam(id) {
     }
     var team = $('#TeamID').val();
     getTeamPlayersDictionary(team);
-    getUserPermissionsDictionary(team)
+    getUserPermissionsDictionary(team);
 }
 
 function getTeamPlayersDictionary(teamID) {
