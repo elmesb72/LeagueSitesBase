@@ -8,7 +8,7 @@
 }
 <div class="row">
     <div class="section invitation">
-        <h1>@(Model.Form!.TeamID == -1 ? "New" : "Edit") Invitation</h1>
+        <h1>@(Model.Form!.IsNewInvitation ? "New" : "Edit") Invitation</h1>
         <form method="post" id="form" class="invitation-form">
             <input type="hidden" id="PlayerExists" asp-for="Form!.PlayerExists" />
             <input type="hidden" id="UserExists" asp-for="Form!.UserExists" />

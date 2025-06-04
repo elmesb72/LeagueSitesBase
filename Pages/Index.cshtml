@@ -32,19 +32,13 @@ else {
         </div>
     </div>
     <div class="section home-main-middle home-middle">
-        <h1>News and Game Recaps</h1>
+        <h1>News and Game Recaps@(Html.Raw(Model.Permissions.Allow("Post") ? "<a class=\"home-add-news\" href=\"/News\"><i title=\"Add\" class=\"fa-regular fa-square-plus header-icon\"></i></a>" : string.Empty))</h1>
 @if (Model.News.Count() == 0) {
-    var news = new News() {
-        Title = "Placeholder Post",
-        Contents = $"<p>Welcome to the news section for the {siteName} website. This section will show news posts made within the last {config["Site:Home:NewsMaxAgeDays"]} days or the {config["Site:Home:NewsMinItems"]} most recent posts.</p>",
-        Date = DateTime.Now,
-        Source = string.Empty
-    };
-        <partial name="_HomepageNewsPartial" model="news" />
+        <partial name="_HomepageNewsPartial" model="News.GeneratePlaceholderPost(config)" />
 }
 else {
     @foreach (var news in Model.News) {
-        <partial name="_HomepageNewsPartial" model="news" />
+        @await Html.PartialAsync("_HomepageNewsPartial", news, new ViewDataDictionary(ViewData) { { "permissions", Model.Permissions }});
     }
 }
     </div>

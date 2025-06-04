@@ -18,4 +18,12 @@ public partial class User
     [JsonIgnore]
     public virtual ICollection<Event> Events { get; set; }
     public virtual ICollection<News> NewsPosts { get; set; }
+
+    public string Name
+    {
+        get
+        {
+            return UserLogins.FirstOrDefault(ul => ul.IsPrimary)?.Name ?? string.Empty;
+        }
+    }
 }

@@ -4,21 +4,25 @@ using Microsoft.EntityFrameworkCore;
 
 namespace LeagueSitesBase.Pages;
 
-public class IndexModel(LeagueSitesContext context) : PageModel
+public class IndexModel(LeagueSitesContext context, IConfiguration config) : PageModel
 {
     public required IEnumerable<Game> Games { get; set; }
     public required IEnumerable<News> News { get; set; }
     public required Standings Standings { get; set; }
+    public required PermissionsManager Permissions { get; set; }
     public bool IsPlayoffs { get; set; }
 
-    readonly LeagueSitesContext _context = context;
+    readonly LeagueSitesContext dbContext = context;
+    readonly IConfiguration config = config;
 
     public async Task<IActionResult> OnGetAsync()
     {
+        Permissions = await PermissionsManager.CreateAsync(User, dbContext);
+
         var startOfWeek = DateTime.Today.AddDays(-7);
         var endOfWeek = DateTime.Today.AddDays(7);
 
-        Games = await _context.Games
+        Games = await dbContext.Games
             .Include(g => g.Season)
             .Include(g => g.HostTeam)
             .Include(g => g.VisitingTeam)
@@ -28,15 +32,29 @@ public class IndexModel(LeagueSitesContext context) : PageModel
             .OrderBy(g => g.Date)
             .ToListAsync();
 
-        News = await _context.News
+        News = await dbContext.News
+            .Include(n => n.Author)
+                .ThenInclude(u => u!.UserLogins)
             .Where(n => !n.IsDeleted && !n.IsHidden)
-            .OrderBy(n => n.Date)
+            .OrderByDescending(n => n.Date)
             .ToListAsync();
+        if (int.TryParse(config["Site:Home:NewsMaxAgeDays"], out var newsMaxAgeDays) && int.TryParse(config["Site:Home:NewsMinItems"], out var newsMinItems))
+        {
+            var recentNews = News.Where(n => DateTime.Compare(n.Date, DateTime.Now.AddDays(-newsMaxAgeDays)) >= 0).ToList();
+            if (recentNews.Count < newsMinItems)
+            {
+                News = News.Take(newsMinItems);
+            }
+            else
+            {
+                News = recentNews;
+            }
+        }
 
-        var closestSeason = await GetClosestSeasonAsync(_context);
+        var closestSeason = await GetClosestSeasonAsync(dbContext);
         if (closestSeason is not null)
         {
-            var seasonGames = await _context.Games
+            var seasonGames = await dbContext.Games
             .Include(g => g.HostTeam)
             .Include(g => g.VisitingTeam)
             .Include(g => g.Status)
@@ -45,7 +63,7 @@ public class IndexModel(LeagueSitesContext context) : PageModel
             Standings = new Standings(seasonGames);
 
 
-            var playoffsSeason = await _context.Seasons
+            var playoffsSeason = await dbContext.Seasons
                 .Include(s => s.Tournaments)
                 .Where(s => s.Year == closestSeason.Year && s.Subseason == "Playoffs")
                 .FirstOrDefaultAsync();

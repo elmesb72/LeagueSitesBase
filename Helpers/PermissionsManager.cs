@@ -6,18 +6,19 @@ public class PermissionsManager
 {
     List<PermissionsScope> SitePermissions { get; set; }
     Dictionary<Team, List<PermissionsScope>> TeamPermissions { get; set; }
-    string Username { get; set; } = string.Empty;
+    public User? User { get; private set; }
 
-    PermissionsManager(List<PermissionsScope> sitePermissions, Dictionary<Team, List<PermissionsScope>> teamPermissions, string? username = null)
+    PermissionsManager(List<PermissionsScope> sitePermissions, Dictionary<Team, List<PermissionsScope>> teamPermissions, User? user = null)
     {
         SitePermissions = sitePermissions;
         TeamPermissions = teamPermissions;
-        if (username != null) Username = username;
+        User = user;
     }
 
-    public static async Task<PermissionsManager> Create(ClaimsPrincipal user, LeagueSitesContext dbContext, List<Team>? teams = null)
+    public static readonly PermissionsManager Public = new([PermissionsScope.Public], []);
+    public static async Task<PermissionsManager> CreateAsync(ClaimsPrincipal user, LeagueSitesContext dbContext, List<Team>? teams = null)
     {
-        if (user == null || user.Identity == null || !user.Identity.IsAuthenticated) return new PermissionsManager([PermissionsScope.Public], []);
+        if (user == null || user.Identity == null || !user.Identity.IsAuthenticated) return new([PermissionsScope.Public], []);
 
         var userID = Convert.ToInt64(user.Claims.First(c => c.Type == "UserID").Value);
 
@@ -43,7 +44,7 @@ public class PermissionsManager
         var sitePermissions = getSitePermissions(siteUser);
         var teamPermissions = getTeamPermissions(siteUser, teams);
         var username = siteUser.UserLogins.First(ul => ul.IsPrimary).Name;
-        return new PermissionsManager(sitePermissions, teamPermissions, username);
+        return new PermissionsManager(sitePermissions, teamPermissions, siteUser);
     }
 
     static List<PermissionsScope> getSitePermissions(User user)
@@ -87,12 +88,19 @@ public class PermissionsManager
 
     public bool Allow(string action)
     {
-        var postPermissions = new List<PermissionsScope>() { PermissionsScope.Webmaster };
+        var postPermissions = new List<PermissionsScope>() { PermissionsScope.Executive, PermissionsScope.Webmaster };
         return action switch
         {
-            "Post" => SitePermissions.Any(p => postPermissions.Contains(p)),
+            "Post" => SitePermissions.Any(postPermissions.Contains),
             _ => false,
         };
+    }
+
+    public bool Include(List<PermissionsScope> scopes, Team? team = null)
+    {
+        if (SitePermissions.Any(scopes.Contains)) return true;
+        if (team != null && TeamPermissions[team].Any(scopes.Contains)) return true;
+        return false;
     }
 }
 

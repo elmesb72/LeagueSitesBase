@@ -1,7 +1,18 @@
 @model News
+@{
+    var permissions = (PermissionsManager?)ViewData["permissions"];
+    if (permissions == null)
+    {
+        permissions = PermissionsManager.Public;
+    }
+    var canEdit = permissions.Include([PermissionsScope.Executive, PermissionsScope.Webmaster]) || 
+        permissions.User?.Name == Model.Author?.Name;
+    var renderedDate = Model.Edited == null ? Model.Date.ToString("MMM d, yyyy") : ((DateTime)Model.Edited).ToString("MMM d, yyyy");
+}
 <div class="home-news">
-            <div class="home-news-header"><div class="home-news-title">@Model.Title</div><div class="home-news-date">@Model.Date.ToString("MMM d, yyyy")</div></div>
+            <div class="home-news-header"><div class="home-news-author">@Model.Author?.Name</div><div class="home-news-date">@Html.Raw(canEdit ? $"<a href=\"/News/{Model.ID}\">{renderedDate} <i class=\"fa-solid fa-pen-to-square\"></i></a>" : renderedDate)</div></div>
+            <div class="home-news-header"><div class="home-news-title">@Model.Title</div></div>
             <div class="home-news-post">
-                @Html.Raw(Model.Contents)
+                @Html.Raw(Model.RenderContents())
             </div>
         </div>

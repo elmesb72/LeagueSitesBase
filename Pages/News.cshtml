@@ -6,10 +6,24 @@
     var shortName = config["Site:ShortName"] ?? string.Join(string.Empty, siteName.Split(' ').Select(w => w[0]));
     ViewData["Title"] = $"{shortName} » News";
 }
+<link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.css"
+/>
+<script src="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.js"></script>
 <div class="row">
-    <div class="section">
-        <div class="subsection">
-            <p>This is a placeholder page.</p>
-        </div>
+    <div class="section news">
+        <h1>@(Model.Form!.IsNewNewsPost ? "New" : "Edit") News Post</h1>
+        <form method="post" id="form" class="invitation-form">
+            <label for="Title">Title</label><input type="text" id="Title" asp-for="Form!.Title" />
+            <textarea id="contents-markdown" asp-for="Form!.Contents"></textarea>
+            <div class="news-edit-footer"><div class="news-edit-submit"><button type="submit">@(Model.Form.IsNewNewsPost ? "Create" : "Update")</button></div><div class="news-edit-checkboxes"><label for="IsHidden">Hidden</label><input type="checkbox" asp-for="Form!.IsHidden" />&nbsp;&nbsp;&nbsp;<label for="IsDeleted">Deleted</label><input type="checkbox" asp-for="Form!.IsDeleted" /></div></div>
+        </form>
     </div>
 </div>
+<script>
+    const easymde = new EasyMDE({ 
+        element: document.getElementById('contents-markdown'),
+        toolbar: ["bold", "italic", "strikethrough", "|", "quote", "unordered-list", "ordered-list", "|", "link", "image", "|", "undo", "redo", "|", "guide"],
+    });
+</script>
