@@ -35,6 +35,9 @@ public class IndexModel(LeagueSitesContext context, IConfiguration config) : Pag
         News = await dbContext.News
             .Include(n => n.Author)
                 .ThenInclude(u => u!.UserLogins)
+            .Include(n => n.Author)
+                .ThenInclude(u => u!.Invitations)
+                    .ThenInclude(i => i.Team)
             .Where(n => !n.IsDeleted && !n.IsHidden)
             .OrderByDescending(n => n.Date)
             .ToListAsync();

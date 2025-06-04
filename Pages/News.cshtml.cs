@@ -21,7 +21,11 @@ public class NewsModel(LeagueSitesContext context) : PageModel
 
         if (id != null)
         {
-            var news = await dbContext.News.FirstOrDefaultAsync(n => n.ID == id);
+            var news = await dbContext.News
+                .Include(n => n.Author)
+                    .ThenInclude(u => u!.Invitations)
+                        .ThenInclude(i => i.Team)
+                .FirstOrDefaultAsync(n => n.ID == id);
             if (news == null)
             {
                 return RedirectToPage("/Index");

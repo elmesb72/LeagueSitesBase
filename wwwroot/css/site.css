@@ -487,6 +487,10 @@ main {
   flex: 4;
   font-style: italic;
 }
+.home-news-author object {
+  display: inline-block;
+  font-style: normal;
+}
 
 .home-news-date {
   flex: 2;
