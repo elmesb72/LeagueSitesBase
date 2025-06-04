@@ -513,6 +513,10 @@ main {
   line-height: 125%;
 }
 
+.home-news-post p {
+  margin-bottom: 16px;
+}
+
 .home-news-post h1, .home-news-post h2, .home-news-post h3, .home-news-post h4, .home-news-post h5, .home-news-post h6 {
   font-size: 16px;
   font-weight: unset;
