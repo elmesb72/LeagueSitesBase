@@ -9,11 +9,17 @@ public class NewsForm
 
     public DateTime Date { get; set; }
     public DateTime? Edited { get; set; }
-    public bool IsNewNewsPost { get; set; } = true;
+    public bool IsNewNewsPost { get; set; }
 
     public Dictionary<Invitation, Team> InvitationTeams { get; set; } = [];
 
-    public NewsForm() { }
+    public NewsForm() {}
+    public NewsForm(User u)
+    {
+        IsNewNewsPost = true;
+
+        InvitationTeams = u.Invitations.ToDictionary(i => i, i => i.Team!);
+    }
 
     public NewsForm(News n)
     {

@@ -490,6 +490,7 @@ main {
 .home-news-author object {
   display: inline-block;
   font-style: normal;
+  vertical-align: middle;
 }
 
 .home-news-date {

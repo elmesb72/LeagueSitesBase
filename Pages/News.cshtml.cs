@@ -34,7 +34,7 @@ public class NewsModel(LeagueSitesContext context) : PageModel
         }
         else
         {
-            Form = new NewsForm();
+            Form = new NewsForm(Permissions.User!);
         }
 
         return Page();
