@@ -6,6 +6,7 @@ public partial class User
         UserLogins = [];
         UserRoles = [];
         Events = [];
+        NewsPosts = [];
     }
 
     public long ID { get; set; }
@@ -16,4 +17,5 @@ public partial class User
     public virtual ICollection<UserRole> UserRoles { get; set; }
     [JsonIgnore]
     public virtual ICollection<Event> Events { get; set; }
+    public virtual ICollection<News> NewsPosts { get; set; }
 }

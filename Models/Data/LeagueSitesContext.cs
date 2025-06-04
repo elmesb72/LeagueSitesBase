@@ -271,6 +271,11 @@ public partial class LeagueSitesContext : DbContext
             entity.Property(e => e.Source).IsRequired();
 
             entity.Property(e => e.Title).IsRequired();
+
+            entity.HasOne(e => e.Author)
+                .WithMany(u => u.NewsPosts)
+                .HasForeignKey(e => e.AuthorID)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<Player>(entity =>
