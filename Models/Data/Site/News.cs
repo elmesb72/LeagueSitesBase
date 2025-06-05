@@ -19,7 +19,8 @@ public partial class News
 
     public string RenderContents()
     {
-        return Markdown.ToHtml(Contents);
+        var pipeline = new MarkdownPipelineBuilder().UseEmphasisExtras().Build();
+        return Markdown.ToHtml(Contents, pipeline);
     }
     
     public static News GeneratePlaceholderPost(IConfiguration config)
