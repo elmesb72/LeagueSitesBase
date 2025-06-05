@@ -9,6 +9,7 @@
         username = User.Identity.Name;
     }
     ViewData["Title"] = $"{shortName} » {username}";
+    var multipleTeams = Model.SiteUser?.Invitations.Count > 1;
 }
 @if (!String.IsNullOrEmpty(Model.Error)) {
 <div class="row">
@@ -38,9 +39,9 @@
             </ul>
         </div>
 }
-@foreach(var invitation in Model.SiteUser.Invitations) {
         <div class="subsection">
-            <h2>Team</h2>
+            <h2>Team@(Html.Raw(multipleTeams ? "s" : string.Empty))</h2>
+@foreach(var invitation in Model.SiteUser.Invitations) {
             <div class="user-invitation">
                 <a class="user-invitation-link" href="/Team/@(invitation.Team!.Abbreviation)">
                     <div>
@@ -71,11 +72,8 @@
                 </div>
     }
             </div>
-            <p>
-                
-                
-        </div>
 }
+        </div>
     </div>
     <div class="section user-logins">
         <h1>Authorization Providers</h1>

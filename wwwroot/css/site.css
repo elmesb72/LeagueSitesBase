@@ -737,7 +737,7 @@ main {
 
 .user-invitation-link {
   display: flex;
-  align-content: center;
+  flex: 4;
 }
 
 .user-invitation-link div {
@@ -750,6 +750,8 @@ main {
 
 .user-invitation-roles {
   line-height: 28px;
+  flex: 1;
+  text-align: right;
 }
 
 .user-logins {
