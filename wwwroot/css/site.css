@@ -470,6 +470,10 @@ main {
   margin-bottom: 8px;
 }
 
+.home-news-hidden {
+  opacity: 0.5;
+}
+
 .home-news:hover {
   background-color: var(--news-hover-background-color);
 }
@@ -516,6 +520,13 @@ main {
   padding-top: 4px;
   font-size: 15px;
   line-height: 125%;
+}
+
+.home-news-hidden-disclaimer {
+  font-style: italic;
+  margin-bottom: 16px;
+  background-color: var(--nav-background-color);
+  padding: 5px;
 }
 
 .home-news-post p {

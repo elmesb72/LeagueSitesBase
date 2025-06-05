@@ -41,6 +41,8 @@ public class IndexModel(LeagueSitesContext context, IConfiguration config) : Pag
             .Where(n => !n.IsDeleted && !n.IsHidden)
             .OrderByDescending(n => n.Date)
             .ToListAsync();
+
+        // Filter out old posts based on site config
         if (int.TryParse(config["Site:Home:NewsMaxAgeDays"], out var newsMaxAgeDays) && int.TryParse(config["Site:Home:NewsMinItems"], out var newsMinItems))
         {
             var recentNews = News.Where(n => DateTime.Compare(n.Date, DateTime.Now.AddDays(-newsMaxAgeDays)) >= 0).ToList();
@@ -52,6 +54,20 @@ public class IndexModel(LeagueSitesContext context, IConfiguration config) : Pag
             {
                 News = recentNews;
             }
+        }
+
+        // Include hidden news authored by the current user (regardless of age)
+        if (Permissions.User != null)
+        {
+            var hiddenAuthoredNews = await dbContext.News
+            .Include(n => n.Author)
+                .ThenInclude(u => u!.UserLogins)
+            .Include(n => n.Author)
+                .ThenInclude(u => u!.Invitations)
+                    .ThenInclude(i => i.Team)
+            .Where(n => n.IsHidden && n.AuthorID == Permissions.User!.ID)
+            .ToListAsync();
+            News = News.Concat(hiddenAuthoredNews).OrderByDescending(n => n.Date);
         }
 
         var closestSeason = await GetClosestSeasonAsync(dbContext);
