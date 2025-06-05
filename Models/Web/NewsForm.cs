@@ -58,6 +58,8 @@ public class NewsForm
             Title = Title,
             Contents = Contents,
             Source = string.Empty,
+            IsDeleted = IsDeleted,
+            IsHidden = IsHidden,
         };
     }
 }
