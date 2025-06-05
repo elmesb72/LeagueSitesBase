@@ -12,6 +12,7 @@ public class InvitationForm
     public bool IsExecutive { get; set; }
     public bool IsManager { get; set; }
     public bool IsScorer { get; set; }
+    public bool IsReporter { get; set; }
 
     public bool IsNewInvitation { get; set; } = true;
     public bool UserExists { get; set; }
@@ -56,6 +57,7 @@ public class InvitationForm
         {
             IsManager = i.InvitationRoles.Any(ir => ir.Role!.Name == "Manager");
             IsScorer = i.InvitationRoles.Any(ir => ir.Role!.Name == "Scorer");
+            IsReporter = i.InvitationRoles.Any(ir => ir.Role!.Name == "Reporter");
         }
     }
 
@@ -166,6 +168,21 @@ public class InvitationForm
                 i.InvitationRoles.Remove(i.InvitationRoles.First(ir => ir.RoleID == (long)Roles.Scorer));
             }
         }
+        if (IsReporter != i.InvitationRoles.Any(ir => ir.RoleID == (long)Roles.Reporter))
+        {
+            if (IsReporter)
+            {
+                i.InvitationRoles.Add(new InvitationRole()
+                {
+                    InvitationID = i.ID,
+                    RoleID = (long)Roles.Reporter,
+                });
+            }
+            else
+            {
+                i.InvitationRoles.Remove(i.InvitationRoles.First(ir => ir.RoleID == (long)Roles.Reporter));
+            }
+        }
 
         i.EmergencyContactInfo = EmergencyContactInfo;
         i.StatusID = StatusID;
@@ -211,6 +228,10 @@ public class InvitationForm
         if (IsManager)
         {
             invitation.InvitationRoles.Add(new InvitationRole() { Invitation = invitation, RoleID = (long)Roles.Manager });
+        }
+        if (IsReporter)
+        {
+            invitation.InvitationRoles.Add(new InvitationRole() { Invitation = invitation, RoleID = (long)Roles.Reporter });
         }
 
         foreach (var email in Emails.Split(','))

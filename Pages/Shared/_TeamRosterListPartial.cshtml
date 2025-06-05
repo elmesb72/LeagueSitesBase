@@ -52,6 +52,9 @@
     @if(i.InvitationRoles.Any(ir => ir.Role?.Name == "Scorer")) {
                     <div><i title="Scorer" class="fas fa-clipboard-list"></i></div>
     }
+    @if(i.InvitationRoles.Any(ir => ir.Role?.Name == "Reporter")) {
+                    <div><i title="Reporter" class="fas fa-newspaper"></i></div>
+    }
     @if(i.User != null && Model.Permissions.Any(p => p == "Webmaster")) {
                     <div><i title="Registered User" class="fas fa-user-check"></i></div>
     }

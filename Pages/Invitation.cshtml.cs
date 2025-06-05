@@ -172,6 +172,7 @@ public class InvitationModel(LeagueSitesContext context, IConfiguration config, 
             { "Executive", false },
             { "Manager", false },
             { "Scorer", false },
+            { "Reporter", false },
         };
         if (User.Identity!.IsAuthenticated)
         {
@@ -195,6 +196,7 @@ public class InvitationModel(LeagueSitesContext context, IConfiguration config, 
 
                 Permissions["Manager"] = user.Invitations.Any(i => i.InvitationRoles.Any(ir => ir.Role!.Name == "Manager"));
                 Permissions["Scorer"] = user.Invitations.Any(i => i.InvitationRoles.Any(ir => ir.Role!.Name == "Scorer"));
+                Permissions["Reporter"] = user.Invitations.Any(i => i.InvitationRoles.Any(ir => ir.Role!.Name == "Reporter"));
 
                 foreach (var i in user.Invitations)
                 {
