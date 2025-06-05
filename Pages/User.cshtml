@@ -74,6 +74,14 @@
             </div>
 }
         </div>
+@if(Model.ShowNewsRecycleBin) {
+        <div class="subsection">
+            <h2>News</h2>
+            <ul>
+                <li><a href="/RecycleBin/News">View/restore deleted News posts</a></li>
+            </ul>
+        </div>
+}
     </div>
     <div class="section user-logins">
         <h1>Authorization Providers</h1>

@@ -65,7 +65,7 @@ public class IndexModel(LeagueSitesContext context, IConfiguration config) : Pag
             .Include(n => n.Author)
                 .ThenInclude(u => u!.Invitations)
                     .ThenInclude(i => i.Team)
-            .Where(n => n.IsHidden && n.AuthorID == Permissions.User!.ID)
+            .Where(n => n.IsHidden && !n.IsDeleted && n.AuthorID == Permissions.User!.ID)
             .ToListAsync();
             News = News.Concat(hiddenAuthoredNews).OrderByDescending(n => n.Date);
         }

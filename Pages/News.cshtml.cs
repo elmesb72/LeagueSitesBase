@@ -30,6 +30,10 @@ public class NewsModel(LeagueSitesContext context) : PageModel
             {
                 return RedirectToPage("/Index");
             }
+            if (news.AuthorID != Permissions.User!.ID || !Permissions.Include([PermissionsScope.Executive, PermissionsScope.Webmaster])) // You can only edit your own posts, unless you're a league executive or webmaster.
+            {
+                return RedirectToPage("/Index");
+            }
             Form = new NewsForm(news);
         }
         else

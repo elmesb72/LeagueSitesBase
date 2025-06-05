@@ -1769,3 +1769,12 @@ input::-webkit-outer-spin-button, input::-webkit-inner-spin-button {
 input[type=number] {
     -moz-appearance:textfield; /* Firefox */
 }
+
+
+/* RECYCLE BIN */
+
+.recycle-bin-news .section {
+
+  min-width: 643px;
+  max-width: 643px;
+}

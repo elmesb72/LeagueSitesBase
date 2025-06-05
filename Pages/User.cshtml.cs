@@ -10,6 +10,7 @@ public class UserModel(LeagueSitesContext context) : PageModel
     public required string Error { get; set; }
 
     public User? SiteUser { get; set; }
+    public bool ShowNewsRecycleBin { get; set; } = false;
 
     readonly LeagueSitesContext dbContext = context;
 
@@ -29,6 +30,7 @@ public class UserModel(LeagueSitesContext context) : PageModel
         }
 
         SiteUser = await GetSiteUser(User, dbContext);
+        ShowNewsRecycleBin = await dbContext.News.CountAsync(n => n.AuthorID == SiteUser!.ID && n.IsDeleted) > 0;
 
         return Page();
     }

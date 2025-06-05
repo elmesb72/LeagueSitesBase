@@ -36,9 +36,9 @@ public class PermissionsManager
                 .ThenInclude(r => r.Role)
             .FirstOrDefaultAsync(u => u.ID == userID);
 
-        if (siteUser is default(User))
+        if (siteUser == null)
         {
-            return new PermissionsManager([PermissionsScope.Authenticated], []);
+            return new PermissionsManager([PermissionsScope.Public], []);
         }
 
         var sitePermissions = getSitePermissions(siteUser);
@@ -88,10 +88,10 @@ public class PermissionsManager
 
     public bool Allow(string action)
     {
-        var postPermissions = new List<PermissionsScope>() { PermissionsScope.Executive, PermissionsScope.Webmaster };
+        var postPermissions = new List<PermissionsScope>() { PermissionsScope.Reporter, PermissionsScope.Scorer, PermissionsScope.Manager, PermissionsScope.Executive, PermissionsScope.Webmaster };
         return action switch
         {
-            "Post" => SitePermissions.Any(postPermissions.Contains),
+            "Post" => SitePermissions.Any(postPermissions.Contains) || TeamPermissions.Any(t => t.Value.Any(postPermissions.Contains)),
             _ => false,
         };
     }
@@ -107,7 +107,7 @@ public class PermissionsManager
 public enum PermissionsScope
 {
     Public,
-    Authenticated,
+    Reporter,
     Scorer,
     Manager,
     Executive,
