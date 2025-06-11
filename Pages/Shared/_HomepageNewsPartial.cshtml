@@ -6,7 +6,7 @@
         permissions = PermissionsManager.Public;
     }
     var canEdit = permissions.Include([PermissionsScope.Executive, PermissionsScope.Webmaster]) || 
-        permissions.User?.Name == Model.Author?.Name;
+        permissions.User?.ID == Model.AuthorID;
     var renderedDate = Model.Edited == null ? Model.Date.ToString("MMM d, yyyy") : ((DateTime)Model.Edited).ToString("MMM d, yyyy");
     Team team = Model.Author?.Invitations.First(i => i.ID == Model.AuthorInvitationID)?.Team ?? new Team() { Location = "Unknown", Name = "Team", Abbreviation = "?", BackgroundColor = "FFFFFF", Color = "000000" };
 }
