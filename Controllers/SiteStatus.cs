@@ -5,8 +5,8 @@ using Microsoft.EntityFrameworkCore;
 [Route("api")]
 public class APISiteStatusController() : ControllerBase
 {
-    [HttpGet("SiteStatus")]
-    public IActionResult OnGet()
+    [HttpHead("SiteStatus")]
+    public IActionResult OnHead()
     {
         var siteStatus = new Dictionary<string, bool>()
         {
