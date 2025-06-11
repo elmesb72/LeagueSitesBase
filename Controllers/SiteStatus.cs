@@ -1,17 +1,21 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 [ApiController]
 [Route("api")]
 public class APISiteStatusController() : ControllerBase
 {
     [HttpHead("SiteStatus")]
-    public IActionResult OnHead()
+    public void OnHead()
     {
-        var siteStatus = new Dictionary<string, bool>()
+        HttpContext.Response.StatusCode = StatusCodes.Status200OK;
+    }
+
+    [HttpGet("SiteStatus")]
+    public IActionResult OnGet()
+    {
+        return new JsonResult(new Dictionary<string, bool>()
         {
             { "Online", true },
-        };
-        return new JsonResult(siteStatus);
+        });
     }
 }
