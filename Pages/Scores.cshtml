@@ -1,14 +1,40 @@
-@page "{year:int?}"
+@page "{day?}"
+@using System.Globalization
 @inject IConfiguration config
+@model ScoresModel
 @{
     var siteName = config["Site:Name"] ?? string.Empty;
     var shortName = config["Site:ShortName"] ?? string.Join(string.Empty, siteName.Split(' ').Select(w => w[0]));
     ViewData["Title"] = $"{shortName} » Scores";
+    var weekday = (int)Model.Date.DayOfWeek;
 }
 <div class="row">
-    <div class="section">
-        <div class="subsection">
-            <p>This is a placeholder page.</p>
+    <div class="section scores-date-picker">
+        <div class="scores-date-picker-month" data-date="@(Model.Date.ToString("MM/dd/yyyy"))"><span class="scores-date-picker-month-name">@Model.Date.ToString("MMM yyyy") <i class="fa-regular fa-calendar"></i></span></div>
+        <div class="scores-date-picker-week-back"><a href="/Scores/@(Model.Date.AddDays(-7).ToString("yyyy-MM-dd"))">&lt;</a></div>
+        <div class="scores-date-picker-days">
+@for (int offset = -weekday; offset < 7 - weekday; offset++) {
+    var dayOfWeek = Model.Date.AddDays(offset);
+    var games = await Model.GetGames(dayOfWeek);
+            <a href="/Scores/@dayOfWeek.ToString("yyyy-MM-dd")">
+                <div class="scores-date-picker-day@(Html.Raw(offset == 0 ? " scores-date-picker-selected-day" : string.Empty))@(Html.Raw(games.Count == 0 ? " scores-date-picker-day-no-games" : string.Empty))">
+                    <div class="scores-date-picker-weekday">@dayOfWeek.ToString("ddd")</div>
+                    <div class="scores-date-picker-day-number">@dayOfWeek.Day</div>
+                    <div class="scores-week-picker-day-games">@games.Count @(games.Count == 1 ? "game" : "games")</div>
+                </div>
+            </a>
+}
         </div>
+        <div class="scores-date-picker-week-ahead"><a href="/Scores/@(Model.Date.AddDays(7).ToString("yyyy-MM-dd"))">&gt;</a></div>
     </div>
 </div>
+<div class="row scores-games-row">
+@foreach (var game in Model.Games) {
+    <div class="section scores-game">
+        @await Html.PartialAsync("_ScoresGamePartial", game)
+    </div>
+}
+</div>
+<script src="https://cdn.jsdelivr.net/npm/vanillajs-datepicker@1.3.4/dist/js/datepicker-full.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vanillajs-datepicker@1.3.4/dist/css/datepicker.min.css">
+<script src="/js/scores-datepicker.js"></script>

@@ -1,0 +1,58 @@
+@model Game
+@if (Model.VisitingTeam is null || Model.HostTeam is null || Model.Status is null || Model.Location is null) return;
+<div class="scores-game-status">
+@if (Model.Status.Name == "Upcoming") {
+    if(DateTime.Compare(Model.Date, DateTime.Now) < 0) {
+                    <span>@Model.Date.ToString("h:mm tt") (OVERDUE/UNSCORED)</span>
+    }
+    else {
+                    <span>@Model.Date.ToString("h:mm tt")</span>
+    }
+}
+else if (Model.Status.Name == "Played") {
+                    <span>FINAL</span>
+}
+else if (Model.Status.Name == "Postponed") {
+                    <span>POSTPONED</span>
+}
+else if (Model.Status.Name == "Forfeit") {
+    var visitorForfeit = Model.ScoreVisitor == null || (long)Model.ScoreVisitor == 0;
+    var hostForfeit = Model.ScoreHost == null || (long)Model.ScoreHost == 0;
+    var forfeitTeam = visitorForfeit && hostForfeit ? "BOTH" : visitorForfeit && !hostForfeit ? Model.VisitingTeam.Abbreviation : Model.HostTeam.Abbreviation;
+                    <span>FORFEIT (@forfeitTeam)</span>
+}
+                </div>
+                <div class="scores-game-matchup">
+                    <div class="scores-game-team-info">
+                        <div class="scores-game-visitor">
+                            <div class="team-logo"><partial name="_TeamLogoSmall" model="Model.VisitingTeam" /></div>
+                            <div class="team"><a href="/Team/@(Model.VisitingTeam.Abbreviation)">@(Model.VisitingTeam.Name)</a></div>
+                            <div class="record">@(Model.Standings?[Model.VisitingTeam].ToString())</div>
+                        </div>
+                        <div class="scores-game-home">
+                            <div class="team-logo"><partial name="_TeamLogoSmall" model="Model.HostTeam" /></div>
+                            <div class="team"><a href="/Team/@(Model.HostTeam.Abbreviation)">@(Model.HostTeam.Name)</a></div>
+                            <div class="record">@(Model.Standings?[Model.HostTeam].ToString())</div>
+                        </div>
+                    </div>
+@if (Model.Status.Name == "Played") {
+                    <div class="scores-game-scoreboard-summary">
+                        <div class="scores-game-scoreboard-summary-header">
+                            <div>R</div><div>H</div><div>E</div>
+                        </div>
+                        <div class="scores-game-scoreboard-summary-visitor">
+                            <div>@Model.ScoreVisitor</div><div></div><div></div>
+                        </div>
+                        <div class="scores-game-scoreboard-summary-home">
+                            <div>@Model.ScoreHost</div><div></div><div></div>
+                        </div>
+                    </div>
+}
+                </div>
+                <div class="scores-game-location"><a href="/Locations/#@(Model.Location.Name)">@(Model.Location.Name)</a></div>
+                <!-- TODO integrate stats and game stories (recaps)
+                <div class="scores-game-links">
+                    <a href="#">Details</a>
+                    <a href="#">Story</a>
+                </div>-->
+                

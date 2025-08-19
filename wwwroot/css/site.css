@@ -10,6 +10,7 @@
   --table-border: 1px solid rgba(0, 0, 0, 1);
   --text: #050506;
   --text-soft: #A5A5A6;
+  --text-soft-contrast: #858584;
   --h1: #886D47;
   --h1-border: 1px solid rgba(0, 0, 0, 0);
   --h2: #B47C45;
@@ -40,6 +41,7 @@
   --table-border: 1px solid #EEEFEA;
   --text: #EEEFEA;
   --text-soft: #5E5F5A;
+  --text-soft-contrast: #C3C3C9;
   --h1: #969C61;
   --h1-border: 1px solid #EEEFEA;
   --h2-border: 1px solid #B47C45;
@@ -1768,13 +1770,201 @@ input::-webkit-outer-spin-button, input::-webkit-inner-spin-button {
 }
 input[type=number] {
     -moz-appearance:textfield; /* Firefox */
+    appearance:textfield;
 }
 
 
 /* RECYCLE BIN */
 
-.recycle-bin-news .section {
 
+.recycle-bin-news .section {
   min-width: 643px;
   max-width: 643px;
+}
+
+
+
+/* SCORES */
+
+
+
+.scores-date-picker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-grow: 1;
+}
+
+.scores-date-picker-month {
+  padding: 6px 12px;
+  margin-right: 20px;
+  font-size: 20px;
+  cursor: pointer;
+  border: var(--game-border);
+  border-width: 3px;
+  border-radius: 4px;
+}
+
+.scores-date-picker-month-name {
+  color: var(--link);
+}
+.scores-date-picker-month-name:hover {
+  color: var(--link-hover);
+}
+
+.datepicker {
+  position: absolute;
+  border: var(--game-border);
+  border-radius: 4px;
+  z-index: 1;
+}
+.datepicker-picker {
+  background-color: var(--section-background-color) !important;
+  color: var(--text);
+}
+.datepicker-controls .button {
+  background-color: var(--section-background-color) !important;
+  color: var(--text) !important;
+}
+.datepicker-cell.next:not(.disabled), .datepicker-cell.prev:not(.disabled) {
+  color: var(--text-soft) !important;
+}
+.datepicker-cell:not(.disabled):hover {
+  background-color: var(--news-hover-background-color) !important;
+}
+.datepicker-cell.selected:not(.disabled) {
+  background-color: var(--news-hover-background-color) !important;
+}
+.datepicker-cell.focused:not(.selected) {
+  background-color: unset !important;
+}
+.datepicker-footer {
+  background-color: unset !important;
+  box-shadow: unset !important;
+}
+
+.scores-date-picker-week-back, .scores-date-picker-week-ahead {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--text-soft);
+  padding: 0 10px;
+}
+
+.scores-date-picker-days {
+  display: flex;
+  text-align: center;
+}
+
+.scores-date-picker-days a {
+  margin: 0 10px;
+}
+
+.scores-date-picker-selected-day {
+  font-weight: 700;
+}
+
+.scores-date-picker-day-no-games {
+  opacity: 0.5;
+}
+
+.scores-date-picker-weekday {
+  font-size: 12px;
+}
+
+.scores-date-picker-day-number {
+  font-size: 30px;
+  padding: 3px 0;
+}
+
+.scores-week-picker-day-games {
+  font-size: 12px;
+}
+
+.scores-games-row {
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+.scores-game {
+  display: flex;
+  flex-basis: 30%;
+  margin-bottom: 20px;
+  flex-direction: column;
+  padding: 8px;
+}
+
+.scores-game-status {
+  font-size: 14px;
+  color: var(--text-soft-contrast);
+  font-weight: 700;
+  padding-bottom: 4px;
+  border-bottom: var(--game-border);
+}
+
+.scores-game-matchup {
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+}
+
+.scores-game-team-info {
+  padding-top: 20px;
+}
+
+.scores-game-visitor, .scores-game-home {
+  display: flex;
+  align-items: center;
+  height: 30px;
+}
+
+.scores-game-matchup .team-logo {
+  margin-right: 10px;
+}
+
+.scores-game-matchup .team {
+  margin-right: 4px;
+}
+
+.scores-game-matchup .record {
+  font-size: 12px;
+  color: var(--text-soft-contrast);
+  display: flex;
+  height: 18px;
+  align-items: end;
+}
+
+.scores-game-scoreboard-summary {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  align-items: end;
+}
+
+.scores-game-scoreboard-summary div {
+  display: flex;
+  height: 30px;
+}
+
+.scores-game-scoreboard-summary div > div {
+  display: flex;
+  width: 20px;
+  justify-content: center;
+  align-items: center;
+}
+
+.scores-game-scoreboard-summary-header {
+  height: 20px !important;
+  align-items: start;
+}
+
+.scores-game-scoreboard-summary-header > div {
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.scores-game-location {
+  font-size: 12px;
+  margin-top: 5px;
+  padding: 5px 0 0 0;
+  border-top: var(--game-border);
 }

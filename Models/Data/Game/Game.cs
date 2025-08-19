@@ -1,4 +1,6 @@
-﻿public partial class Game
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
+public partial class Game
 {
     public Game()
     {
@@ -21,6 +23,8 @@
     public virtual Location? Location { get; set; }
     [JsonIgnore]
     public virtual Season? Season { get; set; }
+    [NotMapped, JsonIgnore]
+    public Standings? Standings { get; set; }
     [JsonIgnore]
     public virtual GameStatus? Status { get; set; }
     [JsonIgnore]

@@ -6,10 +6,7 @@
     var shortName = config["Site:ShortName"] ?? string.Join(string.Empty, siteName.Split(' ').Select(w => w[0]));
     ViewData["Title"] = $"{shortName} » News";
 }
-<link
-    rel="stylesheet"
-    href="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.css"
-/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.css" />
 <script src="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.js"></script>
 <div class="row">
     <div class="section news">

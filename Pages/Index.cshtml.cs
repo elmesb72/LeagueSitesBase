@@ -97,7 +97,7 @@ public class IndexModel(LeagueSitesContext context, IConfiguration config) : Pag
         return Page();
     }
 
-    public static async Task<Season?> GetClosestSeasonAsync(LeagueSitesContext db)
+    public static async Task<Season?> GetClosestSeasonAsync(LeagueSitesContext db, DateTime? dt = null)
     {
         var seasons = await db.Seasons.Where(s => s.Subseason == "Regular Season").ToListAsync();
         var closestSeason = seasons.FirstOrDefault(s => s.Subseason == "Regular Season");
@@ -105,9 +105,11 @@ public class IndexModel(LeagueSitesContext context, IConfiguration config) : Pag
         {
             return null;
         }
+
+        var closestToDate = dt ?? DateTime.Today;
         foreach (var s in seasons)
         {
-            if (DateTime.Today.Subtract(s.StartDate).Duration() < DateTime.Today.Subtract(closestSeason.StartDate).Duration())
+            if (closestToDate.Subtract(s.StartDate).Duration() < closestToDate.Subtract(closestSeason.StartDate).Duration())
             {
                 closestSeason = s;
             }
