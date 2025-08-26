@@ -168,8 +168,9 @@ CREATE TABLE IF NOT EXISTS "TournamentBracket" (
 	"ID"	INTEGER NOT NULL UNIQUE,
 	"Name"	TEXT NOT NULL,
 	"TournamentID"	INTEGER NOT NULL,
-	"HigherSeedSource"	TEXT NOT NULL,
+	"SeedingConfiguration"	TEXT,
 	"Format"	TEXT NOT NULL,
+	"Historical"	INTEGER NOT NULL DEFAULT 1,
 	PRIMARY KEY("ID"),
 	FOREIGN KEY("TournamentID") REFERENCES "Tournament"("ID")
 );
@@ -202,6 +203,7 @@ CREATE TABLE IF NOT EXISTS "TournamentRoundRobin" (
 	"ID"	INTEGER NOT NULL UNIQUE,
 	"Name"	TEXT NOT NULL,
 	"TournamentID"	INTEGER NOT NULL,
+	"Historical"	INTEGER NOT NULL DEFAULT 1,
 	PRIMARY KEY("ID" AUTOINCREMENT),
 	FOREIGN KEY("TournamentID") REFERENCES "Tournament"("ID")
 );

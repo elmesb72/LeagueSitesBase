@@ -26,10 +26,14 @@
     }
     else if (year.PlayoffsAreComplete())
     {
-        @if (year.PlayoffsTournament!.Brackets.Count() > 1)
+        var historicalBrackets = year.PlayoffsTournament!.Brackets.Where(b => b.Historical);
+        var historicalRoundRobins = year.PlayoffsTournament.RoundRobins.Where(r => r.Historical);
+        @if (historicalBrackets.Count() + historicalRoundRobins.Count() > 1)
         {
-            var winners = year.PlayoffsTournament.Brackets.ToDictionary(b => b.Name, b => b.GetWinner());
-            <a href="/Playoffs/@year.CalendarYear">@Html.Raw(String.Join("; ", winners.Select(w => $"{w.Key}: {w.Value.FullName}")))</a>
+            var bracketWinners = historicalBrackets.ToDictionary(b => b.Name, b => b.GetWinner());
+            var roundRobinWinners = historicalRoundRobins.ToDictionary(b => b.Name, b => b.Standings!.Keys.First());
+            var winnersString = String.Join("; ", bracketWinners.Select(w => $"{w.Key}: {w.Value.FullName}").Concat(roundRobinWinners.Select(w => $"{w.Key}: {w.Value.FullName}")));
+            <a href="/Playoffs/@year.CalendarYear">@Html.Raw(winnersString)</a>
         }
         else
         {

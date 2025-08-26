@@ -26,6 +26,9 @@ public class HistoryModel(LeagueSitesContext context, IConfiguration config) : P
                                             .ThenInclude(b => b.Rounds)
                                                 .ThenInclude(r => r.Series)
                                                     .ThenInclude(s => s.Games)
+                                    .Include(s => s.Tournaments)
+                                        .ThenInclude(t => t.RoundRobins)
+                                            .ThenInclude(r => r.Games)
                                     .ToArrayAsync();
 
         Years = [.. seasons.GroupBy(s => s.Year).Select(yg => new Year(yg.Key, [.. yg]))];
