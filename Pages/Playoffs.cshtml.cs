@@ -32,11 +32,12 @@ public class PlayoffsModel(LeagueSitesContext context) : PageModel
             return Redirect("/Index");
         }
 
+        var SeedingSeason = await dbContext.Seasons.FirstOrDefaultAsync(s => s.Year == CurrentSeason.Year && s.Subseason == "Regular Season") ?? CurrentSeason;
         Seeds = new Standings(await dbContext.Games
             .Include(g => g.HostTeam)
             .Include(g => g.VisitingTeam)
             .Include(g => g.Status)
-            .Where(g => g.SeasonID == CurrentSeason.ID)
+            .Where(g => g.SeasonID == SeedingSeason.ID)
             .ToListAsync());
 
         Playoffs = await dbContext.Seasons
