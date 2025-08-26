@@ -36,15 +36,18 @@ public class ScoresModel(LeagueSitesContext context) : PageModel
             .Include(g => g.Location)
             .Where(g => g.Date.Date == date.Date)
             .ToListAsync();
-        var currentSeason = await IndexModel.GetClosestSeasonAsync(dbContext, date);
-        var standingsToDate = new Standings(await dbContext.Games
-            .Include(g => g.Status)
-            .Include(g => g.HostTeam)
-            .Include(g => g.VisitingTeam)
-            .Where(g => g.Status!.Name == "Played" && g.Season == currentSeason && g.Date.Date <= date.Date)
-            .ToListAsync()
-        );
-        games.ForEach(g => g.Standings = standingsToDate);
+        var currentSeason = games.FirstOrDefault()?.SeasonID;
+        if (currentSeason != null)
+        {
+            var standingsToDate = new Standings(await dbContext.Games
+                .Include(g => g.Status)
+                .Include(g => g.HostTeam)
+                .Include(g => g.VisitingTeam)
+                .Where(g => g.Status!.Name == "Played" && g.SeasonID == currentSeason && g.Date.Date <= date.Date)
+                .ToListAsync()
+            );
+            games.ForEach(g => g.Standings = standingsToDate);
+        }
         return games;
     }
 }
