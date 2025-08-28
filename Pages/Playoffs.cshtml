@@ -235,17 +235,22 @@
         </div>
         }
     }
-    /*@foreach (var roundrobin in Model.Playoffs.Tournaments.First().RoundRobins)
+    @foreach (var roundrobin in Model.Playoffs.Tournaments.First().RoundRobins)
     {
+        var games = roundrobin.Games.Select(g => g.Game);
+        var sortedGameDays = games.GroupBy(g => g.Date.Date).Select(g => g.Key).OrderBy(g => g);
         <div class="round-robin-games">
             <h2>@roundrobin.Name Games</h2>
-        @foreach (var game in roundrobin.Games.Select(g => g.Game).OrderBy(g => g.Date))
+        @foreach (var gameDay in sortedGameDays)
         {
-            <p>@game.Date</p>
+            <h2 class="round-robin-game-date">@gameDay.ToString("ddd MMM dd")</h2>
+            @foreach (var game in roundrobin.Games.Where(g => g.Game.Date.Date == gameDay).Select(g => g.Game).OrderBy(g => g.Date))
+            {
             <partial name="_HomepageGamePartial" model="game" />
+            }
         }
         </div>
-    }*/
+    }
 }
 else
 {
