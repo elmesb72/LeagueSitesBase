@@ -83,6 +83,22 @@ public partial class LeagueSitesContext : DbContext
                 .OnDelete(DeleteBehavior.ClientSetNull);
         });
 
+        modelBuilder.Entity<BracketRound>(entity =>
+        {
+            entity.ToTable("BracketRound");
+
+            entity.HasIndex(e => e.ID)
+                .IsUnique();
+
+            entity.Property(e => e.ID)
+                .ValueGeneratedOnAdd();
+
+            entity.HasOne(e => e.Bracket)
+                .WithMany(t => t.Rounds)
+                .HasForeignKey(e => e.BracketID)
+                .OnDelete(DeleteBehavior.ClientSetNull);
+        });
+
         modelBuilder.Entity<Event>(entity =>
         {
             entity.ToTable("Event");
@@ -482,22 +498,6 @@ public partial class LeagueSitesContext : DbContext
                 .OnDelete(DeleteBehavior.ClientSetNull);
         });
 
-        modelBuilder.Entity<BracketRound>(entity =>
-        {
-            entity.ToTable("BracketRound");
-
-            entity.HasIndex(e => e.ID)
-                .IsUnique();
-
-            entity.Property(e => e.ID)
-                .ValueGeneratedOnAdd();
-
-            entity.HasOne(e => e.Bracket)
-                .WithMany(t => t.Rounds)
-                .HasForeignKey(e => e.BracketID)
-                .OnDelete(DeleteBehavior.ClientSetNull);
-        });
-
         modelBuilder.Entity<RoundRobinGame>(entity =>
         {
             entity.ToTable("RoundRobinGame");
@@ -544,7 +544,6 @@ public partial class LeagueSitesContext : DbContext
                 .WithMany(t => t.Games)
                 .HasForeignKey(e => e.SeriesID)
                 .OnDelete(DeleteBehavior.ClientSetNull);
-
         });
 
         modelBuilder.Entity<User>(entity =>

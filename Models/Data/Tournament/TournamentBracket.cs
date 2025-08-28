@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations.Schema;
+
 public partial class TournamentBracket
 {
     public TournamentBracket()
@@ -14,6 +16,9 @@ public partial class TournamentBracket
     
     public virtual Tournament? Tournament { get; set; }
     public ICollection<BracketRound> Rounds { get; set; }
+
+    [NotMapped]
+    public Dictionary<int, Team> Seeds { get; set; }
 
     public Team GetWinner()
     {

@@ -15,7 +15,8 @@ public partial class TournamentRoundRobin
 
     [NotMapped]
     public Standings? Standings { get; set; }
+    [NotMapped]
+    public Dictionary<int, Team> Seeds { get; set; }
     public virtual Tournament? Tournament { get; set; }
     public ICollection<RoundRobinGame> Games { get; set; }
-
 }

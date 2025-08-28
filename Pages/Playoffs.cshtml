@@ -30,37 +30,45 @@
                         <div class="tournament-series">
                             <div class="tournament-series-number">@series.Number</div>
                             <div class="tournament-series-matchup">
-                @if (series.Spots.Item1.Team != null)
+                @if (series.Spots == (null, null))
                 {
-                                <div class="tournament-series-team @(series.Winner != null && series.Winner == series.Spots.Item1.Team ? "tournament-series-winner" : "")"><a href="/Team/@(series.Spots.Item1.Team.Abbreviation)"><img src="/images/teams/@(series.Spots.Item1.Team.ID)-sm.webp" height="28"><span class="tournament-series-team-name">@(series.Spots.Item1.Team.Name)</span><sup>@(Model.Seeds?.Keys.ToList().IndexOf(series.Spots.Item1.Team)+1)</sup></a></div>
+                                <div class="tournament-series-team"><img src="/images/teams/10-sm.webp" height="28"><span class="tournament-series-team-name">TBD</span></div>
+                                <div class="tournament-series-team"><img src="/images/teams/10-sm.webp" height="28"><span class="tournament-series-team-name">TBD</span></div>
                 }
-                else if (series.Spots.Item1.Source == 'w')
+                else
                 {
+                    @if (series.Spots.Item1.Team != null)
+                    {
+                                <div class="tournament-series-team @(series.Winner != null && series.Winner == series.Spots.Item1.Team ? "tournament-series-winner" : "")"><a href="/Team/@(series.Spots.Item1.Team.Abbreviation)"><img src="/images/teams/@(series.Spots.Item1.Team.ID)-sm.webp" height="28"><span class="tournament-series-team-name">@(series.Spots.Item1.Team.Name)</span><sup>@(series?.Round?.Bracket?.Seeds.First(s => s.Value == series.Spots.Item1.Team).Key)</sup></a></div>
+                    }
+                    else if (series.Spots.Item1.Source == 'w')
+                    {
                                 <div class="tournament-series-team"><img src="/images/teams/10-sm.webp" height="28"><span class="tournament-series-team-name">Winner of @series.Spots.Item1.Seed</span></div>
-                }
-                else if (series.Spots.Item1.Source == 'l')
-                {
+                    }
+                    else if (series.Spots.Item1.Source == 'l')
+                    {
                                 <div class="tournament-series-team"><img src="/images/teams/10-sm.webp" height="28"><span class="tournament-series-team-name">Loser of @series.Spots.Item1.Seed</span></div>
-                }
-                else if (series.Spots.Item1.Source == 'r')
-                {
+                    }
+                    else if (series.Spots.Item1.Source == 'r')
+                    {
                                 <div class="tournament-series-team"><img src="/images/teams/10-sm.webp" height="28"><span class="tournament-series-team-name">#@series.Spots.Item1.Seed remaining</span></div>
-                }
-                @if (series.Spots.Item2.Team != null)
-                {
-                                <div class="tournament-series-team @(series.Winner != null && series.Winner == series.Spots.Item2.Team ? "tournament-series-winner" : "")"><a href="/Team/@(series.Spots.Item2.Team.Abbreviation)"><img src="/images/teams/@(series.Spots.Item2.Team.ID)-sm.webp" height="28"><span class="tournament-series-team-name">@(series.Spots.Item2.Team.Name)</span><sup>@(Model.Seeds?.Keys.ToList().IndexOf(series.Spots.Item2.Team)+1)</sup></a></div>
-                }
-                else if (series.Spots.Item2.Source == 'w')
-                {
+                    }
+                    @if (series.Spots.Item2.Team != null)
+                    {
+                                <div class="tournament-series-team @(series.Winner != null && series.Winner == series.Spots.Item2.Team ? "tournament-series-winner" : "")"><a href="/Team/@(series.Spots.Item2.Team.Abbreviation)"><img src="/images/teams/@(series.Spots.Item2.Team.ID)-sm.webp" height="28"><span class="tournament-series-team-name">@(series.Spots.Item2.Team.Name)</span><sup>@(series?.Round?.Bracket?.Seeds.First(s => s.Value == series.Spots.Item2.Team).Key)</sup></a></div>
+                    }
+                    else if (series.Spots.Item2.Source == 'w')
+                    {
                                 <div class="tournament-series-team"><img src="/images/teams/10-sm.webp" height="28"><span class="tournament-series-team-name">Winner of @series.Spots.Item2.Seed</span></div>
-                }
-                else if (series.Spots.Item2.Source == 'l')
-                {
+                    }
+                    else if (series.Spots.Item2.Source == 'l')
+                    {
                                 <div class="tournament-series-team"><img src="/images/teams/10-sm.webp" height="28"><span class="tournament-series-team-name">Loser of @series.Spots.Item2.Seed</span></div>
-                }
-                else if (series.Spots.Item2.Source == 'r')
-                {
+                    }
+                    else if (series.Spots.Item2.Source == 'r')
+                    {
                                 <div class="tournament-series-team"><img src="/images/teams/10-sm.webp" height="28"><span class="tournament-series-team-name">#@series.Spots.Item2.Seed remaining</span></div>
+                    }
                 }
                             </div>
                         </div>
@@ -74,8 +82,12 @@
         </div>
     @foreach (var roundrobin in Model.Playoffs.Tournaments.First().RoundRobins)
     {
+        @if (!roundrobin.Games.Any())
+        {
+            continue;
+        }
         <div class="round-robin">
-            <h2>@roundrobin.Name Standings</h2>
+            <h2>@roundrobin.Name Round Robin Standings</h2>
             <partial name="_StandingsTableFull" model="roundrobin.Standings" />
         </div>
     }
@@ -84,13 +96,13 @@
         @foreach (var series in round.Series)
         {
             var results = series.GetResults();
-            @if (series.Spots.Item1.Team == null || series.Spots.Item2.Team == null)
+            @if (series.Spots == (null, null) || series.Spots.Item1.Team == null || series.Spots.Item2.Team == null)
             {
                 continue;
             }
         <div class="tournament-items-series">
-            <h2>#@(Model.Seeds?.Keys.ToList().IndexOf(series.Spots.Item1.Team)+1) @series.Spots.Item1.Team.Name 
-                vs #@(Model.Seeds?.Keys.ToList().IndexOf(series.Spots.Item2.Team)+1) @series.Spots.Item2.Team.Name</h2>
+            <h2>#@(@series!.Round?.Bracket?.Seeds.First(s => s.Value == series.Spots.Item1.Team).Key) @series.Spots.Item1.Team.Name 
+                vs #@(@series!.Round?.Bracket?.Seeds.First(s => s.Value == series.Spots.Item2.Team).Key) @series.Spots.Item2.Team.Name</h2>
             @if (series.Winner != null)
             {
             <h3>@series.Winner.FullName win @(results.Values.First().Wins)-@(results.Values.Last().Wins)</h3>

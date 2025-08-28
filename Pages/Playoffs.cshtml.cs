@@ -8,7 +8,6 @@ public class PlayoffsModel(LeagueSitesContext context) : PageModel
 {
     public Season? CurrentSeason { get; set; }
     public Season? Playoffs { get; set; }
-    public Standings? Seeds { get; set; }
     
     readonly LeagueSitesContext dbContext = context;
 
@@ -33,12 +32,6 @@ public class PlayoffsModel(LeagueSitesContext context) : PageModel
         }
 
         var SeedingSeason = await dbContext.Seasons.FirstOrDefaultAsync(s => s.Year == CurrentSeason.Year && s.Subseason == "Regular Season") ?? CurrentSeason;
-        Seeds = new Standings(await dbContext.Games
-            .Include(g => g.HostTeam)
-            .Include(g => g.VisitingTeam)
-            .Include(g => g.Status)
-            .Where(g => g.SeasonID == SeedingSeason.ID)
-            .ToListAsync());
 
         Playoffs = await dbContext.Seasons
             .Include(s => s.Tournaments)
@@ -65,7 +58,7 @@ public class PlayoffsModel(LeagueSitesContext context) : PageModel
                 .ToListAsync();
             
             var tournament = Playoffs.Tournaments.FirstOrDefault(); // For a Season of type "Playoffs", one (or zero) tournament(s) should exist. "First()" within the above if statement works based on this.
-            tournament?.Populate(playoffGames, Seeds);
+            tournament?.Populate(playoffGames, dbContext);
         }
 
         return Page();

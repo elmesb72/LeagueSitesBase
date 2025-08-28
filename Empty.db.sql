@@ -203,6 +203,7 @@ CREATE TABLE IF NOT EXISTS "TournamentRoundRobin" (
 	"ID"	INTEGER NOT NULL UNIQUE,
 	"Name"	TEXT NOT NULL,
 	"TournamentID"	INTEGER NOT NULL,
+	"SeedingConfiguration"	TEXT,
 	"Historical"	INTEGER NOT NULL DEFAULT 1,
 	PRIMARY KEY("ID" AUTOINCREMENT),
 	FOREIGN KEY("TournamentID") REFERENCES "Tournament"("ID")

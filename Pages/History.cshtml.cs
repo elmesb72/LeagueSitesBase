@@ -36,7 +36,7 @@ public class HistoryModel(LeagueSitesContext context, IConfiguration config) : P
         {
             if (year.HasPlayoffs() && year.PlayoffsTournament != null && year.Playoffs != null && year.RegularSeasonStandings != null)
             {
-                year.PlayoffsTournament.Populate([.. year.Playoffs.Games], year.RegularSeasonStandings);
+                year.PlayoffsTournament.Populate([.. year.Playoffs.Games], dbContext);
             }
         }
 
