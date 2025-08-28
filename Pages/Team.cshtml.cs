@@ -105,7 +105,7 @@ public class TeamModel(LeagueSitesContext context) : PageModel
                     return;
                 }
                 Schedule = new Schedule() {
-                    Games = Team.Games.Where(g => g.SeasonID == currentSeason.ID && g.Status!.Name != "Deleted").OrderBy(g => g.Date).ToList(),
+                    Games = Team.Games.Where(g => g.Season!.Year == currentSeason.Year && g.Status!.Name != "Deleted").OrderBy(g => g.Date).ToList(),
                     CurrentUser = SiteUser,
                     CurrentUserPermissions = Permissions,
                     FocusTeam = Team
@@ -200,9 +200,13 @@ public class TeamModel(LeagueSitesContext context) : PageModel
             .Include(t => t.Invitations)
                 .ThenInclude(p => p.Status)
             .Include(t => t.GameHostTeam)
+                .ThenInclude(g => g.Season)
+            .Include(t => t.GameHostTeam)
                 .ThenInclude(g => g.Location)
             .Include(t => t.GameHostTeam)
                 .ThenInclude(g => g.Status)
+            .Include(t => t.GameVisitingTeam)
+                .ThenInclude(g => g.Season)
             .Include(t => t.GameVisitingTeam)
                 .ThenInclude(g => g.Location)
             .Include(t => t.GameVisitingTeam)
