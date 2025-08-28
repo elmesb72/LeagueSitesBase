@@ -29,12 +29,13 @@ public class ScoresModel(LeagueSitesContext context) : PageModel
 
     public async Task<List<Game>> GetGames(DateTime date)
     {
+        List<string> excludedStatuses = ["Cancelled", "Deleted"];
         var games = await dbContext.Games
             .Include(g => g.Status)
             .Include(g => g.HostTeam)
             .Include(g => g.VisitingTeam)
             .Include(g => g.Location)
-            .Where(g => g.Date.Date == date.Date)
+            .Where(g => g.Date.Date == date.Date && !excludedStatuses.Contains(g.Status!.Name))
             .ToListAsync();
         var currentSeason = games.FirstOrDefault()?.SeasonID;
         if (currentSeason != null)
