@@ -462,10 +462,6 @@ main {
   margin-left: auto;
 }
 
-.home-add-news {
-  cursor: pointer;
-}
-
 .home-news {
   border: var(--game-border);
   padding: 5px;
@@ -1239,6 +1235,12 @@ main {
 .schedule-section {
   width: 100%;
 }
+.schedule-section h1 {
+  display: flex;
+}
+.schedule-section h1 > a {
+  margin-left: auto;
+}
 
 .league-schedule {
   border: var(--standings-border);
@@ -1258,7 +1260,7 @@ main {
   text-align: center;
 }
 
-.league-schedule td:nth-child(2n-1), .league-schedule th:nth-child(2n-1):not([colspan]) {
+.league-schedule td:first-child, .league-schedule th:nth-child(2n-1):not([colspan]), .league-schedule-empty, .league-schedule-game-away {
   border-right: var(--standings-border);
 }
 .league-schedule th:nth-child(n-1)[colspan] {
@@ -1281,6 +1283,18 @@ main {
 .league-schedule-game a {
   font-weight: bold;
   color: var(--text-inverted) !important;
+}
+
+.league-schedule-create>a>svg.header-icon {
+  color: color-mix(in srgb, var(--text) 0%, transparent);
+}
+.league-schedule-create:hover>a>svg.header-icon {
+  color: color-mix(in srgb, var(--text) 100%, transparent);
+}
+.league-schedule-create a {
+  display: inline-block;
+  width: 100%;
+  line-height: 32px;
 }
 
 

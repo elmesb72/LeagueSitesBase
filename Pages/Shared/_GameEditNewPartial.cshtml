@@ -1,3 +1,4 @@
+@inject LeagueSitesContext dbContext
 @model GameModel
 <form name="EditGameForm" method="post">
 <input type="hidden" id="game-id" name="Game.ID" value="@(Model.Game!.ID)" />
@@ -9,21 +10,17 @@
     <div class="section game-edit-details-section">
         <h2>
             <div>Game Details</div>
-@if(Model.Permissions.Any(p => new List<String>() { "Scorer", "Manager", "Executive", "Webmaster" }.Contains(p)) && Model.Game.Status?.Name != "Deleted") {
-    @if(Model.Game.Status?.Name != "Cancelled") {
+@if(Model.Game.Status?.Name != "Cancelled") {
             <a href="#"><i title="Cancel" class="fa-solid fa-ban header-icon"></i></a>
-    }
-    else {
-            <a href="#"><i title="Play" class="fa-solid fa-caret-right header-icon"></i></a>
-    }
 }
-@if(Model.Permissions.Any(p => new List<String>() { "Webmaster" }.Contains(p))) {
-    @if(Model.Game.Status?.Name != "Deleted") {
+else {
+            <a href="#"><i title="Play" class="fa-solid fa-caret-right header-icon"></i></a>
+}
+@if(Model.Game.Status?.Name != "Deleted") {
             <a href="#"><i title="Delete" class="fas fa-trash header-icon"></i></a>
-    }
-    else {
+}
+else {
             <a href="#"><i title="Restore" class="fas fa-trash-arrow-up header-icon"></i></a>
-    }
 }
         </h2>
         <div class="game-season">
@@ -33,7 +30,7 @@
             @Html.DropDownListFor(
                 m => m.Game!.VisitingTeamID,
                 new SelectList(
-                    Model.DBContext.Teams.Where(t => t.Active).OrderBy(x => x.Abbreviation),
+                    dbContext.Teams.Where(t => t.Active).OrderBy(x => x.Abbreviation),
                     "ID",
                     "FullName",
                     Model.Game.VisitingTeamID
@@ -44,7 +41,7 @@
             @Html.DropDownListFor(
                 m => m.Game!.HostTeamID,
                 new SelectList(
-                    Model.DBContext.Teams.Where(t => t.Active).OrderBy(x => x.Abbreviation),
+                    dbContext.Teams.Where(t => t.Active).OrderBy(x => x.Abbreviation),
                     "ID",
                     "FullName",
                     Model.Game.HostTeamID
@@ -58,7 +55,7 @@
             @Html.DropDownListFor(
                 m => m.Game!.LocationID,
                 new SelectList(
-                    Model.DBContext.Locations.Where(t => t.Active).OrderBy(x => x.Name),
+                    dbContext.Locations.OrderByDescending(x => x.Active).ThenBy(x => x.Name),
                     "ID",
                     "Name",
                     Model.Game.LocationID

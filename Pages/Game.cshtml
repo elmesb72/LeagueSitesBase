@@ -1,4 +1,4 @@
-@page "{id:int}/{mode?}"
+@page "{id:int?}"
 @inject IConfiguration config
 @model GameModel
 @{
@@ -14,4 +14,8 @@ else if (Model.Mode == GameModel.PageMode.Edit) {
 }
 else if (Model.Mode == GameModel.PageMode.EditNew) {
 <partial name="_GameEditNewPartial" model="Model" />
+}
+else if (Model.Mode == GameModel.PageMode.Create) {
+    ViewData["Title"] = $"{shortName} » Create Game";
+<partial name="_GameCreatePartial" model="Model" />
 }

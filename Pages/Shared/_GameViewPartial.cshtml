@@ -6,16 +6,6 @@
             <div>@Model.Records?[Model.Game?.VisitingTeam!].ToString()</div>
         </div>
         <div class="section game-header">
-    @if (Model.Permissions.Any(p => new List<String> { 
-        "Webmaster", 
-        "Executive", 
-        Model.Game?.HostTeam?.Abbreviation + "-Manager", 
-        Model.Game?.HostTeam?.Abbreviation + "-Scorer", 
-        Model.Game?.VisitingTeam?.Abbreviation + "-Manager", 
-        Model.Game?.VisitingTeam?.Abbreviation + "-Scorer" 
-        }.Contains(p))) {
-            <div class="game-edit-link"><a href="/Game/@(Model.Game?.ID)/Edit">Edit Game / Submit Score</a></div>
-    }
     @if (Model.Game?.Status?.Name == "Played") {
             <div class="game-matchup">@Model.Game.VisitingTeam?.Name @(Model.Game.ScoreVisitor), @Model.Game.HostTeam?.Name @(Model.Game.ScoreHost)</div>
     }

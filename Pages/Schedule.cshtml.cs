@@ -10,10 +10,14 @@ public class ScheduleModel(LeagueSitesContext context) : PageModel
     public int Year { get; set; }
     public List<Game> Games { get; set; } = [];
     public List<Location?> Locations { get; set; } = [];
+    public required PermissionsManager Permissions { get; set; }
 
     readonly LeagueSitesContext dbContext = context;
 
-    public async Task<IActionResult> OnGetAsync(int? year) {
+    public async Task<IActionResult> OnGetAsync(int? year)
+    {
+        Permissions = await PermissionsManager.CreateAsync(User, dbContext);
+
         Year = year ?? DateTime.Now.Year;
 
         var seasonIDs = (await dbContext.Seasons

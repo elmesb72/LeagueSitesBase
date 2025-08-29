@@ -88,10 +88,12 @@ public class PermissionsManager
 
     public bool Allow(string action)
     {
-        var postPermissions = new List<PermissionsScope>() { PermissionsScope.Reporter, PermissionsScope.Scorer, PermissionsScope.Manager, PermissionsScope.Executive, PermissionsScope.Webmaster };
+        List<PermissionsScope> postPermissions = [PermissionsScope.Reporter, PermissionsScope.Scorer, PermissionsScope.Manager, PermissionsScope.Executive, PermissionsScope.Webmaster];
+        List<PermissionsScope> createGamePermissions = [PermissionsScope.Webmaster, PermissionsScope.Executive, PermissionsScope.Manager, PermissionsScope.Scorer];
         return action switch
         {
             "Post" => SitePermissions.Any(postPermissions.Contains) || TeamPermissions.Any(t => t.Value.Any(postPermissions.Contains)),
+            "CreateGame" => SitePermissions.Any(createGamePermissions.Contains) || TeamPermissions.Any(t => t.Value.Any(createGamePermissions.Contains)),
             _ => false,
         };
     }
@@ -99,7 +101,7 @@ public class PermissionsManager
     public bool Include(List<PermissionsScope> scopes, Team? team = null)
     {
         if (SitePermissions.Any(scopes.Contains)) return true;
-        if (team != null && TeamPermissions[team].Any(scopes.Contains)) return true;
+        if (team != null && TeamPermissions.TryGetValue(team, out List<PermissionsScope>? tp) && tp.Any(scopes.Contains)) return true;
         return false;
     }
 }

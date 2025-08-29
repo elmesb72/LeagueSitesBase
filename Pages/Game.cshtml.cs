@@ -11,32 +11,44 @@ public class GameModel(LeagueSitesContext context) : PageModel
         View,
         Edit,
         EditNew,
+        Create,
     }
-    public PageMode Mode { get; set; } = PageMode.View;
+    public PageMode Mode { get; set; }
 
     [BindProperty]
     public Game? Game { get; set; }
     public Standings? Records { get; set; }
-    public User? SiteUser { get; set; }
-    public List<string> Permissions { get; set; } = [];
+    public required PermissionsManager Permissions { get; set; }
 
-    public LeagueSitesContext DBContext { get; set; } = context;
+    readonly LeagueSitesContext dbContext = context;
 
-    public async Task<IActionResult> OnGetAsync(int id, string? mode)
+    public async Task<IActionResult> OnGetAsync(int? id, [FromQuery] string? date, [FromQuery] int? location, [FromQuery] int? seriesGame, [FromQuery] int? roundRobinGame)
     {
-        if (!string.IsNullOrEmpty(mode))
+        Permissions = await PermissionsManager.CreateAsync(User, dbContext);
+        if (id == null)
         {
-            if (Enum.TryParse(mode, out PageMode pageMode))
+            if (Permissions.Allow("CreateGame"))
             {
-                Mode = pageMode;
+                var dateIncluded = DateTime.TryParse(date, out var parsedDate);
+                Game = new Game()
+                {
+                    ID = -1,
+                    Date = dateIncluded ? parsedDate : DateTime.Today,
+                    LocationID = location ?? 0,
+                    StatusID = 1,
+                };
+                Mode = PageMode.Create;
             }
             else
             {
-                return RedirectToPage("/Game", new { id = id });
+                return RedirectToPage("/Index");
             }
         }
+        else
+        {
+            Mode = PageMode.View;
 
-        Game = await DBContext.Games
+            Game = await dbContext.Games
             .Include(g => g.Status)
             .Include(g => g.Season)
             .Include(g => g.Location)
@@ -44,14 +56,28 @@ public class GameModel(LeagueSitesContext context) : PageModel
             .Include(g => g.VisitingTeam)
             .FirstOrDefaultAsync(g => id == g.ID);
 
-        if (Game == default)
-        {
-            return RedirectToPage("/Index");
+            if (Game == null)
+            {
+                return RedirectToPage("/Index");
+            }
+            Records = await GetRecords();
+
+            if (Permissions.Include([PermissionsScope.Webmaster, PermissionsScope.Executive]) ||
+                Permissions.Include([PermissionsScope.Manager, PermissionsScope.Scorer], Game.HostTeam) ||
+                Permissions.Include([PermissionsScope.Manager, PermissionsScope.Scorer], Game.VisitingTeam))
+            {
+                Mode = PageMode.Edit;
+            }
         }
 
-        var games = await DBContext.Games
+        return Page();
+    }
+
+    public async Task<Standings> GetRecords()
+    {
+        var games = await dbContext.Games
             .Where(g => g.Status!.Name != "Deleted")
-            .Where(g => g.SeasonID == Game.SeasonID && g.Date <= Game.Date)
+            .Where(g => g.SeasonID == Game!.SeasonID && g.Date <= Game.Date)
             .Include(g => g.Status)
             .Include(g => g.HostTeam)
             .Include(g => g.VisitingTeam)
@@ -61,62 +87,56 @@ public class GameModel(LeagueSitesContext context) : PageModel
         /* If no games exist on a date equal to or before this, the above set returns empty.
             An empty set of games means no there are no teams in the following Standings calculation.
             No teams in the standings means KeyNotFound exception displaying their 0-0 records. */
-        if (!games.Any(g => g.ID == Game.ID))
+        if (!games.Any(g => g.ID == Game!.ID))
         {
-            games.Add(Game);
+            games.Add(Game!);
         }
-        Records = new Standings(games);
-
-        SiteUser = await UserModel.GetSiteUser(User, DBContext);
-        if (SiteUser != null)
-        {
-            Permissions = UserModel.GetUserPermissions(SiteUser, [Game.HostTeam, Game.VisitingTeam]);
-        }
-
-        if (Mode == PageMode.Edit && !Permissions.Any(p => new List<string>
-            {
-                "Webmaster",
-                "Executive",
-                Game.HostTeam?.Abbreviation + "-Manager",
-                Game.HostTeam?.Abbreviation + "-Scorer",
-                Game.VisitingTeam?.Abbreviation + "-Manager",
-                Game.VisitingTeam?.Abbreviation + "-Scorer",
-            }
-            .Contains(p)))
-        {
-            return RedirectToPage("/Game", new { id = id });
-        }
-        if (Mode == PageMode.EditNew && !Permissions.Any(p => new List<string>
-            {
-                "Webmaster",
-                "Executive",
-            }
-            .Contains(p)))
-        {
-            return RedirectToPage("/Game", new { id = id, mode = "Edit" });
-        }
-
-        return Page();
+        return new Standings(games);
     }
     
-    public async Task<IActionResult> OnPostAsync(int id, string? mode)
+    public async Task<IActionResult> OnPostAsync([FromQuery] int? seriesGame, [FromQuery] int? roundRobinGame)
     {
         if (Game == null)
         {
-            return Redirect("/Index");
+            return RedirectToPage("/Index");
         }
-        SiteUser = await UserModel.GetSiteUser(User, DBContext);
-        // TODO - confirm user can't access this without permissions
 
-        var status = DBContext.GameStatuses.First(gs => gs.ID == Game!.StatusID).Name;
+        Permissions = await PermissionsManager.CreateAsync(User, dbContext);
+        var siteUser = await UserModel.GetSiteUser(User, dbContext);
+        
+        var status = (await dbContext.GameStatuses.FirstAsync(gs => gs.ID == Game!.StatusID)).Name;
         if (status != "Played")
         {
             Game!.ScoreHost = null;
             Game.ScoreVisitor = null;
         }
-        DBContext.Games.Update(Game);
-        DBContext.Events.Add(Event.Log(EventType.Update, SiteUser?.ID ?? -1, "/Game/Edit/" + id, "Updated game", JsonConvert.SerializeObject(Game)));
-        await DBContext.SaveChangesAsync();
+
+        if (Game.ID == -1) // Create
+        {
+            Game.ID = 0; // EF Core will ignore 0 in the INSERT so it gets an actual incremented ID
+            if (!Permissions.Allow("CreateGame"))
+            {
+                return RedirectToPage("/Index");
+            }
+
+            await dbContext.Games.AddAsync(Game);
+            await dbContext.SaveChangesAsync();
+            await dbContext.Events.AddAsync(Event.Log(EventType.Update, siteUser?.ID ?? -1, "/Game/" + Game.ID, "Added new game", JsonConvert.SerializeObject(Game)));
+            await dbContext.SaveChangesAsync();
+        }
+        else // Update
+        {
+            if (!(Permissions.Include([PermissionsScope.Webmaster, PermissionsScope.Executive]) ||
+                Permissions.Include([PermissionsScope.Manager, PermissionsScope.Scorer], Game.HostTeam) ||
+                Permissions.Include([PermissionsScope.Manager, PermissionsScope.Scorer], Game.VisitingTeam)))
+            {
+                return RedirectToPage("/Index");
+            }
+
+            dbContext.Games.Update(Game);
+            dbContext.Events.Add(Event.Log(EventType.Update, siteUser?.ID ?? -1, "/Game/" + Game.ID, "Updated game", JsonConvert.SerializeObject(Game)));
+            await dbContext.SaveChangesAsync();
+        }
 
         /*// Email user
         await DBContext.Entry(Game).Reference(g => g.HostTeam).LoadAsync();
@@ -131,7 +151,7 @@ public class GameModel(LeagueSitesContext context) : PageModel
                 new { status, Game });
         }*/
 
-        return RedirectToPage("/Game", new { id = id });
+        return RedirectToPage("/Game", new { id = Game.ID });
     }
 
 }
