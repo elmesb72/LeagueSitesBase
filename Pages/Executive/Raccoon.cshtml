@@ -14,6 +14,6 @@
     var isPlayoffGame = g.RoundRobinGames.Any() || g.SeriesGames.Any();
         <li><a href="/Game/@g.ID">@g.Date.ToString("yyyy MMMM dd (h:mm tt)"): @g.VisitingTeam!.FullName at @g.HostTeam!.FullName in @g.Location!.City @(Html.Raw(isPlayoffGame ? " (Playoff game)" : ""))</a></li>
 }
-        🦝
+        <span style="font-size: 48px;">🦝</span>
     </div>
 </div>
