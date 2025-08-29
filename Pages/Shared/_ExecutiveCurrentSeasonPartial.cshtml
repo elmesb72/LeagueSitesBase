@@ -13,8 +13,15 @@
                 <div>Progress (@gamesScheduled games):&nbsp;</div>
                 <div class="season-progress-bar">
 @if (gamesScheduled > 0) {
+    @if (gamesPlayedPct < 1f)
+    {
                     <div style="flex: 0 0 @((100*(gamesPlayedPct)).ToString("0.0"))%; background-color: var(--h1); " title="Games played">@gamesPlayed GP</div>
                     <div style="flex: 1 0 0; color: var(--text-inverted); background-color: var(--h2);" title="Games remaining">@(gamesScheduled-gamesPlayed) GR</div>
+    }
+    else
+    {
+                    <div style="flex: 0 0 100%; background-color: var(--h1); " title="Games played">@(gamesPlayed)/@(gamesPlayed) GP</div>
+    }
 }
 else {
                     <div style="flex: 1 0 0; color: var(--text-inverted); background-color: var(--h2);" title="Games scheduled">No games scheduled</div>

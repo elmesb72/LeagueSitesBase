@@ -1,0 +1,19 @@
+@page
+@inject IConfiguration config
+@model ExecutiveDeletedGamesModel
+@{
+    var siteName = config["Site:Name"] ?? string.Empty;
+    var shortName = config["Site:ShortName"] ?? string.Join(string.Empty, siteName.Split(' ').Select(w => w[0]));
+    ViewData["Title"] = $"{shortName} » Recover Deleted Games";
+}
+<div class="row">
+    <div class="section executive-section executive-league">
+        <h1>Deleted Games (@Model.DeletedGames.Count)</h1>
+@foreach (var g in Model.DeletedGames)
+{
+    var isPlayoffGame = g.RoundRobinGames.Any() || g.SeriesGames.Any();
+        <li><a href="/Game/@g.ID">@g.Date.ToString("yyyy MMMM dd (h:mm tt)"): @g.VisitingTeam!.FullName at @g.HostTeam!.FullName in @g.Location!.City @(Html.Raw(isPlayoffGame ? " (Playoff game)" : ""))</a></li>
+}
+        🦝
+    </div>
+</div>

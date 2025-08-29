@@ -6,6 +6,8 @@ public partial class Game
     {
         BattingEvents = [];
         BattingLineupEntries = [];
+        SeriesGames = [];
+        RoundRobinGames = [];
     }
     public long ID { get; set; }
     public long SeasonID { get; set; }
@@ -33,5 +35,9 @@ public partial class Game
     public virtual ICollection<BattingEvent> BattingEvents { get; set; }
     [JsonIgnore]
     public virtual ICollection<BattingLineupEntry> BattingLineupEntries { get; set; }
+    [JsonIgnore]
+    public virtual ICollection<SeriesGame> SeriesGames { get; set; }
+    [JsonIgnore]
+    public virtual ICollection<RoundRobinGame> RoundRobinGames { get; set; }
 
 }
