@@ -101,7 +101,16 @@ public class GameModel(LeagueSitesContext context) : PageModel
             return RedirectToPage("/Index");
         }
 
-        Permissions = await PermissionsManager.CreateAsync(User, dbContext);
+        List<Team> gameTeams = [];
+        if (Game.HostTeam != null)
+        {
+            gameTeams.Add(Game.HostTeam);
+        }
+        if (Game.VisitingTeam != null)
+        {
+            gameTeams.Add(Game.VisitingTeam);
+        }
+        Permissions = await PermissionsManager.CreateAsync(User, dbContext, gameTeams);
         var siteUser = await UserModel.GetSiteUser(User, dbContext);
         
         var status = (await dbContext.GameStatuses.FirstAsync(gs => gs.ID == Game!.StatusID)).Name;

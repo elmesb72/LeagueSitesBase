@@ -58,4 +58,18 @@ public partial class Team : IEquatable<Team>
     {
         return Convert.ToInt32(ID);
     }
+
+    public static bool operator ==(Team? left, Team? right)
+    {
+        if (left is null)
+        {
+            return right is null;
+        }
+        return left.Equals(right);
+    }
+
+    public static bool operator !=(Team? left, Team? right)
+    {
+        return !(left == right);
+    }
 }

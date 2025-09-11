@@ -16,7 +16,7 @@ public class PermissionsManager
     }
 
     public static readonly PermissionsManager Public = new([PermissionsScope.Public], []);
-    public static async Task<PermissionsManager> CreateAsync(ClaimsPrincipal user, LeagueSitesContext dbContext, List<Team>? teams = null)
+    public static async Task<PermissionsManager> CreateAsync(ClaimsPrincipal? user, LeagueSitesContext dbContext, List<Team>? teams = null)
     {
         if (user == null || user.Identity == null || !user.Identity.IsAuthenticated) return new([PermissionsScope.Public], []);
 
@@ -41,13 +41,13 @@ public class PermissionsManager
             return new PermissionsManager([PermissionsScope.Public], []);
         }
 
-        var sitePermissions = getSitePermissions(siteUser);
-        var teamPermissions = getTeamPermissions(siteUser, teams);
+        var sitePermissions = GetSitePermissions(siteUser);
+        var teamPermissions = GetTeamPermissions(siteUser, teams);
         var username = siteUser.UserLogins.First(ul => ul.IsPrimary).Name;
         return new PermissionsManager(sitePermissions, teamPermissions, siteUser);
     }
 
-    static List<PermissionsScope> getSitePermissions(User user)
+    static List<PermissionsScope> GetSitePermissions(User user)
     {
         List<PermissionsScope> permissions = [];
         foreach (UserRole userRole in user.UserRoles)
@@ -60,7 +60,7 @@ public class PermissionsManager
         return permissions;
     }
 
-    static Dictionary<Team, List<PermissionsScope>> getTeamPermissions(User user, List<Team>? teams)
+    static Dictionary<Team, List<PermissionsScope>> GetTeamPermissions(User user, List<Team>? teams)
     {
         Dictionary<Team, List<PermissionsScope>> permissions = [];
         if (teams == null)
