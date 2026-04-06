@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
 
-public partial class Game
+public partial class Game : ITeamScoped
 {
     public Game()
     {
@@ -9,6 +9,9 @@ public partial class Game
         SeriesGames = [];
         RoundRobinGames = [];
     }
+
+    public IEnumerable<long> GetRelatedTeamIds() => [HostTeamID, VisitingTeamID];
+    public IEnumerable<Team?> GetRelatedTeams() => [HostTeam, VisitingTeam];
     public long ID { get; set; }
     public long SeasonID { get; set; }
     public DateTime Date { get; set; }

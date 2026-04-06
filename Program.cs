@@ -23,6 +23,10 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.LoginPath = "/Login";
     });
 
+builder.Services.AddScoped<IPermissionsService, PermissionsService>();
+builder.Services.AddScoped<ISeasonService, SeasonService>();
+builder.Services.AddLeagueSitesAuthorization();
+
 builder.Services.AddControllers().AddJsonOptions(o =>
                 o.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles);
 
@@ -58,6 +62,7 @@ app.UseStaticFiles();
 app.UseCookiePolicy();
 
 app.UseAuthentication();
+app.UseAuthorization();
 
 app.UseRouting();
 
