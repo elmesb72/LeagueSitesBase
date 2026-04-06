@@ -1,21 +1,12 @@
 using Microsoft.AspNetCore.Mvc;
 
 [ApiController]
-[Route("api")]
-public class APISiteStatusController() : ControllerBase
+[Route("api/SiteStatus")]
+public class APISiteStatusController : ControllerBase
 {
-    [HttpHead("SiteStatus")]
-    public void OnHead()
-    {
-        HttpContext.Response.StatusCode = StatusCodes.Status200OK;
-    }
+    [HttpHead]
+    public IActionResult Head() => Ok();
 
-    [HttpGet("SiteStatus")]
-    public IActionResult OnGet()
-    {
-        return new JsonResult(new Dictionary<string, bool>()
-        {
-            { "Online", true },
-        });
-    }
+    [HttpGet]
+    public IActionResult Get() => Ok(new { Online = true });
 }
