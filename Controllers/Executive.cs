@@ -11,17 +11,20 @@ public class APIExecutiveController(LeagueSitesContext dbContext) : ControllerBa
     public async Task<IActionResult> Dashboard()
     {
         var teams = await dbContext.Teams
+            .AsNoTracking()
             .Where(t => !t.Hidden)
             .OrderByDescending(t => t.Active)
             .ThenBy(t => t.Name)
             .ToListAsync();
 
         var locations = await dbContext.Locations
+            .AsNoTracking()
             .OrderByDescending(l => l.Active)
             .ThenBy(l => l.Name)
             .ToListAsync();
 
         var currentSeason = await dbContext.Seasons
+            .AsNoTracking()
             .Where(s => s.Subseason == "Regular Season" && s.Year == DateTime.Now.Year)
             .Include(s => s.Games)
                 .ThenInclude(g => g.Status)
@@ -32,6 +35,7 @@ public class APIExecutiveController(LeagueSitesContext dbContext) : ControllerBa
             .FirstOrDefaultAsync();
 
         var currentPlayoffs = await dbContext.Seasons
+            .AsNoTracking()
             .Where(s => s.Subseason == "Playoffs" && s.Year == DateTime.Now.Year)
             .Include(s => s.Tournaments)
                 .ThenInclude(t => t.Brackets)
@@ -101,6 +105,7 @@ public class APIExecutiveController(LeagueSitesContext dbContext) : ControllerBa
     public async Task<IActionResult> DeletedGames()
     {
         var games = await dbContext.Games
+            .AsNoTracking()
             .Include(g => g.HostTeam)
             .Include(g => g.VisitingTeam)
             .Include(g => g.Location)

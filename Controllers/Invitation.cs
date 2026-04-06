@@ -11,6 +11,7 @@ public class APIInvitationController(LeagueSitesContext dbContext) : ControllerB
     public async Task<IActionResult> Get([FromRoute] long id)
     {
         var invitation = await dbContext.Invitations
+            .AsNoTracking()
             .Include(i => i.Player)
             .Include(i => i.User)
                 .ThenInclude(u => u!.UserRoles)

@@ -12,11 +12,13 @@ public class APIScorecardController(LeagueSitesContext dbContext) : ControllerBa
         var hostSide = new Scorecard
         {
             Lineup = await dbContext.BattingLineupEntries
+                .AsNoTracking()
                 .Include(ble => ble.Player)
                 .Where(ble => ble.GameID == id && ble.IsHostTeam)
                 .OrderBy(ble => ble.Row)
                 .ToListAsync(),
             Events = await dbContext.BattingEvents
+                .AsNoTracking()
                 .Where(be => be.GameID == id && be.IsHostTeam)
                 .OrderBy(be => be.Index)
                 .ToListAsync()
@@ -25,10 +27,12 @@ public class APIScorecardController(LeagueSitesContext dbContext) : ControllerBa
         var visitorSide = new Scorecard
         {
             Lineup = await dbContext.BattingLineupEntries
+                .AsNoTracking()
                 .Where(ble => ble.GameID == id && !ble.IsHostTeam)
                 .OrderBy(ble => ble.Row)
                 .ToListAsync(),
             Events = await dbContext.BattingEvents
+                .AsNoTracking()
                 .Where(be => be.GameID == id && !be.IsHostTeam)
                 .OrderBy(be => be.Index)
                 .ToListAsync()

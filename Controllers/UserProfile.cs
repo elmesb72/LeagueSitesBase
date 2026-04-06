@@ -13,6 +13,7 @@ public class APIUserController(LeagueSitesContext dbContext) : ControllerBase
         var uid = Convert.ToInt64(User.Claims.First(c => c.Type == "UserID").Value);
 
         var siteUser = await dbContext.Users
+            .AsNoTracking()
             .Include(u => u.Invitations)
                 .ThenInclude(i => i.InvitationEmails)
             .Include(u => u.Invitations)
@@ -58,6 +59,7 @@ public class APIUserController(LeagueSitesContext dbContext) : ControllerBase
 
             var uid = Convert.ToInt64(User.Claims.First(c => c.Type == "UserID").Value);
             var user = await dbContext.Users
+                .AsNoTracking()
                 .Include(u => u.Invitations)
                     .ThenInclude(i => i.InvitationRoles)
                         .ThenInclude(r => r.Role)

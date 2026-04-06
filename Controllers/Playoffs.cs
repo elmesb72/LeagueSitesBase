@@ -23,6 +23,7 @@ public class APIPlayoffsController(LeagueSitesContext dbContext, ISeasonService 
             return NotFound();
 
         var playoffs = await dbContext.Seasons
+            .AsNoTracking()
             .Include(s => s.Tournaments)
                 .ThenInclude(t => t.Brackets)
                     .ThenInclude(b => b.Rounds)
@@ -40,6 +41,7 @@ public class APIPlayoffsController(LeagueSitesContext dbContext, ISeasonService 
             return NotFound();
 
         var playoffGames = await dbContext.Games
+            .AsNoTracking()
             .Include(g => g.HostTeam)
             .Include(g => g.VisitingTeam)
             .Include(g => g.Status)

@@ -21,6 +21,7 @@ public class APINewsController(
         var permissions = await permissionsService.GetAsync(User);
 
         var news = await dbContext.News
+            .AsNoTracking()
             .Include(n => n.Author)
                 .ThenInclude(u => u!.Invitations)
                     .ThenInclude(i => i.Team)
@@ -128,6 +129,7 @@ public class APINewsController(
         if (permissions.User is null) return Forbid();
 
         var deleted = await dbContext.News
+            .AsNoTracking()
             .Include(n => n.Author)
                 .ThenInclude(u => u!.UserLogins)
             .Include(n => n.Author)

@@ -11,11 +11,13 @@ public class APIScheduleController(LeagueSitesContext dbContext) : ControllerBas
         var targetYear = year ?? DateTime.Now.Year;
 
         var seasonIDs = await dbContext.Seasons
+            .AsNoTracking()
             .Where(s => s.Year == targetYear)
             .Select(s => s.ID)
             .ToListAsync();
 
         var games = await dbContext.Games
+            .AsNoTracking()
             .Where(g => g.Status!.Name != "Deleted")
             .Where(g => seasonIDs.Contains(g.SeasonID))
             .Include(g => g.Status)

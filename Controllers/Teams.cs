@@ -11,6 +11,7 @@ public class APITeamsController(LeagueSitesContext context) : ControllerBase
     public async Task<IActionResult> GetAll()
     {
         var teams = await dbContext.Teams
+            .AsNoTracking()
             .Where(t => t.Active)
             .OrderBy(t => t.Name)
             .ToListAsync();
@@ -37,6 +38,7 @@ public class APITeamsController(LeagueSitesContext context) : ControllerBase
     public async Task<IActionResult> GetPlayers([FromRoute] long id, [FromQuery] string? exclude)
     {
         var players = await dbContext.Invitations
+            .AsNoTracking()
             .Include(i => i.Status)
             .Where(i => i.Status!.Name == "Active")
             .Where(i => i.TeamID == id)

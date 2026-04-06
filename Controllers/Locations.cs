@@ -9,6 +9,7 @@ public class APILocationsController(LeagueSitesContext dbContext) : ControllerBa
     public async Task<IActionResult> GetAll()
     {
         var locations = await dbContext.Locations
+            .AsNoTracking()
             .Where(p => p.Active)
             .Include(p => p.Games)
                 .ThenInclude(g => g.Status)

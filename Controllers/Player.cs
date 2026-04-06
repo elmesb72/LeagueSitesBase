@@ -9,6 +9,7 @@ public class APIPlayerController(LeagueSitesContext dbContext) : ControllerBase
     public async Task<IActionResult> Get([FromRoute] string code)
     {
         var player = await dbContext.Players
+            .AsNoTracking()
             .Include(p => p.Invitations)
                 .ThenInclude(i => i.Team)
             .Include(p => p.Invitations)

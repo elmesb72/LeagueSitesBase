@@ -12,6 +12,7 @@ public class APIHomeController(LeagueSitesContext dbContext, IConfiguration conf
         var endOfWeek = DateTime.Today.AddDays(7);
 
         var games = await dbContext.Games
+            .AsNoTracking()
             .Include(g => g.Season)
             .Include(g => g.HostTeam)
             .Include(g => g.VisitingTeam)
@@ -33,6 +34,7 @@ public class APIHomeController(LeagueSitesContext dbContext, IConfiguration conf
         if (closestSeason is not null)
         {
             var seasonGames = await dbContext.Games
+                .AsNoTracking()
                 .Include(g => g.HostTeam)
                 .Include(g => g.VisitingTeam)
                 .Include(g => g.Status)
@@ -50,6 +52,7 @@ public class APIHomeController(LeagueSitesContext dbContext, IConfiguration conf
     async Task<List<News>> GetFilteredNews()
     {
         var allNews = await dbContext.News
+            .AsNoTracking()
             .Include(n => n.Author)
                 .ThenInclude(u => u!.UserLogins)
             .Include(n => n.Author)
@@ -77,6 +80,7 @@ public class APIHomeController(LeagueSitesContext dbContext, IConfiguration conf
         {
             var uid = Convert.ToInt64(User.Claims.First(c => c.Type == "UserID").Value);
             var hiddenAuthored = await dbContext.News
+                .AsNoTracking()
                 .Include(n => n.Author)
                     .ThenInclude(u => u!.UserLogins)
                 .Include(n => n.Author)

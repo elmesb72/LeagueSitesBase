@@ -14,6 +14,7 @@ public class APIScoresController(LeagueSitesContext dbContext) : ControllerBase
         List<string> excludedStatuses = ["Cancelled", "Deleted"];
 
         var games = await dbContext.Games
+            .AsNoTracking()
             .Include(g => g.Status)
             .Include(g => g.HostTeam)
             .Include(g => g.VisitingTeam)
@@ -26,6 +27,7 @@ public class APIScoresController(LeagueSitesContext dbContext) : ControllerBase
         if (currentSeason != null)
         {
             var standingsGames = await dbContext.Games
+                .AsNoTracking()
                 .Include(g => g.Status)
                 .Include(g => g.HostTeam)
                 .Include(g => g.VisitingTeam)
