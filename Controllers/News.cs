@@ -8,12 +8,6 @@ public class APINewsController(
     LeagueSitesContext dbContext,
     IPermissionsService permissionsService) : ControllerBase
 {
-    public record NewsUpsertDto(
-        long AuthorInvitationID,
-        string Title,
-        string Contents,
-        bool IsHidden);
-
     [Authorize(Policy = "Scope:Reporter,Scorer,Manager,Executive,Webmaster")]
     [HttpGet("{id:long}")]
     public async Task<IActionResult> Get([FromRoute] long id)
@@ -33,7 +27,7 @@ public class APINewsController(
         var canEdit = news.AuthorID == permissions.User?.ID
             || permissions.Include([PermissionsScope.Executive, PermissionsScope.Webmaster]);
 
-        return Ok(new { news, canEdit });
+        return Ok(new { news = new NewsSummaryDto(news), canEdit });
     }
 
     [Authorize(Policy = "Scope:Reporter,Scorer,Manager,Executive,Webmaster")]
@@ -139,6 +133,6 @@ public class APINewsController(
             .OrderByDescending(n => n.Date)
             .ToListAsync();
 
-        return Ok(deleted);
+        return Ok(deleted.Select(n => new NewsSummaryDto(n)));
     }
 }

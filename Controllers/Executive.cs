@@ -43,7 +43,13 @@ public class APIExecutiveController(LeagueSitesContext dbContext) : ControllerBa
                 .ThenInclude(t => t.RoundRobins)
             .FirstOrDefaultAsync();
 
-        return Ok(new { teams, locations, currentSeason, currentPlayoffs });
+        return Ok(new
+        {
+            teams = teams.Select(t => new TeamDetailDto(t)),
+            locations = locations.Select(l => new LocationDetailDto(l)),
+            currentSeason = currentSeason != null ? new SeasonSummaryDto(currentSeason) : null,
+            currentPlayoffs = currentPlayoffs != null ? new SeasonSummaryDto(currentPlayoffs) : null
+        });
     }
 
     [HttpPost("Season")]
@@ -116,6 +122,6 @@ public class APIExecutiveController(LeagueSitesContext dbContext) : ControllerBa
             .OrderByDescending(g => g.Date)
             .ToListAsync();
 
-        return Ok(games);
+        return Ok(games.Select(g => new GameSummaryDto(g)));
     }
 }

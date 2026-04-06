@@ -16,7 +16,7 @@ public class APITeamsController(LeagueSitesContext context) : ControllerBase
             .OrderBy(t => t.Name)
             .ToListAsync();
 
-        return Ok(teams);
+        return Ok(teams.Select(t => new TeamDetailDto(t)));
     }
 
     [HttpGet("{id:long}")]
@@ -29,7 +29,7 @@ public class APITeamsController(LeagueSitesContext context) : ControllerBase
         if (team is null)
             return NotFound();
 
-        return Ok(team);
+        return Ok(new TeamDetailDto(team));
     }
 
     /// Returns a dictionary of names and jersey numbers for active players on the given team.

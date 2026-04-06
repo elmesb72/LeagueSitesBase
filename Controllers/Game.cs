@@ -8,16 +8,6 @@ public class APIGameController(
     LeagueSitesContext dbContext,
     IAuthorizationService authorizationService) : ControllerBase
 {
-    public record GameUpsertDto(
-        long SeasonID,
-        DateTime Date,
-        long HostTeamID,
-        long VisitingTeamID,
-        long LocationID,
-        long StatusID,
-        long? ScoreHost,
-        long? ScoreVisitor);
-
     [HttpGet("{id:long}")]
     public async Task<IActionResult> Get([FromRoute] long id)
     {
@@ -40,7 +30,7 @@ public class APIGameController(
                 PermissionsScope.Manager, PermissionsScope.Scorer,
                 PermissionsScope.Executive, PermissionsScope.Webmaster))).Succeeded;
 
-        return Ok(new { game, canEdit });
+        return Ok(new { game = new GameDetailDto(game), canEdit });
     }
 
     // Site-level scope check via the policy provider convention
@@ -77,7 +67,7 @@ public class APIGameController(
             JsonConvert.SerializeObject(game)));
         await dbContext.SaveChangesAsync();
 
-        return CreatedAtAction(nameof(Get), new { id = game.ID }, game);
+        return CreatedAtAction(nameof(Get), new { id = game.ID }, new GameDetailDto(game));
     }
 
     [Authorize]
@@ -128,6 +118,6 @@ public class APIGameController(
 
         await dbContext.SaveChangesAsync();
 
-        return Ok(game);
+        return Ok(new GameDetailDto(game));
     }
 }

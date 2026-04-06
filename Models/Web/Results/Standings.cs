@@ -42,10 +42,4 @@ public class Standings : Dictionary<Team, TeamResultSet>
             t.Value.CalculateStreak();
         }
     }
-
-    /// <summary>
-    /// Returns a serializable representation of the standings,
-    /// since System.Text.Json can't use Team as a dictionary key.
-    /// </summary>
-    public object ToSerializable() => this.Select(s => new { team = s.Key, results = s.Value });
 }

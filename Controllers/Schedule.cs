@@ -36,6 +36,11 @@ public class APIScheduleController(LeagueSitesContext dbContext) : ControllerBas
             .OrderBy(p => p?.Name)
             .ToList();
 
-        return Ok(new { year = targetYear, games, locations });
+        return Ok(new
+        {
+            year = targetYear,
+            games = games.Select(g => new GameSummaryDto(g)),
+            locations = locations.Where(l => l != null).Select(l => new LocationSummaryDto(l!))
+        });
     }
 }

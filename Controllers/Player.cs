@@ -29,6 +29,6 @@ public class APIPlayerController(LeagueSitesContext dbContext) : ControllerBase
                 .FirstOrDefaultAsync(p => p.FirstName + " " + p.LastName == player.Bio.ReferredBy);
         }
 
-        return Ok(new { player, referredBy });
+        return Ok(new { player = new PlayerDetailDto(player), referredBy = referredBy != null ? new PlayerSummaryDto(referredBy) : null });
     }
 }

@@ -21,6 +21,6 @@ public class APILocationsController(LeagueSitesContext dbContext) : ControllerBa
             .ThenBy(p => p.Name)
             .ToListAsync();
 
-        return Ok(locations);
+        return Ok(locations.Select(l => new LocationDetailDto(l)));
     }
 }
