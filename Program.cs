@@ -2,8 +2,10 @@ global using Newtonsoft.Json;
 global using static LeagueSitesBase.Models.Extensions;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,11 +19,25 @@ if (!string.IsNullOrEmpty(connectionString))
     });
 }
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("Svelte",
+        policy =>
+        {
+            policy.WithOrigins("http://localhost:5173")
+                                .AllowAnyHeader()
+                                .AllowAnyMethod();
+        });
+});
+
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
         options.LoginPath = "/Login";
     });
+
+builder.Services.AddScoped<IPermissionsService, PermissionsService>();
+builder.Services.AddLeagueSitesAuthorization();
 
 builder.Services.AddControllers().AddJsonOptions(o =>
                 o.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles);
@@ -30,7 +46,7 @@ builder.Services.AddRazorPages();
 
 builder.Services.AddHttpClient();
 
-builder.Services.Configure<ForwardedHeadersOptions>(options => 
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
 {
     options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
 });
@@ -57,7 +73,10 @@ app.UseStaticFiles();
 
 app.UseCookiePolicy();
 
+app.UseCors("Svelte");
+
 app.UseAuthentication();
+app.UseAuthorization();
 
 app.UseRouting();
 

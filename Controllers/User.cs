@@ -3,9 +3,15 @@ using Microsoft.EntityFrameworkCore;
 
 [ApiController]
 [Route("api/User")]
-public class APIUserPermissionsController(LeagueSitesContext context) : ControllerBase
+public class APIUserController(LeagueSitesContext context) : ControllerBase
 {
     public readonly LeagueSitesContext dbContext = context;
+
+    [HttpGet]
+    public IActionResult GetUser()
+    {
+        return new JsonResult(User.Identity);
+    }
 
     /// Returns a list of permissions for the current user given a teamID
     [HttpGet("Permissions/{id}")]
