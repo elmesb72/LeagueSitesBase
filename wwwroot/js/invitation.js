@@ -59,7 +59,7 @@ function updateTeam(id) {
 }
 
 function getTeamPlayersDictionary(teamID) {
-    var url = "/api/TeamPlayers/" + teamID;
+    var url = "/api/Teams/" + teamID + "/Players";
     if ($('#PlayerNumber').val() != '') {
         url = url + "?exclude=" + $('#PlayerNumber').val();
     }
