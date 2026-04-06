@@ -46,7 +46,7 @@ public class APIHomeController(LeagueSitesContext dbContext, IConfiguration conf
                 .AnyAsync(s => s.Year == closestSeason.Year && s.Subseason == "Playoffs");
         }
 
-        return Ok(new { games, news, standings, isPlayoffs });
+        return Ok(new { games, news, standings = standings?.ToSerializable(), isPlayoffs });
     }
 
     async Task<List<News>> GetFilteredNews()

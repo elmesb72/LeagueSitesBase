@@ -38,6 +38,6 @@ public class APIScoresController(LeagueSitesContext dbContext) : ControllerBase
             standings = new Standings(standingsGames);
         }
 
-        return Ok(new { date, games, standings });
+        return Ok(new { date, games, standings = standings?.ToSerializable() });
     }
 }
