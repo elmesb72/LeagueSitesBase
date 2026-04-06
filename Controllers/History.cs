@@ -9,7 +9,6 @@ public class APIHistoryController(LeagueSitesContext dbContext, IConfiguration c
     public async Task<IActionResult> Get()
     {
         var seasons = await dbContext.Seasons
-            .AsNoTracking()
             .Include(s => s.Games)
                 .ThenInclude(g => g.HostTeam)
             .Include(s => s.Games)
