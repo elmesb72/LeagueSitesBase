@@ -41,6 +41,7 @@ public class APIHomeController(LeagueSitesContext dbContext, IConfiguration conf
                 .Where(g => g.SeasonID == closestSeason.ID)
                 .ToListAsync();
             standings = new Standings(seasonGames);
+            standings.CalculateStreaks();
 
             isPlayoffs = await dbContext.Seasons
                 .AnyAsync(s => s.Year == closestSeason.Year && s.Subseason == "Playoffs");
