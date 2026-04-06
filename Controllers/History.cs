@@ -56,7 +56,7 @@ public class APIHistoryController(LeagueSitesContext dbContext, IConfiguration c
 
         years = [.. years.OrderByDescending(y => y.CalendarYear)];
 
-        return Ok(years);
+        return Ok(years.Select(HistoryYearDto.From));
     }
 }
 
