@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 [Route("api/Locations")]
 public class APILocationsController(LeagueSitesContext dbContext) : ControllerBase
 {
+    [ResponseCache(Duration = 30)]
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {

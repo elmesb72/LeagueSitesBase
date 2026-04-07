@@ -7,6 +7,7 @@ public class APITeamsController(LeagueSitesContext context) : ControllerBase
 {
     readonly LeagueSitesContext dbContext = context;
 
+    [ResponseCache(Duration = 30)]
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
@@ -19,6 +20,7 @@ public class APITeamsController(LeagueSitesContext context) : ControllerBase
         return Ok(teams.Select(t => new TeamDetailDto(t)));
     }
 
+    [ResponseCache(Duration = 30)]
     [HttpGet("{id:long}")]
     public async Task<IActionResult> Get([FromRoute] long id)
     {
@@ -34,6 +36,7 @@ public class APITeamsController(LeagueSitesContext context) : ControllerBase
 
     /// Returns a dictionary of names and jersey numbers for active players on the given team.
     /// Optional query parameter: exclude (string) removes a player matching the provided number.
+    [ResponseCache(Duration = 30)]
     [HttpGet("{id:long}/Players")]
     public async Task<IActionResult> GetPlayers([FromRoute] long id, [FromQuery] string? exclude)
     {

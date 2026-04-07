@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 [Route("api/Standings")]
 public class APIStandingsController(LeagueSitesContext dbContext, ISeasonService seasonService) : ControllerBase
 {
+    [ResponseCache(Duration = 30)]
     [HttpGet]
     public async Task<IActionResult> Get([FromQuery] int? year)
     {

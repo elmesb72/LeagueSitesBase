@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 [Route("api/History")]
 public class APIHistoryController(LeagueSitesContext dbContext, IConfiguration config) : ControllerBase
 {
+    [ResponseCache(Duration = 30)]
     [HttpGet]
     public async Task<IActionResult> Get()
     {

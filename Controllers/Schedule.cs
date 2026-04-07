@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 [Route("api/Schedule")]
 public class APIScheduleController(LeagueSitesContext dbContext) : ControllerBase
 {
+    [ResponseCache(Duration = 30)]
     [HttpGet]
     public async Task<IActionResult> Get([FromQuery] int? year)
     {

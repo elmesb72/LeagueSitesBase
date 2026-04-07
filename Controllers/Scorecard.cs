@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 public class APIScorecardController(LeagueSitesContext dbContext) : ControllerBase
 {
     /// Returns batting events and lineup for each team given a game ID.
+    [ResponseCache(Duration = 30)]
     [HttpGet("{id:long}")]
     public async Task<IActionResult> Get([FromRoute] long id)
     {

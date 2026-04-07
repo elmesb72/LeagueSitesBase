@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 [Route("api/Scores")]
 public class APIScoresController(LeagueSitesContext dbContext) : ControllerBase
 {
+    [ResponseCache(Duration = 30)]
     [HttpGet]
     public async Task<IActionResult> Get([FromQuery] string? day)
     {

@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 [Route("api/Player")]
 public class APIPlayerController(LeagueSitesContext dbContext) : ControllerBase
 {
+    [ResponseCache(Duration = 30)]
     [HttpGet("{code}")]
     public async Task<IActionResult> Get([FromRoute] string code)
     {

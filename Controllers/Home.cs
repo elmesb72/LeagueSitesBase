@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 [Route("api/Home")]
 public class APIHomeController(LeagueSitesContext dbContext, IConfiguration config, ISeasonService seasonService) : ControllerBase
 {
+    [ResponseCache(Duration = 30)]
     [HttpGet]
     public async Task<IActionResult> Get()
     {
