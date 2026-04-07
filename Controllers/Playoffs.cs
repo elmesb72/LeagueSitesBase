@@ -23,7 +23,6 @@ public class APIPlayoffsController(LeagueSitesContext dbContext, ISeasonService 
             return NotFound();
 
         var playoffs = await dbContext.Seasons
-            .AsNoTracking()
             .Include(s => s.Tournaments)
                 .ThenInclude(t => t.Brackets)
                     .ThenInclude(b => b.Rounds)
@@ -52,6 +51,12 @@ public class APIPlayoffsController(LeagueSitesContext dbContext, ISeasonService 
         var tournament = playoffs.Tournaments.FirstOrDefault();
         tournament?.Populate(playoffGames, dbContext);
 
-        return Ok(playoffs);
+        if (tournament is null)
+            return Ok(new PlayoffsDto(new SeasonSummaryDto(playoffs), [], []));
+
+        return Ok(new PlayoffsDto(
+            new SeasonSummaryDto(playoffs),
+            tournament.Brackets.Select(BracketDto.From).ToList(),
+            tournament.RoundRobins.Select(RoundRobinDto.From).ToList()));
     }
 }
