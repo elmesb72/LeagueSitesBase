@@ -14,6 +14,7 @@ public class APIUserController(LeagueSitesContext dbContext) : ControllerBase
 
         var siteUser = await dbContext.Users
             .AsNoTracking()
+            .AsSplitQuery()
             .Include(u => u.Invitations)
                 .ThenInclude(i => i.InvitationEmails)
             .Include(u => u.Invitations)

@@ -1,3 +1,4 @@
+using Facet.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -12,12 +13,12 @@ public class APITeamsController(LeagueSitesContext context) : ControllerBase
     public async Task<IActionResult> GetAll()
     {
         var teams = await dbContext.Teams
-            .AsNoTracking()
             .Where(t => t.Active)
             .OrderBy(t => t.Name)
+            .SelectFacet<TeamDetailDto>()
             .ToListAsync();
 
-        return Ok(teams.Select(t => new TeamDetailDto(t)));
+        return Ok(teams);
     }
 
     [ResponseCache(Duration = 30)]
@@ -25,13 +26,14 @@ public class APITeamsController(LeagueSitesContext context) : ControllerBase
     public async Task<IActionResult> Get([FromRoute] long id)
     {
         var team = await dbContext.Teams
-            .AsNoTracking()
-            .FirstOrDefaultAsync(t => t.ID == id);
+            .Where(t => t.ID == id)
+            .SelectFacet<TeamDetailDto>()
+            .FirstOrDefaultAsync();
 
         if (team is null)
             return NotFound();
 
-        return Ok(new TeamDetailDto(team));
+        return Ok(team);
     }
 
     /// Returns a dictionary of names and jersey numbers for active players on the given team.

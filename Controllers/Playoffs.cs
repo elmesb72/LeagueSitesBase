@@ -24,6 +24,7 @@ public class APIPlayoffsController(LeagueSitesContext dbContext, ISeasonService 
             return NotFound();
 
         var playoffs = await dbContext.Seasons
+            .AsSplitQuery()
             .Include(s => s.Tournaments)
                 .ThenInclude(t => t.Brackets)
                     .ThenInclude(b => b.Rounds)

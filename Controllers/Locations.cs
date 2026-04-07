@@ -1,3 +1,4 @@
+using Facet.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -10,18 +11,12 @@ public class APILocationsController(LeagueSitesContext dbContext) : ControllerBa
     public async Task<IActionResult> GetAll()
     {
         var locations = await dbContext.Locations
-            .AsNoTracking()
             .Where(p => p.Active)
-            .Include(p => p.Games)
-                .ThenInclude(g => g.Status)
-            .Include(p => p.Games)
-                .ThenInclude(g => g.HostTeam)
-            .Include(p => p.Games)
-                .ThenInclude(g => g.VisitingTeam)
             .OrderBy(p => p.City)
             .ThenBy(p => p.Name)
+            .SelectFacet<LocationDetailDto>()
             .ToListAsync();
 
-        return Ok(locations.Select(l => new LocationDetailDto(l)));
+        return Ok(locations);
     }
 }
