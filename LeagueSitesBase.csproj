@@ -40,4 +40,8 @@
     </Content>
   </ItemGroup>-->
 
+  <Target Name="SetGitHooksPath" BeforeTargets="Build" Condition="Exists('.git')">
+    <Exec Command="git config core.hooksPath .githooks" />
+  </Target>
+
 </Project>
