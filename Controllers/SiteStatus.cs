@@ -37,7 +37,8 @@ public class APISiteStatusController(IWebHostEnvironment env) : ControllerBase
                 return new(true, null, []);
 
             var json = System.IO.File.ReadAllText(path);
-            var result = System.Text.Json.JsonSerializer.Deserialize<SmokeTestResult>(json);
+            var result = System.Text.Json.JsonSerializer.Deserialize<SmokeTestResult>(json,
+                new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
             if (result is null)
                 return new(true, null, []);
 
