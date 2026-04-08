@@ -10,7 +10,7 @@ public partial class TournamentBracket
     public long ID { get; set; }
     public required string Name { get; set; }
     public long TournamentID { get; set; }
-    public required string SeedingConfiguration { get; set; }
+    public string? SeedingConfiguration { get; set; }
     public required string Format { get; set; } // "Fixed", "Re-seed"
     public required bool Historical { get; set; } // if true, the winner of this bracket is shown on the league History page
     
