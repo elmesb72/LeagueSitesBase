@@ -1,3 +1,4 @@
+PRAGMA foreign_keys=OFF;
 BEGIN TRANSACTION;
 CREATE TABLE IF NOT EXISTS "Season" (
 	"ID"	INTEGER NOT NULL UNIQUE,
@@ -6,26 +7,14 @@ CREATE TABLE IF NOT EXISTS "Season" (
 	"StartDate"	TEXT NOT NULL,
 	PRIMARY KEY("ID" AUTOINCREMENT)
 );
-CREATE TABLE IF NOT EXISTS "News" (
-	"ID"	INTEGER NOT NULL UNIQUE,
-	"AuthorID"	INTEGER NOT NULL,
-	"AuthorInvitationID"	INTEGER NOT NULL,
-	"Date"	TEXT NOT NULL,
-	"Edited"	TEXT,
-	"Title"	TEXT NOT NULL,
-	"Contents"	TEXT NOT NULL,
-	"Source"	TEXT NOT NULL,
-	"IsDeleted"	INTEGER NOT NULL DEFAULT 0,
-	"IsHidden"	INTEGER NOT NULL DEFAULT 0,
-	PRIMARY KEY("ID" AUTOINCREMENT),
-	FOREIGN KEY("AuthorID") REFERENCES "User"("ID")
-	FOREIGN KEY("AuthorInvitationID") REFERENCES "Invitation"("ID")
-);
 CREATE TABLE IF NOT EXISTS "UserLoginSource" (
 	"ID"	INTEGER NOT NULL UNIQUE,
 	"Source"	TEXT NOT NULL,
 	PRIMARY KEY("ID" AUTOINCREMENT)
 );
+INSERT INTO UserLoginSource VALUES(1,'Google');
+INSERT INTO UserLoginSource VALUES(2,'Microsoft');
+INSERT INTO UserLoginSource VALUES(3,'Facebook');
 CREATE TABLE IF NOT EXISTS "UserLogin" (
 	"ID"	INTEGER NOT NULL UNIQUE,
 	"UserID"	INTEGER NOT NULL,
@@ -33,10 +22,11 @@ CREATE TABLE IF NOT EXISTS "UserLogin" (
 	"Name"	TEXT NOT NULL,
 	"Email"	TEXT NOT NULL,
 	"IsPrimary"	INTEGER NOT NULL DEFAULT 1,
-	FOREIGN KEY("UserID") REFERENCES "User"("ID"),
 	FOREIGN KEY("LoginSourceID") REFERENCES "UserLoginSource"("ID"),
+	FOREIGN KEY("UserID") REFERENCES "User"("ID"),
 	PRIMARY KEY("ID" AUTOINCREMENT)
 );
+INSERT INTO UserLogin VALUES(1,1,1,'Dev Admin','admin@example.com',1);
 CREATE TABLE IF NOT EXISTS "UserRole" (
 	"ID"	INTEGER NOT NULL UNIQUE,
 	"UserID"	INTEGER NOT NULL,
@@ -45,11 +35,17 @@ CREATE TABLE IF NOT EXISTS "UserRole" (
 	FOREIGN KEY("UserID") REFERENCES "User"("ID"),
 	PRIMARY KEY("ID" AUTOINCREMENT)
 );
+INSERT INTO UserRole VALUES(1,1,4);
 CREATE TABLE IF NOT EXISTS "Role" (
 	"ID"	INTEGER NOT NULL UNIQUE,
 	"Name"	TEXT NOT NULL,
 	PRIMARY KEY("ID" AUTOINCREMENT)
 );
+INSERT INTO Role VALUES(1,'Manager');
+INSERT INTO Role VALUES(2,'Scorer');
+INSERT INTO Role VALUES(3,'Executive');
+INSERT INTO Role VALUES(4,'Webmaster');
+INSERT INTO Role VALUES(5,'Reporter');
 CREATE TABLE IF NOT EXISTS "InvitationEmail" (
 	"ID"	INTEGER NOT NULL UNIQUE,
 	"InvitationID"	INTEGER NOT NULL,
@@ -57,12 +53,13 @@ CREATE TABLE IF NOT EXISTS "InvitationEmail" (
 	FOREIGN KEY("InvitationID") REFERENCES "Invitation"("ID"),
 	PRIMARY KEY("ID" AUTOINCREMENT)
 );
+INSERT INTO InvitationEmail VALUES(1,1,'admin@example.com');
 CREATE TABLE IF NOT EXISTS "InvitationRole" (
 	"ID"	INTEGER NOT NULL UNIQUE,
 	"InvitationID"	INTEGER NOT NULL,
 	"RoleID"	INTEGER NOT NULL,
-	FOREIGN KEY("InvitationID") REFERENCES "Invitation"("ID"),
 	FOREIGN KEY("RoleID") REFERENCES "Role"("ID"),
+	FOREIGN KEY("InvitationID") REFERENCES "Invitation"("ID"),
 	PRIMARY KEY("ID" AUTOINCREMENT)
 );
 CREATE TABLE IF NOT EXISTS "Player" (
@@ -77,6 +74,7 @@ CREATE TABLE IF NOT EXISTS "User" (
 	"ID"	INTEGER NOT NULL UNIQUE,
 	PRIMARY KEY("ID" AUTOINCREMENT)
 );
+INSERT INTO User VALUES(1);
 CREATE TABLE IF NOT EXISTS "Invitation" (
 	"ID"	INTEGER NOT NULL UNIQUE,
 	"PlayerID"	INTEGER,
@@ -84,22 +82,34 @@ CREATE TABLE IF NOT EXISTS "Invitation" (
 	"UserID"	INTEGER,
 	"StatusID"	INTEGER NOT NULL,
 	"EmergencyContactInfo"	TEXT,
-	PRIMARY KEY("ID" AUTOINCREMENT),
+	FOREIGN KEY("StatusID") REFERENCES "InvitationStatus"("ID"),
+	FOREIGN KEY("TeamID") REFERENCES "Team"("ID"),
 	FOREIGN KEY("PlayerID") REFERENCES "Player"("ID"),
 	FOREIGN KEY("UserID") REFERENCES "User"("ID"),
-	FOREIGN KEY("StatusID") REFERENCES "InvitationStatus"("ID"),
-	FOREIGN KEY("TeamID") REFERENCES "Team"("ID")
+	PRIMARY KEY("ID" AUTOINCREMENT)
 );
+INSERT INTO Invitation VALUES(1,NULL,1,1,4,NULL);
 CREATE TABLE IF NOT EXISTS "GameStatus" (
 	"ID"	INTEGER NOT NULL UNIQUE,
 	"Name"	TEXT NOT NULL,
 	PRIMARY KEY("ID" AUTOINCREMENT)
 );
+INSERT INTO GameStatus VALUES(1,'Upcoming');
+INSERT INTO GameStatus VALUES(2,'Cancelled');
+INSERT INTO GameStatus VALUES(3,'Postponed');
+INSERT INTO GameStatus VALUES(4,'Deleted');
+INSERT INTO GameStatus VALUES(5,'Played');
+INSERT INTO GameStatus VALUES(6,'Forfeit (Home)');
+INSERT INTO GameStatus VALUES(7,'Forfeit (Away)');
 CREATE TABLE IF NOT EXISTS "InvitationStatus" (
 	"ID"	INTEGER NOT NULL UNIQUE,
 	"Name"	TEXT NOT NULL,
 	PRIMARY KEY("ID" AUTOINCREMENT)
 );
+INSERT INTO InvitationStatus VALUES(1,'Active');
+INSERT INTO InvitationStatus VALUES(2,'Substitute');
+INSERT INTO InvitationStatus VALUES(3,'Retired');
+INSERT INTO InvitationStatus VALUES(4,'Other');
 CREATE TABLE IF NOT EXISTS "Event" (
 	"ID"	INTEGER NOT NULL UNIQUE,
 	"Type"	INTEGER NOT NULL,
@@ -110,6 +120,7 @@ CREATE TABLE IF NOT EXISTS "Event" (
 	"Description"	TEXT NOT NULL,
 	PRIMARY KEY("ID" AUTOINCREMENT)
 );
+INSERT INTO Event VALUES(1,'Update','2024-08-11 16:45:45.8882345',1,'/OAuth/Google','Registered new user','[{"ID":1,"PlayerID":null,"TeamID":1,"UserID":1,"Player":null,"StatusID":4,"EmergencyContactInfo":null,"InvitationEmails":[{"ID":1,"InvitationID":1,"Email":"admin@example.com"}],"InvitationRoles":[]}]');
 CREATE TABLE IF NOT EXISTS "PlayerBio" (
 	"PlayerID"	INTEGER NOT NULL UNIQUE,
 	"Bats"	TEXT,
@@ -120,8 +131,8 @@ CREATE TABLE IF NOT EXISTS "PlayerBio" (
 	"Birthdate"	TEXT,
 	"From"	TEXT,
 	"ReferredBy"	TEXT,
-	PRIMARY KEY("PlayerID"),
-	FOREIGN KEY("PlayerID") REFERENCES "Player"("ID")
+	FOREIGN KEY("PlayerID") REFERENCES "Player"("ID"),
+	PRIMARY KEY("PlayerID")
 );
 CREATE TABLE IF NOT EXISTS "Team" (
 	"ID"	INTEGER NOT NULL UNIQUE,
@@ -134,52 +145,47 @@ CREATE TABLE IF NOT EXISTS "Team" (
 	"Hidden"	INTEGER DEFAULT 0,
 	PRIMARY KEY("ID" AUTOINCREMENT)
 );
+INSERT INTO Team VALUES(1,'Webmaster','Fake Team','WFT',0,'FFFFFF','000000',1);
 CREATE TABLE IF NOT EXISTS "SocialPlatform" (
 	"ID"	INTEGER NOT NULL UNIQUE,
 	"Name"	TEXT NOT NULL,
 	"BaseUrl"	TEXT,
 	PRIMARY KEY("ID" AUTOINCREMENT)
 );
+INSERT INTO SocialPlatform VALUES(1,'Twitter','https://twitter.com/');
+INSERT INTO SocialPlatform VALUES(2,'Instagram','https://instagram.com/');
+INSERT INTO SocialPlatform VALUES(3,'Facebook','https://facebook.com');
+INSERT INTO SocialPlatform VALUES(4,'YouTube','https://www.youtube.com/channel/');
 CREATE TABLE IF NOT EXISTS "TeamSocial" (
 	"ID"	INTEGER NOT NULL UNIQUE,
 	"TeamID"	INTEGER NOT NULL,
 	"SocialPlatformID"	INTEGER NOT NULL,
 	"Account"	TEXT NOT NULL,
-	PRIMARY KEY("ID" AUTOINCREMENT),
 	FOREIGN KEY("TeamID") REFERENCES "Team"("ID"),
-	FOREIGN KEY("SocialPlatformID") REFERENCES "SocialPlatform"("ID")
+	FOREIGN KEY("SocialPlatformID") REFERENCES "SocialPlatform"("ID"),
+	PRIMARY KEY("ID" AUTOINCREMENT)
 );
 CREATE TABLE IF NOT EXISTS "PlayerSocial" (
 	"ID"	INTEGER NOT NULL UNIQUE,
 	"PlayerID"	INTEGER NOT NULL,
 	"SocialPlatformID"	INTEGER NOT NULL,
 	"Account"	TEXT NOT NULL,
-	PRIMARY KEY("ID" AUTOINCREMENT),
 	FOREIGN KEY("PlayerID") REFERENCES "Player"("ID"),
-	FOREIGN KEY("SocialPlatformID") REFERENCES "SocialPlatform"("ID")
+	FOREIGN KEY("SocialPlatformID") REFERENCES "SocialPlatform"("ID"),
+	PRIMARY KEY("ID" AUTOINCREMENT)
 );
 CREATE TABLE IF NOT EXISTS "Tournament" (
 	"ID"	INTEGER NOT NULL UNIQUE,
 	"SeasonID"	INTEGER NOT NULL,
-	PRIMARY KEY("ID" AUTOINCREMENT),
-	FOREIGN KEY("SeasonID") REFERENCES "Season"("ID")
-);
-CREATE TABLE IF NOT EXISTS "TournamentBracket" (
-	"ID"	INTEGER NOT NULL UNIQUE,
-	"Name"	TEXT NOT NULL,
-	"TournamentID"	INTEGER NOT NULL,
-	"SeedingConfiguration"	TEXT,
-	"Format"	TEXT NOT NULL,
-	"Historical"	INTEGER NOT NULL DEFAULT 1,
-	PRIMARY KEY("ID"),
-	FOREIGN KEY("TournamentID") REFERENCES "Tournament"("ID")
+	FOREIGN KEY("SeasonID") REFERENCES "Season"("ID"),
+	PRIMARY KEY("ID" AUTOINCREMENT)
 );
 CREATE TABLE IF NOT EXISTS "BracketRound" (
 	"ID"	INTEGER NOT NULL UNIQUE,
 	"Name"	TEXT NOT NULL,
 	"BracketID"	INTEGER NOT NULL,
-	PRIMARY KEY("ID"),
-	FOREIGN KEY("BracketID") REFERENCES "TournamentBracket"("ID")
+	FOREIGN KEY("BracketID") REFERENCES "TournamentBracket"("ID"),
+	PRIMARY KEY("ID")
 );
 CREATE TABLE IF NOT EXISTS "RoundSeries" (
 	"ID"	INTEGER NOT NULL UNIQUE,
@@ -188,33 +194,24 @@ CREATE TABLE IF NOT EXISTS "RoundSeries" (
 	"Format"	TEXT NOT NULL,
 	"HostOrder"	TEXT NOT NULL,
 	"Matchup"	TEXT NOT NULL,
-	PRIMARY KEY("ID" AUTOINCREMENT),
-	FOREIGN KEY("RoundID") REFERENCES "BracketRound"("ID")
+	FOREIGN KEY("RoundID") REFERENCES "BracketRound"("ID"),
+	PRIMARY KEY("ID" AUTOINCREMENT)
 );
 CREATE TABLE IF NOT EXISTS "SeriesGame" (
 	"ID"	INTEGER NOT NULL UNIQUE,
 	"SeriesID"	INTEGER NOT NULL,
 	"GameNumber"	INTEGER NOT NULL,
 	"GameID"	INTEGER,
-	PRIMARY KEY("ID" AUTOINCREMENT),
-	FOREIGN KEY("SeriesID") REFERENCES "RoundSeries"("ID")
-);
-CREATE TABLE IF NOT EXISTS "TournamentRoundRobin" (
-	"ID"	INTEGER NOT NULL UNIQUE,
-	"Name"	TEXT NOT NULL,
-	"TournamentID"	INTEGER NOT NULL,
-	"SeedingConfiguration"	TEXT,
-	"Historical"	INTEGER NOT NULL DEFAULT 1,
-	PRIMARY KEY("ID" AUTOINCREMENT),
-	FOREIGN KEY("TournamentID") REFERENCES "Tournament"("ID")
+	FOREIGN KEY("SeriesID") REFERENCES "RoundSeries"("ID"),
+	PRIMARY KEY("ID" AUTOINCREMENT)
 );
 CREATE TABLE IF NOT EXISTS "RoundRobinGame" (
 	"ID"	INTEGER NOT NULL UNIQUE,
 	"TournamentRoundRobinID"	INTEGER NOT NULL,
 	"GameID"	INTEGER,
-	PRIMARY KEY("ID" AUTOINCREMENT),
 	FOREIGN KEY("TournamentRoundRobinID") REFERENCES "TournamentRoundRobin"("ID"),
-	FOREIGN KEY("GameID") REFERENCES "Game"("ID")
+	FOREIGN KEY("GameID") REFERENCES "Game"("ID"),
+	PRIMARY KEY("ID" AUTOINCREMENT)
 );
 CREATE TABLE IF NOT EXISTS "Location" (
 	"ID"	INTEGER NOT NULL UNIQUE,
@@ -236,9 +233,9 @@ CREATE TABLE IF NOT EXISTS "BattingEvent" (
 	"After"	TEXT,
 	"PitchSequence"	TEXT,
 	"Notes"	TEXT,
-	PRIMARY KEY("GameID","IsHostTeam","Index"),
 	FOREIGN KEY("PlayerID") REFERENCES "Player"("ID"),
-	FOREIGN KEY("GameID") REFERENCES "Game"("ID")
+	FOREIGN KEY("GameID") REFERENCES "Game"("ID"),
+	PRIMARY KEY("GameID","IsHostTeam","Index")
 );
 CREATE TABLE IF NOT EXISTS "BattingLineupEntry" (
 	"ID"	INTEGER NOT NULL UNIQUE,
@@ -250,9 +247,9 @@ CREATE TABLE IF NOT EXISTS "BattingLineupEntry" (
 	"BattingSide"	TEXT,
 	"Positions"	TEXT,
 	"Out"	INTEGER,
-	PRIMARY KEY("ID" AUTOINCREMENT),
+	FOREIGN KEY("GameID") REFERENCES "Game"("ID"),
 	FOREIGN KEY("PlayerID") REFERENCES "Player"("ID"),
-	FOREIGN KEY("GameID") REFERENCES "Game"("ID")
+	PRIMARY KEY("ID" AUTOINCREMENT)
 );
 CREATE TABLE IF NOT EXISTS "Game" (
 	"ID"	INTEGER NOT NULL UNIQUE,
@@ -264,11 +261,59 @@ CREATE TABLE IF NOT EXISTS "Game" (
 	"StatusID"	INTEGER NOT NULL DEFAULT 0,
 	"ScoreHost"	INTEGER,
 	"ScoreVisitor"	INTEGER,
-	PRIMARY KEY("ID" AUTOINCREMENT),
 	FOREIGN KEY("SeasonID") REFERENCES "Season"("ID"),
+	FOREIGN KEY("HostTeamID") REFERENCES "Team"("ID"),
 	FOREIGN KEY("LocationID") REFERENCES "Location"("ID"),
 	FOREIGN KEY("StatusID") REFERENCES "GameStatus"("ID"),
-	FOREIGN KEY("HostTeamID") REFERENCES "Team"("ID"),
-	FOREIGN KEY("VisitingTeamID") REFERENCES "Team"("ID")
+	FOREIGN KEY("VisitingTeamID") REFERENCES "Team"("ID"),
+	PRIMARY KEY("ID" AUTOINCREMENT)
 );
+CREATE TABLE IF NOT EXISTS "News" (
+	"ID"	INTEGER NOT NULL UNIQUE,
+	"AuthorID"	INTEGER NOT NULL,
+	"Date"	TEXT NOT NULL,
+	"Edited"	TEXT,
+	"Title"	TEXT NOT NULL,
+	"Contents"	TEXT NOT NULL,
+	"Source"	TEXT NOT NULL,
+	"IsDeleted"	INTEGER NOT NULL DEFAULT 0,
+	"IsHidden"	INTEGER NOT NULL DEFAULT 0, AuthorInvitationID INTEGER NOT NULL DEFAULT 0 REFERENCES Invitation(ID),
+	PRIMARY KEY("ID" AUTOINCREMENT),
+	FOREIGN KEY("AuthorID") REFERENCES "User"("ID")
+);
+CREATE TABLE IF NOT EXISTS "TournamentRoundRobin" (
+	"ID"	INTEGER NOT NULL UNIQUE,
+	"Name"	TEXT NOT NULL,
+	"TournamentID"	INTEGER NOT NULL,
+	"SeedingConfiguration"	TEXT,
+	"Historical"	INTEGER NOT NULL DEFAULT 1,
+	PRIMARY KEY("ID" AUTOINCREMENT),
+	FOREIGN KEY("TournamentID") REFERENCES "Tournament"("ID")
+);
+CREATE TABLE IF NOT EXISTS "TournamentBracket" (
+	"ID"	INTEGER NOT NULL UNIQUE,
+	"Name"	TEXT NOT NULL,
+	"TournamentID"	INTEGER NOT NULL,
+	"SeedingConfiguration"	TEXT,
+	"Format"	TEXT NOT NULL,
+	"Historical"	INTEGER NOT NULL DEFAULT 1,
+	PRIMARY KEY("ID"),
+	FOREIGN KEY("TournamentID") REFERENCES "Tournament"("ID")
+);
+DELETE FROM sqlite_sequence;
+INSERT INTO sqlite_sequence VALUES('Game',0);
+INSERT INTO sqlite_sequence VALUES('UserLoginSource',3);
+INSERT INTO sqlite_sequence VALUES('SocialPlatform',4);
+INSERT INTO sqlite_sequence VALUES('Role',5);
+INSERT INTO sqlite_sequence VALUES('InvitationStatus',4);
+INSERT INTO sqlite_sequence VALUES('GameStatus',7);
+INSERT INTO sqlite_sequence VALUES('Invitation',1);
+INSERT INTO sqlite_sequence VALUES('InvitationEmail',1);
+INSERT INTO sqlite_sequence VALUES('Team',1);
+INSERT INTO sqlite_sequence VALUES('User',1);
+INSERT INTO sqlite_sequence VALUES('UserLogin',1);
+INSERT INTO sqlite_sequence VALUES('Event',1);
+INSERT INTO sqlite_sequence VALUES('UserRole',1);
+INSERT INTO sqlite_sequence VALUES('News',0);
+INSERT INTO sqlite_sequence VALUES('TournamentRoundRobin',0);
 COMMIT;

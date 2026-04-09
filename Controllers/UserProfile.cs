@@ -6,6 +6,22 @@ using Microsoft.EntityFrameworkCore;
 [Route("api/User")]
 public class APIUserController(LeagueSitesContext dbContext) : ControllerBase
 {
+    [HttpGet]
+    public IActionResult GetStatus()
+    {
+        if (User.Identity?.IsAuthenticated != true)
+        {
+            return Ok(new { isAuthenticated = false, name = "", claims = Array.Empty<object>() });
+        }
+
+        var name = User.Identity.Name ?? "";
+        var claims = User.Claims
+            .Where(c => c.Type == "UserID")
+            .Select(c => new { type = c.Type, value = c.Value });
+
+        return Ok(new { isAuthenticated = true, name, claims });
+    }
+
     [Authorize]
     [HttpGet("Profile")]
     public async Task<IActionResult> GetProfile()

@@ -16,6 +16,9 @@ League-specific settings are specified in appsettings.json.
 | GET | `/api/SiteStatus` | Health check |
 | HEAD | `/api/SiteStatus` | Health check (no body) |
 | GET | `/api/Home` | Homepage data: upcoming games, news, standings |
+| GET | `/api/Site/Config` | Site configuration: name, about, executives, socials, links |
+| GET | `/api/User` | Current user auth status (name, claims) |
+| GET | `/api/User/Permissions/{id}` | Current user's permissions for a team |
 | GET | `/api/Teams` | All active teams |
 | GET | `/api/Teams/{id}` | Single team by ID |
 | GET | `/api/Teams/{id}/Players` | Active players on a team (jersey number → name) |
@@ -27,7 +30,6 @@ League-specific settings are specified in appsettings.json.
 | GET | `/api/Scorecard/{id}` | Batting events and lineup for a game |
 | GET | `/api/History` | League history: champions and best records by year |
 | GET | `/api/Playoffs?year=` | Playoff brackets, series, round robins |
-| GET | `/api/User/Permissions/{id}` | Current user's permissions for a team |
 
 ### Authenticated
 
