@@ -1,4 +1,4 @@
-namespace LeagueSitesBase.Models;
+namespace LeagueSitesBackend.Models;
 
 public static class Extensions
 {

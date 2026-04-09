@@ -1,6 +1,6 @@
 using FluentAssertions;
 
-namespace LeagueSitesBase.Tests;
+namespace LeagueSitesBackend.Tests;
 
 public class HistoryYearDtoTests
 {

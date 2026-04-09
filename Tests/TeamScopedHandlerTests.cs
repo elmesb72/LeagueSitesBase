@@ -3,7 +3,7 @@ using Moq;
 using Moq.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authorization;
 
-namespace LeagueSitesBase.Tests;
+namespace LeagueSitesBackend.Tests;
 
 public class TeamScopedHandlerTests
 {

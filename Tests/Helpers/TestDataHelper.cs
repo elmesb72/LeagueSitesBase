@@ -1,7 +1,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication.Cookies;
 
-namespace LeagueSitesBase.Tests;
+namespace LeagueSitesBackend.Tests;
 
 public static class TestDataHelper
 {

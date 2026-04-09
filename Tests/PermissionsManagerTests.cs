@@ -3,7 +3,7 @@ using Moq.EntityFrameworkCore;
 using FluentAssertions;
 using System.Security.Claims;
 
-namespace LeagueSitesBase.Tests;
+namespace LeagueSitesBackend.Tests;
 
 public class PermissionsManagerTests
 {

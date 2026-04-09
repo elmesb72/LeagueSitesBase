@@ -2,7 +2,7 @@ using FluentAssertions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Options;
 
-namespace LeagueSitesBase.Tests;
+namespace LeagueSitesBackend.Tests;
 
 public class ScopePolicyProviderTests
 {

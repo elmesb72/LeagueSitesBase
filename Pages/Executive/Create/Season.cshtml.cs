@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 
-namespace LeagueSitesBase.Pages;
+namespace LeagueSitesBackend.Pages;
 
 public class CreateSeasonModel(LeagueSitesContext context) : PageModel
 {

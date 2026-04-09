@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-namespace LeagueSitesBase.Pages;
+namespace LeagueSitesBackend.Pages;
 
 public class HeaderTeamsViewComponent(LeagueSitesContext context) : ViewComponent
 {
