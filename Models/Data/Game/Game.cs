@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
 
-public partial class Game : ITeamScoped
+public partial class Game : ITeamScoped, IEquatable<Game>
 {
     public Game()
     {
@@ -43,4 +43,9 @@ public partial class Game : ITeamScoped
     [JsonIgnore]
     public virtual ICollection<RoundRobinGame> RoundRobinGames { get; set; }
 
+    public bool Equals(Game? other) => ID == other?.ID;
+    public override bool Equals(object? obj) => Equals(obj as Game);
+    public override int GetHashCode() => Convert.ToInt32(ID);
+    public static bool operator ==(Game? left, Game? right) => left is null ? right is null : left.Equals(right);
+    public static bool operator !=(Game? left, Game? right) => !(left == right);
 }

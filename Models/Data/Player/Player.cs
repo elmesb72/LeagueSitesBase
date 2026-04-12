@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-public partial class Player
+public partial class Player : IEquatable<Player>
 {
     public Player()
     {
@@ -46,4 +46,10 @@ public partial class Player
     public virtual ICollection<Invitation> Invitations { get; set; }
     [JsonIgnore]
     public virtual ICollection<PlayerSocial> Socials { get; set; }
+
+    public bool Equals(Player? other) => ID == other?.ID;
+    public override bool Equals(object? obj) => Equals(obj as Player);
+    public override int GetHashCode() => Convert.ToInt32(ID);
+    public static bool operator ==(Player? left, Player? right) => left is null ? right is null : left.Equals(right);
+    public static bool operator !=(Player? left, Player? right) => !(left == right);
 }

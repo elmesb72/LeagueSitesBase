@@ -137,12 +137,14 @@ public record RoundRobinDto(
 {
     public static RoundRobinDto From(TournamentRoundRobin rr)
     {
+        List<string> excludedStatuses = ["Cancelled", "Deleted"];
         rr.Standings?.CalculateStreaks();
         return new(
             rr.Name,
             rr.Standings?.ToDto(),
             rr.Games
-                .Where(g => g.Game != null)
+                .Where(g => g.Game != null && !excludedStatuses.Contains(g.Game.Status?.Name ?? ""))
+                .OrderBy(g => g.Game!.Date)
                 .Select(g => new RoundRobinGameDto(new GameSummaryDto(g.Game!)))
                 .ToList());
     }
