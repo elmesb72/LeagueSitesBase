@@ -21,7 +21,7 @@ public class APIPlayoffsController(LeagueSitesContext dbContext, ISeasonService 
         }
 
         if (currentSeason is null)
-            return NotFound();
+            return Ok(new PlayoffsDto(null!, [], []));
 
         var playoffs = await dbContext.Seasons
             .AsSplitQuery()
@@ -39,7 +39,7 @@ public class APIPlayoffsController(LeagueSitesContext dbContext, ISeasonService 
             .FirstOrDefaultAsync();
 
         if (playoffs is null)
-            return NotFound();
+            return Ok(new PlayoffsDto(new SeasonSummaryDto(currentSeason), [], []));
 
         var playoffGames = await dbContext.Games
             .AsNoTracking()
