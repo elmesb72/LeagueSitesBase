@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 
 [ApiController]
 [Route("api/Login")]
-public class APILoginController(IConfiguration config) : ControllerBase
+public class APILoginController(IConfiguration config, IWebHostEnvironment env) : ControllerBase
 {
     static readonly Dictionary<string, Func<string, string, string>> ProviderUrlGenerators = new()
     {
@@ -36,6 +36,10 @@ public class APILoginController(IConfiguration config) : ControllerBase
             })
             .ToList();
 
-        return Ok(new { providers });
+        return Ok(new
+        {
+            providers,
+            isDevelopment = env.IsDevelopment()
+        });
     }
 }
