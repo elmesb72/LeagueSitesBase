@@ -43,12 +43,51 @@ public class APIExecutiveController(LeagueSitesContext dbContext) : ControllerBa
                 .ThenInclude(t => t.RoundRobins)
             .FirstOrDefaultAsync();
 
+        int gamesScheduled = 0;
+        int gamesPlayed = 0;
+        List<object>? seasonTournaments = null;
+
+        if (currentSeason != null)
+        {
+            gamesScheduled = currentSeason.Games.Count(g =>
+                g.Status!.Name == "Upcoming" || g.Status.Name == "Played" || g.Status.Name.StartsWith("Forfeit"));
+            gamesPlayed = currentSeason.Games.Count(g =>
+                g.Status!.Name == "Played" || g.Status.Name.StartsWith("Forfeit"));
+            seasonTournaments = currentSeason.Tournaments.Select(t => new
+            {
+                id = t.ID,
+                brackets = t.Brackets.Select(b => new { b.ID, b.Name }),
+                roundRobins = t.RoundRobins.Select(r => new { r.ID, r.Name })
+            }).Cast<object>().ToList();
+        }
+
+        List<object>? playoffTournaments = null;
+        if (currentPlayoffs != null)
+        {
+            playoffTournaments = currentPlayoffs.Tournaments.Select(t => new
+            {
+                id = t.ID,
+                brackets = t.Brackets.Select(b => new { b.ID, b.Name }),
+                roundRobins = t.RoundRobins.Select(r => new { r.ID, r.Name })
+            }).Cast<object>().ToList();
+        }
+
         return Ok(new
         {
             teams = teams.Select(t => new TeamDetailDto(t)),
             locations = locations.Select(l => new LocationDetailDto(l)),
-            currentSeason = currentSeason != null ? new SeasonSummaryDto(currentSeason) : null,
-            currentPlayoffs = currentPlayoffs != null ? new SeasonSummaryDto(currentPlayoffs) : null
+            currentSeason = currentSeason != null ? new
+            {
+                season = new SeasonSummaryDto(currentSeason),
+                gamesScheduled,
+                gamesPlayed,
+                tournaments = seasonTournaments
+            } : null,
+            currentPlayoffs = currentPlayoffs != null ? new
+            {
+                season = new SeasonSummaryDto(currentPlayoffs),
+                tournaments = playoffTournaments
+            } : null
         });
     }
 
