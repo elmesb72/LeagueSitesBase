@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 
 [ApiController]
 [Route("api/Schedule")]
-public class APIScheduleController(LeagueSitesContext dbContext) : ControllerBase
+public class APIScheduleController(LeagueSitesContext dbContext, IPermissionsService permissionsService) : ControllerBase
 {
     [ResponseCache(Duration = 30)]
     [HttpGet]
@@ -11,11 +11,16 @@ public class APIScheduleController(LeagueSitesContext dbContext) : ControllerBas
     {
         var targetYear = year ?? DateTime.Now.Year;
 
-        var seasonIDs = await dbContext.Seasons
+        var seasons = await dbContext.Seasons
             .AsNoTracking()
             .Where(s => s.Year == targetYear)
-            .Select(s => s.ID)
             .ToListAsync();
+
+        var seasonIDs = seasons.Select(s => s.ID).ToList();
+        var seasonStartDate = seasons
+            .Where(s => s.Subseason == "Regular Season")
+            .Select(s => s.StartDate)
+            .FirstOrDefault();
 
         var games = await dbContext.Games
             .AsNoTracking()
@@ -37,11 +42,29 @@ public class APIScheduleController(LeagueSitesContext dbContext) : ControllerBas
             .OrderBy(p => p?.Name)
             .ToList();
 
+        // If no games yet, provide active locations so the empty table has columns
+        List<Location> activeLocations = [];
+        if (!locations.Any())
+        {
+            activeLocations = await dbContext.Locations
+                .AsNoTracking()
+                .Where(l => l.Active)
+                .OrderBy(l => l.Name)
+                .ToListAsync();
+        }
+
+        var permissions = await permissionsService.GetAsync(User);
+        var canCreateGame = permissions.Allow("CreateGame");
+
         return Ok(new
         {
             year = targetYear,
+            seasonStartDate = seasonStartDate != default ? seasonStartDate.ToString("yyyy-MM-dd") : null,
             games = games.Select(g => new GameSummaryDto(g)),
-            locations = locations.Where(l => l != null).Select(l => new LocationSummaryDto(l!))
+            locations = locations.Any()
+                ? locations.Where(l => l != null).Select(l => new LocationSummaryDto(l!))
+                : activeLocations.Select(l => new LocationSummaryDto(l)),
+            canCreateGame
         });
     }
 }

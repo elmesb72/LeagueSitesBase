@@ -116,6 +116,24 @@ public class APIExecutiveController(LeagueSitesContext dbContext) : ControllerBa
         return CreatedAtAction(nameof(Dashboard), new { }, season);
     }
 
+    [HttpPatch("Season/StartDate")]
+    public async Task<IActionResult> UpdateSeasonStartDate([FromBody] SeasonStartDateDto dto)
+    {
+        var season = await dbContext.Seasons
+            .FirstOrDefaultAsync(s => s.Subseason == "Regular Season" && s.Year == DateTime.Now.Year);
+
+        if (season is null)
+            return NotFound("No regular season found for this year.");
+
+        if (!DateTime.TryParse(dto.StartDate, out var parsed))
+            return BadRequest("Invalid date format.");
+
+        season.StartDate = parsed;
+        await dbContext.SaveChangesAsync();
+
+        return Ok(new { startDate = season.StartDate.ToString("yyyy-MM-dd") });
+    }
+
     [HttpPatch("Status/{entity}/{id:long}")]
     public async Task<IActionResult> ToggleStatus([FromRoute] string entity, [FromRoute] long id)
     {
@@ -164,3 +182,5 @@ public class APIExecutiveController(LeagueSitesContext dbContext) : ControllerBa
         return Ok(games.Select(g => new GameSummaryDto(g)));
     }
 }
+
+public record SeasonStartDateDto(string StartDate);
