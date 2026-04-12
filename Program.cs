@@ -61,10 +61,10 @@ app.UseStaticFiles();
 
 app.UseCookiePolicy();
 
+app.UseRouting();
+
 app.UseAuthentication();
 app.UseAuthorization();
-
-app.UseRouting();
 
 app.MapControllers();
 app.MapRazorPages();

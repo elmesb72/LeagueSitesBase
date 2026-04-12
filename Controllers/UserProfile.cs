@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -107,5 +108,15 @@ public class APIUserController(LeagueSitesContext dbContext) : ControllerBase
         }
 
         return Ok(permissions);
+    }
+
+    [HttpPost("Logout")]
+    public async Task<IActionResult> Logout()
+    {
+        if (User.Identity?.IsAuthenticated == true)
+        {
+            await HttpContext.SignOutAsync();
+        }
+        return Ok();
     }
 }
