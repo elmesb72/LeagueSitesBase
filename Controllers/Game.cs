@@ -6,7 +6,8 @@ using Microsoft.EntityFrameworkCore;
 [Route("api/Game")]
 public class APIGameController(
     LeagueSitesContext dbContext,
-    IAuthorizationService authorizationService) : ControllerBase
+    IAuthorizationService authorizationService,
+    IPermissionsService permissionsService) : ControllerBase
 {
     [HttpGet("{id:long}")]
     public async Task<IActionResult> Get([FromRoute] long id)
@@ -30,7 +31,77 @@ public class APIGameController(
                 PermissionsScope.Manager, PermissionsScope.Scorer,
                 PermissionsScope.Executive, PermissionsScope.Webmaster))).Succeeded;
 
-        return Ok(new { game = new GameDetailDto(game), canEdit });
+        var canDelete = false;
+        object? editData = null;
+        if (canEdit)
+        {
+            var permissions = await permissionsService.GetAsync(User);
+            canDelete = permissions.Include([PermissionsScope.Executive, PermissionsScope.Webmaster]);
+
+            editData = new
+            {
+                seasons = await dbContext.Seasons.AsNoTracking()
+                    .OrderByDescending(s => s.StartDate)
+                    .Select(s => new { s.ID, s.Name })
+                    .ToListAsync(),
+                teams = await dbContext.Teams.AsNoTracking()
+                    .Where(t => t.Active)
+                    .OrderBy(t => t.Abbreviation)
+                    .Select(t => new { t.ID, t.FullName, t.Abbreviation, t.BackgroundColor, t.Color })
+                    .ToListAsync(),
+                locations = await dbContext.Locations.AsNoTracking()
+                    .OrderByDescending(l => l.Active)
+                    .ThenBy(l => l.Name)
+                    .Select(l => new { l.ID, l.Name })
+                    .ToListAsync(),
+                statuses = await dbContext.GameStatuses.AsNoTracking()
+                    .Select(s => new { s.ID, s.Name })
+                    .ToListAsync()
+            };
+        }
+
+        // Records to date
+        var seasonGames = await dbContext.Games
+            .AsNoTracking()
+            .Include(g => g.Status)
+            .Include(g => g.HostTeam)
+            .Include(g => g.VisitingTeam)
+            .Where(g => g.Status!.Name != "Deleted"
+                && g.SeasonID == game.SeasonID
+                && g.Date <= game.Date)
+            .ToListAsync();
+        var standings = new Standings(seasonGames);
+        string? hostRecord = standings.ContainsKey(game.HostTeam!) ? standings[game.HostTeam!].ToString() : null;
+        string? visitorRecord = standings.ContainsKey(game.VisitingTeam!) ? standings[game.VisitingTeam!].ToString() : null;
+
+        return Ok(new { game = new GameDetailDto(game), canEdit, canDelete, editData, hostRecord, visitorRecord });
+    }
+
+    [Authorize(Policy = "Scope:Manager,Scorer,Executive,Webmaster")]
+    [HttpGet("Create")]
+    public async Task<IActionResult> GetCreateData()
+    {
+        return Ok(new
+        {
+            seasons = await dbContext.Seasons.AsNoTracking()
+                .OrderByDescending(s => s.StartDate)
+                .Select(s => new { s.ID, s.Name })
+                .ToListAsync(),
+            teams = await dbContext.Teams.AsNoTracking()
+                .Where(t => t.Active)
+                .OrderBy(t => t.Abbreviation)
+                .Select(t => new { t.ID, t.FullName, t.Abbreviation, t.BackgroundColor, t.Color })
+                .ToListAsync(),
+            locations = await dbContext.Locations.AsNoTracking()
+                .Where(l => l.Active)
+                .OrderBy(l => l.Name)
+                .Select(l => new { l.ID, l.Name })
+                .ToListAsync(),
+            statuses = await dbContext.GameStatuses.AsNoTracking()
+                .Where(s => s.Name != "Deleted")
+                .Select(s => new { s.ID, s.Name })
+                .ToListAsync()
+        });
     }
 
     // Site-level scope check via the policy provider convention
@@ -119,5 +190,34 @@ public class APIGameController(
         await dbContext.SaveChangesAsync();
 
         return Ok(new GameDetailDto(game));
+    }
+
+    [Authorize(Policy = "Scope:Executive,Webmaster")]
+    [HttpDelete("{id:long}")]
+    public async Task<IActionResult> Delete([FromRoute] long id)
+    {
+        var game = await dbContext.Games
+            .Include(g => g.Status)
+            .FirstOrDefaultAsync(g => g.ID == id);
+
+        if (game is null)
+            return NotFound();
+
+        var deletedStatus = await dbContext.GameStatuses.FirstAsync(gs => gs.Name == "Deleted");
+        game.StatusID = deletedStatus.ID;
+        game.ScoreHost = null;
+        game.ScoreVisitor = null;
+
+        dbContext.Games.Update(game);
+
+        var uid = Convert.ToInt64(User.Claims.First(c => c.Type == "UserID").Value);
+        dbContext.Events.Add(Event.Log(
+            EventType.Update, uid,
+            "/api/Game/" + id, "Deleted game",
+            JsonConvert.SerializeObject(game)));
+
+        await dbContext.SaveChangesAsync();
+
+        return NoContent();
     }
 }
