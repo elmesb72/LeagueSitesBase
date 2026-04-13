@@ -9,6 +9,23 @@ public class APINewsController(
     IPermissionsService permissionsService) : ControllerBase
 {
     [Authorize(Policy = "Scope:Reporter,Scorer,Manager,Executive,Webmaster")]
+    [HttpGet("Create")]
+    public async Task<IActionResult> GetCreateData()
+    {
+        var permissions = await permissionsService.GetAsync(User);
+        if (permissions.User is null) return Forbid();
+
+        var invitations = await dbContext.Invitations
+            .AsNoTracking()
+            .Include(i => i.Team)
+            .Where(i => i.UserID == permissions.User.ID)
+            .Select(i => new { i.ID, teamName = i.Team!.FullName })
+            .ToListAsync();
+
+        return Ok(new { invitations });
+    }
+
+    [Authorize(Policy = "Scope:Reporter,Scorer,Manager,Executive,Webmaster")]
     [HttpGet("{id:long}")]
     public async Task<IActionResult> Get([FromRoute] long id)
     {
@@ -27,7 +44,18 @@ public class APINewsController(
         var canEdit = news.AuthorID == permissions.User?.ID
             || permissions.Include([PermissionsScope.Executive, PermissionsScope.Webmaster]);
 
-        return Ok(new { news = new NewsSummaryDto(news), canEdit });
+        List<object>? invitations = null;
+        if (canEdit && permissions.User != null)
+        {
+            invitations = await dbContext.Invitations
+                .AsNoTracking()
+                .Include(i => i.Team)
+                .Where(i => i.UserID == permissions.User.ID)
+                .Select(i => new { i.ID, teamName = i.Team!.FullName } as object)
+                .ToListAsync();
+        }
+
+        return Ok(new { news = new NewsSummaryDto(news), canEdit, invitations });
     }
 
     [Authorize(Policy = "Scope:Reporter,Scorer,Manager,Executive,Webmaster")]

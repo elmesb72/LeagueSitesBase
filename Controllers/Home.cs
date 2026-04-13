@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 
 [ApiController]
 [Route("api/Home")]
-public class APIHomeController(LeagueSitesContext dbContext, IConfiguration config, ISeasonService seasonService) : ControllerBase
+public class APIHomeController(LeagueSitesContext dbContext, IConfiguration config, ISeasonService seasonService, IPermissionsService permissionsService) : ControllerBase
 {
     [ResponseCache(Duration = 30)]
     [HttpGet]
@@ -48,12 +48,22 @@ public class APIHomeController(LeagueSitesContext dbContext, IConfiguration conf
                 .AnyAsync(s => s.Year == closestSeason.Year && s.Subseason == "Playoffs");
         }
 
+        var permissions = await permissionsService.GetAsync(User);
+        var canPost = permissions.Allow("Post");
+
         return Ok(new
         {
             games = games.Select(g => new GameSummaryDto(g)),
-            news = news.Select(n => new NewsSummaryDto(n)),
+            news = news.Select(n => new
+            {
+                news = new NewsSummaryDto(n),
+                renderedContents = n.RenderContents(),
+                canEdit = permissions.Include([PermissionsScope.Executive, PermissionsScope.Webmaster])
+                    || permissions.User?.ID == n.AuthorID
+            }),
             standings = standings?.ToDto(),
-            isPlayoffs
+            isPlayoffs,
+            canPost
         });
     }
 
