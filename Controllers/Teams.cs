@@ -89,6 +89,7 @@ public class APITeamsController(LeagueSitesContext context, ISeasonService seaso
             .Include(i => i.User)
                 .ThenInclude(u => u!.UserRoles)
                     .ThenInclude(ur => ur.Role)
+            .Include(i => i.InvitationEmails)
             .Where(i => i.TeamID == team.ID && i.PlayerID != null && i.Status!.Name == "Active")
             .OrderBy(i => i.Player!.LastName)
             .ThenBy(i => i.Player!.FirstName)
@@ -124,6 +125,8 @@ public class APITeamsController(LeagueSitesContext context, ISeasonService seaso
         var isTeamMember = permissions.Include([PermissionsScope.Manager, PermissionsScope.Scorer, PermissionsScope.Reporter], team)
             || permissions.Include([PermissionsScope.Executive, PermissionsScope.Webmaster]);
         var canEditTeam = canAddPlayer;
+        var canViewAdminIcons = permissions.Include([PermissionsScope.Manager], team)
+            || permissions.Include([PermissionsScope.Executive, PermissionsScope.Webmaster]);
 
         // Inactive roster (only for team members / executives / webmasters)
         object? inactiveRoster = null;
@@ -168,7 +171,9 @@ public class APITeamsController(LeagueSitesContext context, ISeasonService seaso
                 userName = i.User?.UserLogins.FirstOrDefault(ul => ul.IsPrimary)?.Name,
                 email = i.InvitationEmails.FirstOrDefault()?.Email,
                 roles = i.InvitationRoles.Select(ir => ir.Role!.Name),
-                userRoles = i.User?.UserRoles.Select(ur => ur.Role!.Name) ?? []
+                userRoles = i.User?.UserRoles.Select(ur => ur.Role!.Name) ?? [],
+                hasUser = i.User != null,
+                hasInvitationEmails = i.InvitationEmails?.Count > 0
             };
 
             inactiveRoster = new
@@ -191,11 +196,14 @@ public class APITeamsController(LeagueSitesContext context, ISeasonService seaso
                 id = i.ID,
                 player = i.Player != null ? new PlayerSummaryDto(i.Player) : null,
                 roles = i.InvitationRoles.Select(ir => ir.Role!.Name),
-                userRoles = i.User?.UserRoles.Select(ur => ur.Role!.Name) ?? []
+                userRoles = i.User?.UserRoles.Select(ur => ur.Role!.Name) ?? [],
+                hasUser = i.User != null,
+                hasInvitationEmails = i.InvitationEmails?.Count > 0
             }),
             canAddPlayer,
             canEditTeam,
             isTeamMember,
+            canViewAdminIcons,
             inactiveRoster
         });
     }
