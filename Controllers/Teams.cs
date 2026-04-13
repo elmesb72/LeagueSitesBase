@@ -1,10 +1,11 @@
 using Facet.Extensions;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 [ApiController]
 [Route("api/Teams")]
-public class APITeamsController(LeagueSitesContext context, ISeasonService seasonService) : ControllerBase
+public class APITeamsController(LeagueSitesContext context, ISeasonService seasonService, IPermissionsService permissionsService) : ControllerBase
 {
     readonly LeagueSitesContext dbContext = context;
 
@@ -36,7 +37,6 @@ public class APITeamsController(LeagueSitesContext context, ISeasonService seaso
         return Ok(team);
     }
 
-    [ResponseCache(Duration = 30)]
     [HttpGet("{abbreviation}/Page")]
     public async Task<IActionResult> GetTeamPage([FromRoute] string abbreviation, [FromQuery] int? year)
     {
@@ -116,8 +116,68 @@ public class APITeamsController(LeagueSitesContext context, ISeasonService seaso
 
         // Standings for record
         var standings = new Standings(games.Where(g => g.Status?.Name == "Played").ToList());
-
         string record = standings.ContainsKey(team) ? standings[team].ToString() : "(0-0)";
+
+        // Permissions
+        var permissions = await permissionsService.GetAsync(User, [team]);
+        var canAddPlayer = permissions.Allow("CreateGame"); // Scorer, Manager, Executive, Webmaster
+        var isTeamMember = permissions.Include([PermissionsScope.Manager, PermissionsScope.Scorer, PermissionsScope.Reporter], team)
+            || permissions.Include([PermissionsScope.Executive, PermissionsScope.Webmaster]);
+        var canEditTeam = canAddPlayer;
+
+        // Inactive roster (only for team members / executives / webmasters)
+        object? inactiveRoster = null;
+        if (isTeamMember)
+        {
+            var substitutes = await dbContext.Invitations
+                .AsNoTracking()
+                .Include(i => i.Player)
+                .Include(i => i.Status)
+                .Include(i => i.InvitationRoles).ThenInclude(ir => ir.Role)
+                .Include(i => i.User).ThenInclude(u => u!.UserRoles).ThenInclude(ur => ur.Role)
+                .Where(i => i.TeamID == team.ID && i.PlayerID != null && i.Status!.Name == "Substitute")
+                .OrderBy(i => i.Player!.LastName).ThenBy(i => i.Player!.FirstName)
+                .ToListAsync();
+
+            var formerPlayers = await dbContext.Invitations
+                .AsNoTracking()
+                .Include(i => i.Player)
+                .Include(i => i.Status)
+                .Include(i => i.InvitationRoles).ThenInclude(ir => ir.Role)
+                .Include(i => i.User).ThenInclude(u => u!.UserRoles).ThenInclude(ur => ur.Role)
+                .Where(i => i.TeamID == team.ID && i.PlayerID != null
+                    && (i.Status!.Name == "Retired" || i.Status.Name == "Other"))
+                .OrderBy(i => i.Player!.LastName).ThenBy(i => i.Player!.FirstName)
+                .ToListAsync();
+
+            var nonPlayerUsers = await dbContext.Invitations
+                .AsNoTracking()
+                .Include(i => i.Player)
+                .Include(i => i.Status)
+                .Include(i => i.InvitationRoles).ThenInclude(ir => ir.Role)
+                .Include(i => i.User).ThenInclude(u => u!.UserLogins)
+                .Include(i => i.User).ThenInclude(u => u!.UserRoles).ThenInclude(ur => ur.Role)
+                .Include(i => i.InvitationEmails)
+                .Where(i => i.TeamID == team.ID && i.PlayerID == null && i.Status!.Name != "Hidden")
+                .ToListAsync();
+
+            Func<Invitation, object> mapInvitation = i => new
+            {
+                id = i.ID,
+                player = i.Player != null ? new PlayerSummaryDto(i.Player) : null,
+                userName = i.User?.UserLogins.FirstOrDefault(ul => ul.IsPrimary)?.Name,
+                email = i.InvitationEmails.FirstOrDefault()?.Email,
+                roles = i.InvitationRoles.Select(ir => ir.Role!.Name),
+                userRoles = i.User?.UserRoles.Select(ur => ur.Role!.Name) ?? []
+            };
+
+            inactiveRoster = new
+            {
+                substitutes = substitutes.Select(mapInvitation),
+                formerPlayers = formerPlayers.Select(mapInvitation),
+                nonPlayerUsers = nonPlayerUsers.Select(mapInvitation)
+            };
+        }
 
         return Ok(new
         {
@@ -132,8 +192,31 @@ public class APITeamsController(LeagueSitesContext context, ISeasonService seaso
                 player = i.Player != null ? new PlayerSummaryDto(i.Player) : null,
                 roles = i.InvitationRoles.Select(ir => ir.Role!.Name),
                 userRoles = i.User?.UserRoles.Select(ur => ur.Role!.Name) ?? []
-            })
+            }),
+            canAddPlayer,
+            canEditTeam,
+            isTeamMember,
+            inactiveRoster
         });
+    }
+
+    [Authorize(Policy = "Scope:Scorer,Manager,Executive,Webmaster")]
+    [HttpPut("{id:long}")]
+    public async Task<IActionResult> UpdateTeam([FromRoute] long id, [FromBody] TeamUpdateDto dto)
+    {
+        var team = await dbContext.Teams.FirstOrDefaultAsync(t => t.ID == id);
+        if (team is null) return NotFound();
+
+        team.Location = dto.Location;
+        team.Name = dto.Name;
+        team.Abbreviation = dto.Abbreviation;
+        team.BackgroundColor = dto.BackgroundColor;
+        team.Color = dto.Color;
+
+        dbContext.Teams.Update(team);
+        await dbContext.SaveChangesAsync();
+
+        return Ok(new TeamDetailDto(team));
     }
 
     /// Returns a dictionary of names and jersey numbers for active players on the given team.

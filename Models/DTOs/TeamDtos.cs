@@ -12,3 +12,10 @@ public partial record TeamSummaryDto;
                nameof(Team.Active), nameof(Team.Hidden),
                nameof(Team.BackgroundColor), nameof(Team.Color)])]
 public partial record TeamDetailDto;
+
+public record TeamUpdateDto(
+    string Location,
+    string Name,
+    string Abbreviation,
+    string BackgroundColor,
+    string Color);
