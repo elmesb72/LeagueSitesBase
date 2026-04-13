@@ -7,6 +7,24 @@ using Microsoft.EntityFrameworkCore;
 [Authorize(Policy = "Scope:Manager,Scorer,Reporter,Executive,Webmaster")]
 public class APIInvitationController(LeagueSitesContext dbContext) : ControllerBase
 {
+    [HttpGet("Create")]
+    public async Task<IActionResult> GetCreateData()
+    {
+        var teams = await dbContext.Teams
+            .AsNoTracking()
+            .Where(t => t.Active)
+            .OrderBy(t => t.Name)
+            .Select(t => new { t.ID, t.FullName, t.Abbreviation, t.BackgroundColor, t.Color })
+            .ToListAsync();
+
+        var statuses = await dbContext.InvitationStatuses
+            .AsNoTracking()
+            .Select(s => new { s.ID, s.Name })
+            .ToListAsync();
+
+        return Ok(new { teams, statuses });
+    }
+
     [HttpGet("{id:long}")]
     public async Task<IActionResult> Get([FromRoute] long id)
     {
