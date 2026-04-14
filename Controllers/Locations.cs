@@ -39,7 +39,7 @@ public class APILocationsController(LeagueSitesContext dbContext) : ControllerBa
                 .Take(5)
                 .Select(g => new GameSummaryDto(g)),
             upcomingGames = l.Games
-                .Where(g => g.Status?.Name != "Played" && g.Date.Date >= today)
+                .Where(g => g.Status?.Name != "Played" && g.Status?.Name != "Deleted" && g.Date.Date >= today)
                 .OrderBy(g => Math.Abs(g.Date.Subtract(now).TotalDays))
                 .Take(5)
                 .Select(g => new GameSummaryDto(g))

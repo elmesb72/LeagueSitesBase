@@ -30,6 +30,7 @@ public class APIStandingsController(LeagueSitesContext dbContext, ISeasonService
             .Include(g => g.VisitingTeam)
             .Include(g => g.Status)
             .Where(g => g.SeasonID == season.ID)
+            .Where(g => g.Status!.Name != "Deleted")
             .ToListAsync();
 
         var standings = new Standings(games);

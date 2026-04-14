@@ -39,6 +39,7 @@ public class APIHomeController(LeagueSitesContext dbContext, IConfiguration conf
                 .Include(g => g.VisitingTeam)
                 .Include(g => g.Status)
                 .Where(g => g.SeasonID == closestSeason.ID)
+                .Where(g => g.Status!.Name != "Deleted")
                 .ToListAsync();
             standings = new Standings(seasonGames);
             standings.CalculateStreaks();
