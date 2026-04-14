@@ -22,7 +22,7 @@ public class APILoginController(IConfiguration config, IWebHostEnvironment env) 
     [HttpGet]
     public IActionResult Get()
     {
-        var callbackUrlBase = $"https://{Request.Host.Value}/OAuth";
+        var callbackUrlBase = $"https://{Request.Host.Value}/api/OAuth";
         var authMethods = config.GetSection("Authentication").GetChildren();
 
         var providers = authMethods

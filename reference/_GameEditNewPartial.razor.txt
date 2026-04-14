@@ -1,5 +1,4 @@
-@inject LeagueSitesContext dbContext
-@model GameModel
+@* Reference file — kept for future frontend migration *@
 <form name="EditGameForm" method="post">
 <input type="hidden" id="game-id" name="Game.ID" value="@(Model.Game!.ID)" />
 
