@@ -1,11 +1,13 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 [ApiController]
 [Route("api/Scores")]
-public class APIScoresController(LeagueSitesContext dbContext) : ControllerBase
+public class APIScoresController(
+    LeagueSitesContext dbContext,
+    IAuthorizationService authorizationService) : ControllerBase
 {
-    [ResponseCache(Duration = 30)]
     [HttpGet]
     public async Task<IActionResult> Get([FromQuery] string? day)
     {
@@ -23,6 +25,18 @@ public class APIScoresController(LeagueSitesContext dbContext) : ControllerBase
             .Where(g => g.Date.Date == date.Date && !excludedStatuses.Contains(g.Status!.Name))
             .ToListAsync();
 
+        // Per-game edit authorization (team-scoped)
+        var requirement = new TeamScopedRequirement(
+            PermissionsScope.Manager, PermissionsScope.Scorer,
+            PermissionsScope.Executive, PermissionsScope.Webmaster);
+
+        var gameDtos = new List<object>();
+        foreach (var g in games)
+        {
+            var canEdit = (await authorizationService.AuthorizeAsync(User, g, requirement)).Succeeded;
+            gameDtos.Add(new { game = new GameSummaryDto(g), canEdit });
+        }
+
         Standings? standings = null;
         var currentSeason = games.FirstOrDefault()?.SeasonID;
         if (currentSeason != null)
@@ -39,6 +53,6 @@ public class APIScoresController(LeagueSitesContext dbContext) : ControllerBase
             standings = new Standings(standingsGames);
         }
 
-        return Ok(new { date, games = games.Select(g => new GameSummaryDto(g)), standings = standings?.ToDto() });
+        return Ok(new { date, games = gameDtos, standings = standings?.ToDto() });
     }
 }
