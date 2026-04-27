@@ -104,6 +104,18 @@ public class PermissionsManager
         if (team != null && TeamPermissions.TryGetValue(team, out List<PermissionsScope>? tp) && tp.Any(scopes.Contains)) return true;
         return false;
     }
+
+    /// <summary>
+    /// Returns true if the user has any of the given scopes at the site level
+    /// or on ANY team. Use for gatekeeper policies where the specific team is
+    /// unknown at the authorization stage (resource-based checks happen later).
+    /// </summary>
+    public bool IncludeAnyScope(List<PermissionsScope> scopes)
+    {
+        if (SitePermissions.Any(scopes.Contains)) return true;
+        if (TeamPermissions.Any(tp => tp.Value.Any(scopes.Contains))) return true;
+        return false;
+    }
 }
 
 public enum PermissionsScope

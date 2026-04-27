@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations.Schema;
 
-public partial class Team : IEquatable<Team>
+public partial class Team : ITeamScoped, IEquatable<Team>
 {
     public Team()
     {
@@ -9,6 +9,9 @@ public partial class Team : IEquatable<Team>
         Invitations = [];
         Socials = [];
     }
+
+    public IEnumerable<long> GetRelatedTeamIds() => [ID];
+    public IEnumerable<Team?> GetRelatedTeams() => [this];
 
     public long ID { get; set; }
     public required string Location { get; set; }

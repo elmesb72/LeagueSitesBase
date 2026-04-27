@@ -5,7 +5,9 @@ using Microsoft.EntityFrameworkCore;
 [ApiController]
 [Route("api/Invitation")]
 [Authorize(Policy = "Scope:Manager,Scorer,Reporter,Executive,Webmaster")]
-public class APIInvitationController(LeagueSitesContext dbContext) : ControllerBase
+public class APIInvitationController(
+    LeagueSitesContext dbContext,
+    IAuthorizationService authorizationService) : ControllerBase
 {
     [HttpGet("Create")]
     public async Task<IActionResult> GetCreateData()
@@ -50,6 +52,18 @@ public class APIInvitationController(LeagueSitesContext dbContext) : ControllerB
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] InvitationForm form)
     {
+        if (form.TeamID < 0)
+            return BadRequest("TeamID is required.");
+
+        var team = await dbContext.Teams.FirstOrDefaultAsync(t => t.ID == form.TeamID);
+        if (team is null) return NotFound($"Team {form.TeamID} not found.");
+
+        var auth = await authorizationService.AuthorizeAsync(
+            User, team,
+            new TeamScopedRequirement(
+                PermissionsScope.Manager, PermissionsScope.Executive, PermissionsScope.Webmaster));
+        if (!auth.Succeeded) return Forbid();
+
         if (!string.IsNullOrEmpty(form.FirstName) && !string.IsNullOrEmpty(form.LastName))
             form.PlayerExists = true;
 
@@ -107,6 +121,12 @@ public class APIInvitationController(LeagueSitesContext dbContext) : ControllerB
 
         if (invitation is null)
             return NotFound();
+
+        var auth = await authorizationService.AuthorizeAsync(
+            User, invitation,
+            new TeamScopedRequirement(
+                PermissionsScope.Manager, PermissionsScope.Executive, PermissionsScope.Webmaster));
+        if (!auth.Succeeded) return Forbid();
 
         form.UpdateExistingInvitation(ref invitation);
         GeneratePlayerShortCode(invitation);

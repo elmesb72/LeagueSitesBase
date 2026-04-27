@@ -1,10 +1,13 @@
-public partial class Invitation
+public partial class Invitation : ITeamScoped
 {
     public Invitation()
     {
         InvitationEmails = [];
         InvitationRoles = [];
     }
+
+    public IEnumerable<long> GetRelatedTeamIds() => [TeamID];
+    public IEnumerable<Team?> GetRelatedTeams() => [Team];
 
     public long ID { get; set; }
     public long? PlayerID { get; set; }

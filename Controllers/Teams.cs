@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 [ApiController]
 [Route("api/Teams")]
-public class APITeamsController(LeagueSitesContext context, ISeasonService seasonService, IPermissionsService permissionsService) : ControllerBase
+public class APITeamsController(LeagueSitesContext context, ISeasonService seasonService, IPermissionsService permissionsService, IAuthorizationService authorizationService) : ControllerBase
 {
     readonly LeagueSitesContext dbContext = context;
 
@@ -214,6 +214,12 @@ public class APITeamsController(LeagueSitesContext context, ISeasonService seaso
     {
         var team = await dbContext.Teams.FirstOrDefaultAsync(t => t.ID == id);
         if (team is null) return NotFound();
+
+        var auth = await authorizationService.AuthorizeAsync(
+            User, team,
+            new TeamScopedRequirement(
+                PermissionsScope.Manager, PermissionsScope.Executive, PermissionsScope.Webmaster));
+        if (!auth.Succeeded) return Forbid();
 
         team.Location = dto.Location;
         team.Name = dto.Name;
