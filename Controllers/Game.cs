@@ -135,7 +135,7 @@ public class APIGameController(
         dbContext.Events.Add(Event.Log(
             EventType.Update, uid,
             "/api/Game", "Added new game",
-            JsonConvert.SerializeObject(game)));
+            new GameDetailDto(game)));
         await dbContext.SaveChangesAsync();
 
         return CreatedAtAction(nameof(Get), new { id = game.ID }, new GameDetailDto(game));
@@ -185,7 +185,7 @@ public class APIGameController(
         dbContext.Events.Add(Event.Log(
             EventType.Update, uid,
             "/api/Game/" + id, "Updated game",
-            JsonConvert.SerializeObject(game)));
+            new GameDetailDto(game)));
 
         await dbContext.SaveChangesAsync();
 
@@ -214,7 +214,7 @@ public class APIGameController(
         dbContext.Events.Add(Event.Log(
             EventType.Update, uid,
             "/api/Game/" + id, "Deleted game",
-            JsonConvert.SerializeObject(game)));
+            new GameDetailDto(game)));
 
         await dbContext.SaveChangesAsync();
 

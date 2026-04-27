@@ -30,8 +30,6 @@ builder.Services.AddLeagueSitesAuthorization();
 builder.Services.AddControllers().AddJsonOptions(o =>
                 o.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles);
 
-builder.Services.AddRazorPages();
-
 builder.Services.AddHttpClient();
 
 builder.Services.Configure<ForwardedHeadersOptions>(options => 
@@ -48,10 +46,12 @@ builder.WebHost.ConfigureKestrel((context, serverOptions) =>
 
 var app = builder.Build();
 
+// Exception logging — must be early in pipeline to catch all downstream errors
+app.UseMiddleware<ExceptionLoggingMiddleware>();
+
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
-    app.UseExceptionHandler("/Error");
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     //app.UseHsts();
 }
@@ -67,6 +67,5 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
-app.MapRazorPages();
 
 app.Run();

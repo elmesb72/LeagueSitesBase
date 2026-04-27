@@ -119,6 +119,7 @@ public partial class LeagueSitesContext : DbContext
             entity.HasOne(d => d.User)
                 .WithMany(p => p.Events)
                 .HasForeignKey(d => d.UserID)
+                .IsRequired(false)
                 .OnDelete(DeleteBehavior.ClientSetNull);
         });
 

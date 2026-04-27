@@ -82,6 +82,12 @@ public class APINewsController(
         await dbContext.News.AddAsync(news);
         await dbContext.SaveChangesAsync();
 
+        dbContext.Events.Add(Event.Log(
+            EventType.Update, permissions.User.ID,
+            "/api/News", "Created news post",
+            new { news.ID, news.AuthorID, news.AuthorInvitationID, news.Title, news.IsHidden }));
+        await dbContext.SaveChangesAsync();
+
         return CreatedAtAction(nameof(Get), new { id = news.ID }, news);
     }
 
@@ -111,6 +117,12 @@ public class APINewsController(
         dbContext.News.Update(news);
         await dbContext.SaveChangesAsync();
 
+        dbContext.Events.Add(Event.Log(
+            EventType.Update, permissions.User.ID,
+            "/api/News/" + id, "Updated news post",
+            new { news.ID, news.AuthorID, news.AuthorInvitationID, news.Title, news.IsHidden }));
+        await dbContext.SaveChangesAsync();
+
         return Ok(news);
     }
 
@@ -135,6 +147,12 @@ public class APINewsController(
 
         news.IsDeleted = true;
         dbContext.News.Update(news);
+        await dbContext.SaveChangesAsync();
+
+        dbContext.Events.Add(Event.Log(
+            EventType.Update, permissions.User.ID,
+            "/api/News/" + id, "Deleted news post",
+            new { news.ID, news.AuthorID, news.Title }));
         await dbContext.SaveChangesAsync();
 
         return NoContent();

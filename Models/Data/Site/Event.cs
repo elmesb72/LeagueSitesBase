@@ -10,6 +10,12 @@ public partial class Event
 
     public virtual User? User { get; set; }
 
+    static readonly Newtonsoft.Json.JsonSerializerSettings SerializerSettings = new()
+    {
+        ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore,
+        MaxDepth = 4,
+    };
+
     public static Event Log(EventType type, long userID, string resource, string summary, string description)
     {
         return new Event()
@@ -21,5 +27,20 @@ public partial class Event
             Summary = summary,
             Description = description,
         };
+    }
+
+    public static Event Log(EventType type, long userID, string resource, string summary, object payload)
+    {
+        string description;
+        try
+        {
+            description = Newtonsoft.Json.JsonConvert.SerializeObject(payload, SerializerSettings);
+        }
+        catch (Exception ex)
+        {
+            description = $"[Failed to serialize payload: {ex.Message}]";
+        }
+
+        return Log(type, userID, resource, summary, description);
     }
 }

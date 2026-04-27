@@ -80,7 +80,9 @@ public class APIInvitationController(LeagueSitesContext dbContext) : ControllerB
         dbContext.Events.Add(Event.Log(
             EventType.Update, uid,
             "/api/Invitation", "Added invitation",
-            JsonConvert.SerializeObject(invitation)));
+            new { invitation.TeamID, invitation.UserID, invitation.PlayerID, invitation.StatusID,
+                  Emails = invitation.InvitationEmails.Select(e => e.Email),
+                  Roles = invitation.InvitationRoles.Select(r => r.RoleID) }));
 
         await dbContext.SaveChangesAsync();
 
@@ -115,7 +117,9 @@ public class APIInvitationController(LeagueSitesContext dbContext) : ControllerB
         dbContext.Events.Add(Event.Log(
             EventType.Update, uid,
             "/api/Invitation/" + id, "Updated invitation",
-            JsonConvert.SerializeObject(invitation)));
+            new { invitation.ID, invitation.TeamID, invitation.UserID, invitation.PlayerID, invitation.StatusID,
+                  Emails = invitation.InvitationEmails.Select(e => e.Email),
+                  Roles = invitation.InvitationRoles.Select(r => r.RoleID) }));
 
         await dbContext.SaveChangesAsync();
 

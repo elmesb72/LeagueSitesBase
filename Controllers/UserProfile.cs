@@ -115,7 +115,14 @@ public class APIUserController(LeagueSitesContext dbContext) : ControllerBase
     {
         if (User.Identity?.IsAuthenticated == true)
         {
+            var uid = Convert.ToInt64(User.Claims.First(c => c.Type == "UserID").Value);
             await HttpContext.SignOutAsync();
+
+            dbContext.Events.Add(Event.Log(
+                EventType.Information, uid,
+                "/api/User/Logout", "User logged out",
+                new { userID = uid, name = User.Identity.Name }));
+            await dbContext.SaveChangesAsync();
         }
         return Ok();
     }

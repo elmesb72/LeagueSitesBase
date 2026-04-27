@@ -110,8 +110,23 @@ public class APIExecutiveController(LeagueSitesContext dbContext) : ControllerBa
         dbContext.Seasons.Add(season);
         var result = await dbContext.SaveChangesAsync();
 
+        var uid = Convert.ToInt64(User.Claims.First(c => c.Type == "UserID").Value);
+
         if (result == 0)
+        {
+            dbContext.Events.Add(Event.Log(
+                EventType.Error, uid,
+                "/api/Executive/Season", "Season creation failed — no rows written",
+                new { season.Year, season.Subseason }));
+            await dbContext.SaveChangesAsync();
             return StatusCode(500, "Error writing to database.");
+        }
+
+        dbContext.Events.Add(Event.Log(
+            EventType.Update, uid,
+            "/api/Executive/Season", "Created season",
+            new SeasonSummaryDto(season)));
+        await dbContext.SaveChangesAsync();
 
         return CreatedAtAction(nameof(Dashboard), new { }, season);
     }
@@ -131,32 +146,57 @@ public class APIExecutiveController(LeagueSitesContext dbContext) : ControllerBa
         season.StartDate = parsed;
         await dbContext.SaveChangesAsync();
 
+        var uid = Convert.ToInt64(User.Claims.First(c => c.Type == "UserID").Value);
+        dbContext.Events.Add(Event.Log(
+            EventType.Update, uid,
+            "/api/Executive/Season/StartDate", "Updated season start date",
+            new { season.ID, season.Year, StartDate = season.StartDate.ToString("yyyy-MM-dd") }));
+        await dbContext.SaveChangesAsync();
+
         return Ok(new { startDate = season.StartDate.ToString("yyyy-MM-dd") });
     }
 
     [HttpPatch("Status/{entity}/{id:long}")]
     public async Task<IActionResult> ToggleStatus([FromRoute] string entity, [FromRoute] long id)
     {
+        object? affected = null;
         switch (entity.ToLower())
         {
             case "team":
                 var team = await dbContext.Teams.FirstOrDefaultAsync(t => t.ID == id);
                 if (team is null) return NotFound($"Team {id} not found.");
                 team.Active = !team.Active;
+                affected = new { team.ID, team.Name, team.Active };
                 break;
 
             case "park":
                 var park = await dbContext.Locations.FirstOrDefaultAsync(l => l.ID == id);
                 if (park is null) return NotFound($"Park {id} not found.");
                 park.Active = !park.Active;
+                affected = new { park.ID, park.Name, park.Active };
                 break;
 
             default:
                 return BadRequest("Can only toggle status of 'team' or 'park' entities.");
         }
 
+        var uid = Convert.ToInt64(User.Claims.First(c => c.Type == "UserID").Value);
+
         if (await dbContext.SaveChangesAsync() == 0)
+        {
+            dbContext.Events.Add(Event.Log(
+                EventType.Error, uid,
+                $"/api/Executive/Status/{entity}/{id}", "Status toggle failed — no rows written",
+                affected));
+            await dbContext.SaveChangesAsync();
             return StatusCode(500, "Error updating in the database.");
+        }
+
+        dbContext.Events.Add(Event.Log(
+            EventType.Update, uid,
+            $"/api/Executive/Status/{entity}/{id}", $"Toggled {entity} status",
+            affected));
+        await dbContext.SaveChangesAsync();
 
         return NoContent();
     }

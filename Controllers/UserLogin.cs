@@ -33,7 +33,7 @@ public class APIUserLoginController(LeagueSitesContext context) : ControllerBase
         dbContext.Events.Add(Event.Log(
             EventType.Update, uid,
             "/api/UserLogin/Delete/" + id, "Deleted user login",
-            JsonConvert.SerializeObject(login)));
+            new { login.ID, login.UserID, login.LoginSourceID, login.Name, login.Email, login.IsPrimary }));
         await dbContext.SaveChangesAsync();
 
         return NoContent();
@@ -64,10 +64,11 @@ public class APIUserLoginController(LeagueSitesContext context) : ControllerBase
         logins.ForEach(ul => ul.IsPrimary = false);
         logins.First(ul => ul.ID == login.ID).IsPrimary = true;
         dbContext.UserLogins.UpdateRange(logins);
+        var favouriteLogin = logins.First(ul => ul.ID == login.ID);
         dbContext.Events.Add(Event.Log(
             EventType.Update, uid,
             "/api/UserLogin/Favourite/" + id, "Set login as favourite",
-            JsonConvert.SerializeObject(logins.First(ul => ul.ID == login.ID))));
+            new { favouriteLogin.ID, favouriteLogin.UserID, favouriteLogin.LoginSourceID, favouriteLogin.Name, favouriteLogin.Email, favouriteLogin.IsPrimary }));
         await dbContext.SaveChangesAsync();
 
         return Ok();

@@ -224,6 +224,13 @@ public class APITeamsController(LeagueSitesContext context, ISeasonService seaso
         dbContext.Teams.Update(team);
         await dbContext.SaveChangesAsync();
 
+        var uid = Convert.ToInt64(User.Claims.First(c => c.Type == "UserID").Value);
+        dbContext.Events.Add(Event.Log(
+            EventType.Update, uid,
+            "/api/Teams/" + id, "Updated team",
+            new TeamDetailDto(team)));
+        await dbContext.SaveChangesAsync();
+
         return Ok(new TeamDetailDto(team));
     }
 

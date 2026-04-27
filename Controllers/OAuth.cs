@@ -68,7 +68,8 @@ public class APIOAuthController(IHttpClientFactory clientFactory, IConfiguration
                     IsPrimary = false
                 };
                 await dbContext.UserLogins.AddAsync(ul);
-                dbContext.Events.Add(Event.Log(EventType.Update, uid, "/OAuth/" + source, "Associating " + source + " UserLogin", JsonConvert.SerializeObject(ul)));
+                dbContext.Events.Add(Event.Log(EventType.Update, uid, "/api/OAuth/" + source, "Associating " + source + " UserLogin",
+                    new { ul.UserID, ul.LoginSourceID, ul.Name, ul.Email, ul.IsPrimary }));
                 await dbContext.SaveChangesAsync();
             }
 
@@ -111,7 +112,8 @@ public class APIOAuthController(IHttpClientFactory clientFactory, IConfiguration
             login.UserID = existingLogins.First().UserID;
             login.IsPrimary = false;
             await dbContext.UserLogins.AddAsync(login);
-            dbContext.Events.Add(Event.Log(EventType.Update, login.UserID, "/OAuth/" + source, "Associating " + source + " UserLogin", JsonConvert.SerializeObject(login)));
+            dbContext.Events.Add(Event.Log(EventType.Update, login.UserID, "/api/OAuth/" + source, "Associating " + source + " UserLogin",
+                new { login.UserID, login.LoginSourceID, login.Name, login.Email, login.IsPrimary }));
             await dbContext.SaveChangesAsync();
             return await SignIn(existingLogins.First().User!);
         }
@@ -137,7 +139,8 @@ public class APIOAuthController(IHttpClientFactory clientFactory, IConfiguration
                 dbContext.InvitationEmails.RemoveRange(emailsToRemove);
                 await dbContext.SaveChangesAsync();
 
-                dbContext.Events.Add(Event.Log(EventType.Update, user.ID, "/OAuth/" + source, "Registered new user", JsonConvert.SerializeObject(invitations)));
+                dbContext.Events.Add(Event.Log(EventType.Update, user.ID, "/api/OAuth/" + source, "Registered new user",
+                    invitations.Select(i => new { i.ID, i.TeamID, i.UserID, i.PlayerID, i.StatusID })));
                 await dbContext.SaveChangesAsync();
 
                 return await SignIn(user);
