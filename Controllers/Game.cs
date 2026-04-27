@@ -122,7 +122,12 @@ public class APIGameController(
         };
 
         var status = await dbContext.GameStatuses.FirstAsync(gs => gs.ID == game.StatusID);
-        if (status.Name != "Played")
+        if (status.Name == "Played")
+        {
+            if (dto.ScoreHost is null || dto.ScoreVisitor is null)
+                return BadRequest("Both scores must be provided when the game status is Played.");
+        }
+        else
         {
             game.ScoreHost = null;
             game.ScoreVisitor = null;
@@ -173,7 +178,12 @@ public class APIGameController(
         game.ScoreVisitor = dto.ScoreVisitor;
 
         var status = await dbContext.GameStatuses.FirstAsync(gs => gs.ID == game.StatusID);
-        if (status.Name != "Played")
+        if (status.Name == "Played")
+        {
+            if (dto.ScoreHost is null || dto.ScoreVisitor is null)
+                return BadRequest("Both scores must be provided when the game status is Played.");
+        }
+        else
         {
             game.ScoreHost = null;
             game.ScoreVisitor = null;
