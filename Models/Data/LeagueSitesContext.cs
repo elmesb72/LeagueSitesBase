@@ -35,6 +35,7 @@ public partial class LeagueSitesContext : DbContext
     public virtual DbSet<Tournament> Tournaments { get; set; }
     public virtual DbSet<TournamentBracket> TournamentBrackets { get; set; }
     public virtual DbSet<TournamentRoundRobin> TournamentRoundRobins { get; set; }
+    public virtual DbSet<TrafficDaily> TrafficDaily { get; set; }
     public virtual DbSet<User> Users { get; set; }
     public virtual DbSet<UserLogin> UserLogins { get; set; }
     public virtual DbSet<UserLoginSource> UserLoginSources { get; set; }
@@ -617,6 +618,12 @@ public partial class LeagueSitesContext : DbContext
                 .WithMany(p => p.UserRoles)
                 .HasForeignKey(d => d.RoleID)
                 .OnDelete(DeleteBehavior.ClientSetNull);
+        });
+
+        modelBuilder.Entity<TrafficDaily>(entity =>
+        {
+            entity.ToTable("TrafficDaily");
+            entity.HasKey(e => e.Date);
         });
 
         OnModelCreatingPartial(modelBuilder);
