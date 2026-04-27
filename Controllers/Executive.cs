@@ -5,7 +5,9 @@ using Microsoft.EntityFrameworkCore;
 [ApiController]
 [Route("api/Executive")]
 [Authorize(Policy = "Scope:Executive,Webmaster")]
-public class APIExecutiveController(LeagueSitesContext dbContext) : ControllerBase
+public class APIExecutiveController(
+    LeagueSitesContext dbContext,
+    IScheduleImportService scheduleImportService) : ControllerBase
 {
     [HttpGet("Dashboard")]
     public async Task<IActionResult> Dashboard()
@@ -221,6 +223,97 @@ public class APIExecutiveController(LeagueSitesContext dbContext) : ControllerBa
 
         return Ok(games.Select(g => new GameSummaryDto(g)));
     }
+
+    /// <summary>
+    /// Parses an uploaded xlsx schedule and returns a preview (does not write to DB).
+    /// </summary>
+    [HttpPost("Schedule/Preview")]
+    [RequestSizeLimit(5 * 1024 * 1024)] // 5 MB
+    public async Task<IActionResult> SchedulePreview(IFormFile file)
+    {
+        if (file is null || file.Length == 0)
+            return BadRequest("No file uploaded.");
+
+        var season = await dbContext.Seasons
+            .FirstOrDefaultAsync(s => s.Subseason == "Regular Season" && s.Year == DateTime.Now.Year);
+        if (season is null)
+            return BadRequest("No regular season exists for the current year.");
+
+        var existingGames = await dbContext.Games
+            .Where(g => g.SeasonID == season.ID && g.Status!.Name != "Deleted")
+            .CountAsync();
+        if (existingGames > 0)
+            return BadRequest($"Schedule already has {existingGames} games. Import is only available for empty schedules.");
+
+        try
+        {
+            using var stream = file.OpenReadStream();
+            var preview = await scheduleImportService.ParseAsync(stream, season.ID);
+            return Ok(preview);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest($"Failed to parse spreadsheet: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Confirms and commits the games from a previously previewed schedule import.
+    /// </summary>
+    [HttpPost("Schedule/Import")]
+    public async Task<IActionResult> ScheduleImport([FromBody] ScheduleImportConfirmDto dto)
+    {
+        if (dto.Games is null || dto.Games.Count == 0)
+            return BadRequest("No games provided.");
+
+        var season = await dbContext.Seasons
+            .FirstOrDefaultAsync(s => s.ID == dto.SeasonID);
+        if (season is null) return NotFound("Season not found.");
+
+        var existingGames = await dbContext.Games
+            .Where(g => g.SeasonID == season.ID && g.Status!.Name != "Deleted")
+            .CountAsync();
+        if (existingGames > 0)
+            return BadRequest($"Schedule already has {existingGames} games. Cannot import into non-empty schedule.");
+
+        var upcomingStatus = await dbContext.GameStatuses.FirstAsync(s => s.Name == "Upcoming");
+
+        var games = dto.Games.Select(g => new Game
+        {
+            SeasonID = season.ID,
+            Date = g.Date,
+            HostTeamID = g.HostTeamID,
+            VisitingTeamID = g.VisitingTeamID,
+            LocationID = g.LocationID,
+            StatusID = upcomingStatus.ID,
+            ScoreHost = null,
+            ScoreVisitor = null
+        }).ToList();
+
+        await dbContext.Games.AddRangeAsync(games);
+        await dbContext.SaveChangesAsync();
+
+        var uid = Convert.ToInt64(User.Claims.First(c => c.Type == "UserID").Value);
+        dbContext.Events.Add(Event.Log(
+            EventType.Update, uid,
+            "/api/Executive/Schedule/Import", $"Imported {games.Count} games",
+            new { season.ID, season.Year, Count = games.Count }));
+        await dbContext.SaveChangesAsync();
+
+        return Ok(new { count = games.Count });
+    }
 }
 
 public record SeasonStartDateDto(string StartDate);
+
+public record ScheduleImportConfirmDto(
+    long SeasonID,
+    List<ScheduleImportGameConfirm> Games
+);
+
+public record ScheduleImportGameConfirm(
+    DateTime Date,
+    long HostTeamID,
+    long VisitingTeamID,
+    long LocationID
+);

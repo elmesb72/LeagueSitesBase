@@ -7,6 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="ClosedXML" Version="0.105.0" />
     <PackageReference Include="Facet" Version="5.9.1" />
     <PackageReference Include="Facet.Extensions.EFCore" Version="5.9.1" />
     <PackageReference Include="FluentAssertions" Version="8.6.0" />
