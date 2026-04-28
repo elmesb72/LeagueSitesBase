@@ -240,6 +240,84 @@ public class APITeamsController(LeagueSitesContext context, ISeasonService seaso
         return Ok(new TeamDetailDto(team));
     }
 
+    [Authorize(Policy = "Scope:Executive,Webmaster")]
+    [HttpPost]
+    public async Task<IActionResult> Create([FromBody] TeamUpdateDto dto)
+    {
+        if (string.IsNullOrWhiteSpace(dto.Location) || string.IsNullOrWhiteSpace(dto.Name)
+            || string.IsNullOrWhiteSpace(dto.Abbreviation))
+            return BadRequest("Location, name, and abbreviation are required.");
+
+        if (!IsHex6(dto.BackgroundColor) || !IsHex6(dto.Color))
+            return BadRequest("BackgroundColor and Color must be 6-character hex strings (e.g. 'FFFFFF').");
+
+        var duplicate = await dbContext.Teams
+            .AnyAsync(t => t.Abbreviation.ToLower() == dto.Abbreviation.ToLower());
+        if (duplicate)
+            return Conflict($"A team with abbreviation '{dto.Abbreviation}' already exists.");
+
+        var team = new Team
+        {
+            Location = dto.Location,
+            Name = dto.Name,
+            Abbreviation = dto.Abbreviation,
+            BackgroundColor = dto.BackgroundColor,
+            Color = dto.Color,
+            Active = true,
+            Hidden = false
+        };
+
+        await dbContext.Teams.AddAsync(team);
+        await dbContext.SaveChangesAsync();
+
+        var uid = Convert.ToInt64(User.Claims.First(c => c.Type == "UserID").Value);
+        dbContext.Events.Add(Event.Log(
+            EventType.Update, uid,
+            "/api/Teams", "Created team",
+            new TeamDetailDto(team)));
+        await dbContext.SaveChangesAsync();
+
+        return CreatedAtAction(nameof(Get), new { id = team.ID }, new TeamDetailDto(team));
+    }
+
+    [Authorize(Policy = "Scope:Executive,Webmaster")]
+    [HttpDelete("{id:long}")]
+    public async Task<IActionResult> Delete([FromRoute] long id)
+    {
+        var team = await dbContext.Teams
+            .Include(t => t.GameHostTeam)
+            .Include(t => t.GameVisitingTeam)
+            .Include(t => t.Invitations)
+            .Include(t => t.Socials)
+            .FirstOrDefaultAsync(t => t.ID == id);
+
+        if (team is null) return NotFound();
+
+        var blockers = new List<string>();
+        if (team.GameHostTeam.Count > 0 || team.GameVisitingTeam.Count > 0)
+            blockers.Add($"{team.GameHostTeam.Count + team.GameVisitingTeam.Count} game(s)");
+        if (team.Invitations.Count > 0)
+            blockers.Add($"{team.Invitations.Count} invitation(s)");
+        if (team.Socials.Count > 0)
+            blockers.Add($"{team.Socials.Count} social link(s)");
+
+        if (blockers.Count > 0)
+            return Conflict($"Cannot delete team — it has {string.Join(", ", blockers)}.");
+
+        var snapshot = new TeamDetailDto(team);
+        dbContext.Teams.Remove(team);
+        await dbContext.SaveChangesAsync();
+
+        var uid = Convert.ToInt64(User.Claims.First(c => c.Type == "UserID").Value);
+        dbContext.Events.Add(Event.Log(
+            EventType.Update, uid,
+            "/api/Teams/" + id, "Deleted team",
+            snapshot));
+        await dbContext.SaveChangesAsync();
+
+        return NoContent();
+    }
+
     /// Returns a dictionary of names and jersey numbers for active players on the given team.
     /// Optional query parameter: exclude (string) removes a player matching the provided number.
     [ResponseCache(Duration = 30)]
@@ -261,4 +339,9 @@ public class APITeamsController(LeagueSitesContext context, ISeasonService seaso
 
         return Ok(players.ToDictionary(p => p.Number!, p => p.Name));
     }
+
+    static bool IsHex6(string? value) =>
+        !string.IsNullOrEmpty(value)
+        && value.Length == 6
+        && System.Text.RegularExpressions.Regex.IsMatch(value, "^[A-Fa-f0-9]{6}$");
 }

@@ -25,6 +25,24 @@ public class APIExecutiveController(
             .ThenBy(l => l.Name)
             .ToListAsync();
 
+        // Efficient bulk check: collect IDs of teams/locations that have any associated record
+        var referencedTeamIds = new HashSet<long>(
+            await dbContext.Games.AsNoTracking()
+                .Select(g => g.HostTeamID).Distinct().ToListAsync());
+        referencedTeamIds.UnionWith(
+            await dbContext.Games.AsNoTracking()
+                .Select(g => g.VisitingTeamID).Distinct().ToListAsync());
+        referencedTeamIds.UnionWith(
+            await dbContext.Invitations.AsNoTracking()
+                .Select(i => i.TeamID).Distinct().ToListAsync());
+        referencedTeamIds.UnionWith(
+            await dbContext.Set<TeamSocial>().AsNoTracking()
+                .Select(s => s.TeamID).Distinct().ToListAsync());
+
+        var referencedLocationIds = new HashSet<long>(
+            await dbContext.Games.AsNoTracking()
+                .Select(g => g.LocationID).Distinct().ToListAsync());
+
         var currentSeason = await dbContext.Seasons
             .AsNoTracking()
             .Where(s => s.Subseason == "Regular Season" && s.Year == DateTime.Now.Year)
@@ -76,8 +94,38 @@ public class APIExecutiveController(
 
         return Ok(new
         {
-            teams = teams.Select(t => new TeamDetailDto(t)),
-            locations = locations.Select(l => new LocationDetailDto(l)),
+            teams = teams.Select(t =>
+            {
+                var dto = new TeamDetailDto(t);
+                return new
+                {
+                    dto.ID,
+                    dto.Location,
+                    dto.Name,
+                    dto.FullName,
+                    dto.Abbreviation,
+                    dto.Active,
+                    dto.Hidden,
+                    dto.BackgroundColor,
+                    dto.Color,
+                    CanDelete = !referencedTeamIds.Contains(t.ID)
+                };
+            }),
+            locations = locations.Select(l =>
+            {
+                var dto = new LocationDetailDto(l);
+                return new
+                {
+                    dto.ID,
+                    dto.Active,
+                    dto.Name,
+                    dto.FormalName,
+                    dto.City,
+                    dto.Address,
+                    dto.MapsPlaceID,
+                    CanDelete = !referencedLocationIds.Contains(l.ID)
+                };
+            }),
             currentSeason = currentSeason != null ? new
             {
                 season = new SeasonSummaryDto(currentSeason),
