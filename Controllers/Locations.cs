@@ -5,9 +5,8 @@ using Microsoft.EntityFrameworkCore;
 
 [ApiController]
 [Route("api/Locations")]
-public class APILocationsController(LeagueSitesContext dbContext) : ControllerBase
+public class APILocationsController(LeagueSitesContext dbContext, IPermissionsService permissionsService) : ControllerBase
 {
-    [ResponseCache(Duration = 30)]
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
@@ -26,25 +25,74 @@ public class APILocationsController(LeagueSitesContext dbContext) : ControllerBa
         var now = DateTime.Now;
         var today = DateTime.Today;
 
-        return Ok(locations.Select(l => new
+        var permissions = await permissionsService.GetAsync(User);
+        var canEdit = permissions.Include([PermissionsScope.Executive, PermissionsScope.Webmaster]);
+
+        return Ok(new
         {
-            id = l.ID,
-            name = l.Name,
-            formalName = l.FormalName,
-            city = l.City,
-            address = l.Address,
-            mapsPlaceId = l.MapsPlaceID,
-            recentGames = l.Games
-                .Where(g => g.Status?.Name == "Played")
-                .OrderBy(g => Math.Abs(g.Date.Subtract(now).TotalDays))
-                .Take(5)
-                .Select(g => new GameSummaryDto(g)),
-            upcomingGames = l.Games
-                .Where(g => g.Status?.Name != "Played" && g.Status?.Name != "Deleted" && g.Date.Date >= today)
-                .OrderBy(g => Math.Abs(g.Date.Subtract(now).TotalDays))
-                .Take(5)
-                .Select(g => new GameSummaryDto(g))
-        }));
+            canEdit,
+            locations = locations.Select(l => new
+            {
+                id = l.ID,
+                name = l.Name,
+                formalName = l.FormalName,
+                city = l.City,
+                address = l.Address,
+                mapsPlaceId = l.MapsPlaceID,
+                recentGames = l.Games
+                    .Where(g => g.Status?.Name == "Played")
+                    .OrderBy(g => Math.Abs(g.Date.Subtract(now).TotalDays))
+                    .Take(5)
+                    .Select(g => new GameSummaryDto(g)),
+                upcomingGames = l.Games
+                    .Where(g => g.Status?.Name != "Played" && g.Status?.Name != "Deleted" && g.Date.Date >= today)
+                    .OrderBy(g => Math.Abs(g.Date.Subtract(now).TotalDays))
+                    .Take(5)
+                    .Select(g => new GameSummaryDto(g))
+            })
+        });
+    }
+
+    [Authorize(Policy = "Scope:Executive,Webmaster")]
+    [HttpGet("{id:long}")]
+    public async Task<IActionResult> Get([FromRoute] long id)
+    {
+        var location = await dbContext.Locations
+            .AsNoTracking()
+            .FirstOrDefaultAsync(l => l.ID == id);
+
+        if (location is null) return NotFound();
+
+        return Ok(new LocationDetailDto(location));
+    }
+
+    [Authorize(Policy = "Scope:Executive,Webmaster")]
+    [HttpPut("{id:long}")]
+    public async Task<IActionResult> Update([FromRoute] long id, [FromBody] LocationUpsertDto dto)
+    {
+        if (string.IsNullOrWhiteSpace(dto.Name) || string.IsNullOrWhiteSpace(dto.City))
+            return BadRequest("Name and city are required.");
+
+        var location = await dbContext.Locations.FirstOrDefaultAsync(l => l.ID == id);
+        if (location is null) return NotFound();
+
+        location.Name = dto.Name;
+        location.FormalName = dto.FormalName;
+        location.City = dto.City;
+        location.Address = dto.Address;
+        location.MapsPlaceID = dto.MapsPlaceID;
+
+        dbContext.Locations.Update(location);
+        await dbContext.SaveChangesAsync();
+
+        var uid = Convert.ToInt64(User.Claims.First(c => c.Type == "UserID").Value);
+        dbContext.Events.Add(Event.Log(
+            EventType.Update, uid,
+            "/api/Locations/" + id, "Updated location",
+            new LocationDetailDto(location)));
+        await dbContext.SaveChangesAsync();
+
+        return Ok(new LocationDetailDto(location));
     }
 
     [Authorize(Policy = "Scope:Executive,Webmaster")]
