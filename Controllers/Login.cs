@@ -31,7 +31,7 @@ public class APILoginController(IConfiguration config, IWebHostEnvironment env) 
             {
                 name = m.Key,
                 url = ProviderUrlGenerators[m.Key](
-                    config[$"Authentication:{m.Key}:ClientID"] ?? "",
+                    config[$"Authentication:{m.Key}:ClientId"] ?? "",
                     callbackUrlBase)
             })
             .ToList();

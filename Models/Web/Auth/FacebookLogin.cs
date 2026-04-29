@@ -8,7 +8,7 @@ public class FacebookLogin(IQueryCollection qc, HttpClient hc, IConfiguration cf
         var clientSecret = configuration["Authentication:Facebook:ClientSecret"];
         if (clientId is null || clientSecret is null)
         {
-            throw new Exception("Required 'ClientID' and/or 'ClientSecret' properties are missing for the provider in appsettings.json");
+            throw new Exception("Required 'ClientId' and/or 'ClientSecret' properties are missing for the provider in appsettings.json");
         }
         var code = query["code"];
         if (StringValues.IsNullOrEmpty(code)) {
