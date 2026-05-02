@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -44,4 +45,70 @@ public class APISiteConfigController(LeagueSitesContext dbContext, IConfiguratio
             }
         });
     }
+
+    /// <summary>
+    /// Returns the full editable site config (including news settings and history).
+    /// </summary>
+    [Authorize(Policy = "Scope:Webmaster")]
+    [HttpGet("Edit")]
+    public async Task<IActionResult> GetEdit()
+    {
+        var siteConfig = await dbContext.SiteConfigs.FirstOrDefaultAsync();
+        if (siteConfig is null)
+            return NotFound("Site configuration not found.");
+
+        var home = System.Text.Json.JsonSerializer.Deserialize<SiteHomeConfig>(siteConfig.HomeJson, JsonOptions)
+            ?? new SiteHomeConfig();
+
+        var history = System.Text.Json.JsonSerializer.Deserialize<List<SiteHistoryEntry>>(
+            siteConfig.HistoryJson, JsonOptions) ?? [];
+
+        return Ok(new
+        {
+            name = siteConfig.Name,
+            shortName = siteConfig.ShortName,
+            home,
+            history
+        });
+    }
+
+    /// <summary>
+    /// Updates the site configuration.
+    /// </summary>
+    [Authorize(Policy = "Scope:Webmaster")]
+    [HttpPut]
+    public async Task<IActionResult> Update([FromBody] SiteConfigUpdateDto dto)
+    {
+        var siteConfig = await dbContext.SiteConfigs.FirstOrDefaultAsync();
+        if (siteConfig is null)
+            return NotFound("Site configuration not found.");
+
+        if (string.IsNullOrWhiteSpace(dto.Name) || string.IsNullOrWhiteSpace(dto.ShortName))
+            return BadRequest("Name and short name are required.");
+
+        siteConfig.Name = dto.Name.Trim();
+        siteConfig.ShortName = dto.ShortName.Trim();
+        siteConfig.HomeJson = System.Text.Json.JsonSerializer.Serialize(dto.Home, JsonOptions);
+        siteConfig.HistoryJson = System.Text.Json.JsonSerializer.Serialize(dto.History ?? [], JsonOptions);
+
+        dbContext.SiteConfigs.Update(siteConfig);
+        await dbContext.SaveChangesAsync();
+
+        var uid = Convert.ToInt64(User.Claims.First(c => c.Type == "UserID").Value);
+        dbContext.Events.Add(Event.Log(
+            EventType.Update, uid,
+            "/api/Site/Config", "Updated site configuration",
+            new { siteConfig.Name, siteConfig.ShortName }));
+        await dbContext.SaveChangesAsync();
+
+        return Ok();
+    }
 }
+
+public record SiteHistoryEntry(int Year, string Result);
+
+public record SiteConfigUpdateDto(
+    string Name,
+    string ShortName,
+    SiteHomeConfig Home,
+    List<SiteHistoryEntry>? History);
