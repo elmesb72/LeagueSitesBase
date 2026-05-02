@@ -316,4 +316,14 @@ INSERT INTO sqlite_sequence VALUES('Event',1);
 INSERT INTO sqlite_sequence VALUES('UserRole',1);
 INSERT INTO sqlite_sequence VALUES('News',0);
 INSERT INTO sqlite_sequence VALUES('TournamentRoundRobin',0);
+CREATE TABLE IF NOT EXISTS "SiteConfig" (
+	"ID"	INTEGER NOT NULL UNIQUE,
+	"Name"	TEXT NOT NULL,
+	"ShortName"	TEXT NOT NULL,
+	"HomeJson"	TEXT NOT NULL,
+	"HistoryJson"	TEXT NOT NULL DEFAULT '[]',
+	PRIMARY KEY("ID" AUTOINCREMENT)
+);
+INSERT INTO SiteConfig VALUES(1,'Empty Generic League','EGL','{"aboutBlurb":"Welcome to the official website for the <i>Empty Generic League</i>! This league is a sports league where we play sports together.","newsMaxAgeDays":30,"newsMinItems":3,"executives":{"Commissioner":"Example Commissioner","Treasurer":"Example Treasurer"},"socials":{"Facebook":"","Twitter":"","Instagram":"","Discord":""},"links":{"Church League Fastball":"https://churchleaguefastball.ca"},"information":{"League Rules":"#","Waiver Form":"#"}}','[]');
+INSERT INTO sqlite_sequence VALUES('SiteConfig',1);
 COMMIT;

@@ -23,8 +23,16 @@ public partial class News
         return Markdown.ToHtml(Contents, pipeline);
     }
     
-    public static News GeneratePlaceholderPost(IConfiguration config)
+    public static News GeneratePlaceholderPost(SiteConfig? siteConfig)
     {
+        var siteName = siteConfig?.Name ?? "this";
+        var home = siteConfig is not null
+            ? System.Text.Json.JsonSerializer.Deserialize<SiteHomeConfig>(
+                siteConfig.HomeJson,
+                new System.Text.Json.JsonSerializerOptions { PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase })
+                ?? new SiteHomeConfig()
+            : new SiteHomeConfig();
+
         return new()
         {
             AuthorID = -1,
@@ -52,7 +60,7 @@ public partial class News
                 ]
             },
             Title = "Placeholder Post",
-            Contents = $"Welcome to the news section for the {config["Site:Name"]} website. This section shows news posts made within the last {config["Site:Home:NewsMaxAgeDays"]} days or the {config["Site:Home:NewsMinItems"]} most recent posts.",
+            Contents = $"Welcome to the news section for the {siteName} website. This section shows news posts made within the last {home.NewsMaxAgeDays} days or the {home.NewsMinItems} most recent posts.",
             Date = DateTime.Now,
             Source = string.Empty
         };

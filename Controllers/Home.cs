@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 
 [ApiController]
 [Route("api/Home")]
-public class APIHomeController(LeagueSitesContext dbContext, IConfiguration config, ISeasonService seasonService, IPermissionsService permissionsService) : ControllerBase
+public class APIHomeController(LeagueSitesContext dbContext, ISeasonService seasonService, IPermissionsService permissionsService) : ControllerBase
 {
     [HttpGet]
     public async Task<IActionResult> Get()
@@ -82,14 +82,19 @@ public class APIHomeController(LeagueSitesContext dbContext, IConfiguration conf
 
         IEnumerable<News> filtered = allNews;
 
-        if (int.TryParse(config["Site:Home:NewsMaxAgeDays"], out var maxAge)
-            && int.TryParse(config["Site:Home:NewsMinItems"], out var minItems))
+        var siteConfig = await dbContext.SiteConfigs.AsNoTracking().FirstOrDefaultAsync();
+        if (siteConfig is not null)
         {
+            var home = System.Text.Json.JsonSerializer.Deserialize<SiteHomeConfig>(
+                siteConfig.HomeJson,
+                new System.Text.Json.JsonSerializerOptions { PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase })
+                ?? new SiteHomeConfig();
+
             var recent = allNews
-                .Where(n => DateTime.Compare(n.Date, DateTime.Now.AddDays(-maxAge)) >= 0)
+                .Where(n => DateTime.Compare(n.Date, DateTime.Now.AddDays(-home.NewsMaxAgeDays)) >= 0)
                 .ToList();
-            filtered = recent.Count < minItems
-                ? allNews.Take(minItems)
+            filtered = recent.Count < home.NewsMinItems
+                ? allNews.Take(home.NewsMinItems)
                 : recent;
         }
 

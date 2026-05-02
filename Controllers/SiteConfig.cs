@@ -1,32 +1,42 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 [ApiController]
 [Route("api/Site/Config")]
-public class APISiteConfigController(IConfiguration config) : ControllerBase
+public class APISiteConfigController(LeagueSitesContext dbContext, IConfiguration config) : ControllerBase
 {
+    static readonly System.Text.Json.JsonSerializerOptions JsonOptions = new()
+    {
+        PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase
+    };
+
     [ResponseCache(Duration = 300)]
     [HttpGet]
-    public IActionResult Get()
+    public async Task<IActionResult> Get()
     {
-        var homeSection = config.GetSection("Site:Home");
-        var socials = config.GetSection("Site:Home:Socials").GetChildren()
+        var siteConfig = await dbContext.SiteConfigs.FirstOrDefaultAsync();
+        if (siteConfig is null)
+            return NotFound("Site configuration not found.");
+
+        var home = System.Text.Json.JsonSerializer.Deserialize<SiteHomeConfig>(siteConfig.HomeJson, JsonOptions)
+            ?? new SiteHomeConfig();
+
+        // Filter out empty socials (same behavior as the old IConfiguration-based code)
+        var socials = home.Socials
             .Where(s => !string.IsNullOrEmpty(s.Value))
-            .ToDictionary(s => s.Key, s => s.Value!);
+            .ToDictionary(s => s.Key, s => s.Value);
 
         return Ok(new
         {
-            siteName = config["Site:Name"],
-            shortName = config["Site:ShortName"],
+            siteName = siteConfig.Name,
+            shortName = siteConfig.ShortName,
             home = new
             {
-                aboutBlurb = homeSection["AboutBlurb"],
-                executives = config.GetSection("Site:Home:Executives").GetChildren()
-                    .ToDictionary(e => e.Key, e => e.Value!),
+                aboutBlurb = home.AboutBlurb,
+                executives = home.Executives,
                 socials,
-                links = config.GetSection("Site:Home:Links").GetChildren()
-                    .ToDictionary(l => l.Key, l => l.Value!),
-                information = config.GetSection("Site:Home:Information").GetChildren()
-                    .ToDictionary(i => i.Key, i => i.Value!)
+                links = home.Links,
+                information = home.Information
             },
             apiKeys = new
             {

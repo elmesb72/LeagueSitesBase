@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 
 [ApiController]
 [Route("api/History")]
-public class APIHistoryController(LeagueSitesContext dbContext, IConfiguration config) : ControllerBase
+public class APIHistoryController(LeagueSitesContext dbContext) : ControllerBase
 {
     [ResponseCache(Duration = 30)]
     [HttpGet]
@@ -41,18 +41,25 @@ public class APIHistoryController(LeagueSitesContext dbContext, IConfiguration c
             }
         }
 
-        // Add/overwrite from appsettings config
-        var history = config.GetSection("Site:History").Get<List<ConfigurationYear>>() ?? [];
-        foreach (var entry in history)
+        // Add/overwrite from DB-stored site config history
+        var siteConfig = await dbContext.SiteConfigs.AsNoTracking().FirstOrDefaultAsync();
+        if (siteConfig is not null)
         {
-            var existing = years.FirstOrDefault(y => y.CalendarYear == entry.Year);
-            if (existing != null)
+            var history = System.Text.Json.JsonSerializer.Deserialize<List<ConfigurationYear>>(
+                siteConfig.HistoryJson,
+                new System.Text.Json.JsonSerializerOptions { PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase })
+                ?? [];
+            foreach (var entry in history)
             {
-                existing.ExceptionYearDescription = entry.Result;
-            }
-            else
-            {
-                years.Add(new Year(entry.Year, entry.Result));
+                var existing = years.FirstOrDefault(y => y.CalendarYear == entry.Year);
+                if (existing != null)
+                {
+                    existing.ExceptionYearDescription = entry.Result;
+                }
+                else
+                {
+                    years.Add(new Year(entry.Year, entry.Result));
+                }
             }
         }
 

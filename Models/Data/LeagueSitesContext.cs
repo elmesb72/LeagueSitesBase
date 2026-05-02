@@ -31,6 +31,7 @@ public partial class LeagueSitesContext : DbContext
     public virtual DbSet<RoundRobinGame> RoundRobinGames { get; set; }
     public virtual DbSet<Season> Seasons { get; set; }
     public virtual DbSet<SeriesGame> SeriesGames { get; set; }
+    public virtual DbSet<SiteConfig> SiteConfigs { get; set; }
     public virtual DbSet<Team> Teams { get; set; }
     public virtual DbSet<Tournament> Tournaments { get; set; }
     public virtual DbSet<TournamentBracket> TournamentBrackets { get; set; }
@@ -381,6 +382,22 @@ public partial class LeagueSitesContext : DbContext
             entity.Property(e => e.StartDate).IsRequired();
 
             entity.Property(e => e.Subseason).IsRequired();
+        });
+
+        modelBuilder.Entity<SiteConfig>(entity =>
+        {
+            entity.ToTable("SiteConfig");
+
+            entity.HasIndex(e => e.ID)
+                .IsUnique();
+
+            entity.Property(e => e.ID)
+                .ValueGeneratedOnAdd();
+
+            entity.Property(e => e.Name).IsRequired();
+            entity.Property(e => e.ShortName).IsRequired();
+            entity.Property(e => e.HomeJson).IsRequired();
+            entity.Property(e => e.HistoryJson).HasDefaultValue("[]");
         });
 
         modelBuilder.Entity<SocialPlatform>(entity =>
