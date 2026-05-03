@@ -63,12 +63,31 @@ public class APISiteConfigController(LeagueSitesContext dbContext, IConfiguratio
         var history = System.Text.Json.JsonSerializer.Deserialize<List<SiteHistoryEntry>>(
             siteConfig.HistoryJson, JsonOptions) ?? [];
 
+        // List all files on the volume so the UI can surface orphans
+        var filesOnDisk = new List<string>();
+        try
+        {
+            if (Directory.Exists("/var/db/static/files"))
+            {
+                filesOnDisk = [.. Directory.GetFiles("/var/db/static/files")
+                    .Select(Path.GetFileName)
+                    .Where(n => !string.IsNullOrEmpty(n))
+                    .Cast<string>()
+                    .OrderBy(n => n)];
+            }
+        }
+        catch
+        {
+            // Non-fatal: if we can't read the dir, just return an empty list
+        }
+
         return Ok(new
         {
             name = siteConfig.Name,
             shortName = siteConfig.ShortName,
             home,
-            history
+            history,
+            files = filesOnDisk
         });
     }
 

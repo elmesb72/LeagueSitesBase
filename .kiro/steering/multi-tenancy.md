@@ -1,5 +1,6 @@
 ---
 inclusion: auto
+description: Multi-tenancy guidelines — keep tenant-specific data out of the shared codebase; secrets live in Infisical; static assets live on per-VM volumes
 ---
 
 # Multi-tenancy guidelines
