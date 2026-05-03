@@ -110,7 +110,9 @@ public class APISiteConfigController(LeagueSitesContext dbContext, IConfiguratio
             home,
             history,
             files = filesOnDisk,
-            socialImages = socialImagesOnDisk
+            socialImages = socialImagesOnDisk,
+            hasLogo = System.IO.File.Exists("/var/db/static/images/logo.webp"),
+            hasFavicon = System.IO.File.Exists("/var/db/static/favicon.png")
         });
     }
 

@@ -1,9 +1,6 @@
 using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Formats.Webp;
-using SixLabors.ImageSharp.Processing;
 
 [ApiController]
 [Route("api/Site/SocialImages")]
@@ -15,7 +12,6 @@ public class APISiteSocialImagesController(LeagueSitesContext dbContext) : Contr
     // {platformKey}.webp to match the homepage's existing <img src> pattern.
     const string SocialImagesDirectory = "/var/db/static/images/social";
     const int MaxDimension = 128;
-    const int WebpQuality = 90;
 
     // Platform keys must be safe to use as a filename and in URLs with no
     // encoding. This matches the assumption on the homepage, which builds
@@ -34,42 +30,11 @@ public class APISiteSocialImagesController(LeagueSitesContext dbContext) : Contr
         if (!ValidPlatformKey.IsMatch(platformKey))
             return BadRequest("Platform key may only contain letters, numbers, hyphens, and underscores.");
 
-        if (file is null || file.Length == 0)
-            return BadRequest("No file uploaded.");
-
-        // ImageSharp doesn't rasterize SVG; reject it explicitly so the
-        // caller gets a clear error instead of a generic decode failure.
-        if (LooksLikeSvg(file))
-            return BadRequest("SVG uploads are not supported. Please upload a raster image (PNG, JPG, or WebP).");
-
-        Directory.CreateDirectory(SocialImagesDirectory);
-        var path = Path.Combine(SocialImagesDirectory, $"{platformKey}.webp");
-
-        try
-        {
-            using var source = file.OpenReadStream();
-            using var image = await Image.LoadAsync(source);
-
-            // Downscale to fit within MaxDimension x MaxDimension while
-            // preserving aspect ratio. No upscaling — Mode.Max keeps smaller
-            // images at their original size.
-            image.Mutate(x => x.Resize(new ResizeOptions
-            {
-                Size = new Size(MaxDimension, MaxDimension),
-                Mode = ResizeMode.Max
-            }));
-
-            await using var output = new FileStream(path, FileMode.Create, FileAccess.Write);
-            await image.SaveAsWebpAsync(output, new WebpEncoder { Quality = WebpQuality });
-        }
-        catch (UnknownImageFormatException)
-        {
-            return BadRequest("Unsupported or unrecognized image format.");
-        }
-        catch (InvalidImageContentException)
-        {
-            return BadRequest("Image file is corrupted or could not be decoded.");
-        }
+        var destination = Path.Combine(SocialImagesDirectory, $"{platformKey}.webp");
+        var result = await ImageProcessor.ConvertAsync(
+            file, destination, ImageOutputFormat.Webp, MaxDimension);
+        if (!result.Success)
+            return BadRequest(result.ErrorMessage);
 
         var uid = Convert.ToInt64(User.Claims.First(c => c.Type == "UserID").Value);
         dbContext.Events.Add(Event.Log(
@@ -104,19 +69,5 @@ public class APISiteSocialImagesController(LeagueSitesContext dbContext) : Contr
         await dbContext.SaveChangesAsync();
 
         return NoContent();
-    }
-
-    /// <summary>
-    /// Heuristic SVG check: XML/SVG content is text-based and ImageSharp
-    /// will throw a generic decode error if we try to load it. Catching it
-    /// early gives a clearer message to the user.
-    /// </summary>
-    static bool LooksLikeSvg(IFormFile file)
-    {
-        var type = file.ContentType ?? string.Empty;
-        if (type.Contains("svg", StringComparison.OrdinalIgnoreCase)) return true;
-
-        var name = file.FileName ?? string.Empty;
-        return name.EndsWith(".svg", StringComparison.OrdinalIgnoreCase);
     }
 }

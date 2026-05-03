@@ -61,25 +61,18 @@ if (!app.Environment.IsDevelopment())
 app.UseStaticFiles();
 
 // Serve tenant-specific static assets from the persistent volume at
-// /var/db/static/. In production this is handled by Apache aliases for
-// /images/ and /files/, but in dev (no Apache) this lets the backend
-// serve them directly so URLs like /images/social/Facebook.webp work.
-// Production is unaffected: Apache aliases fire before the request ever
-// reaches Kestrel.
+// /var/db/static/. In production Apache aliases handle these paths and
+// requests never reach Kestrel; in dev (no Apache) this lets the
+// backend serve them directly so URLs like /images/social/Facebook.webp
+// and /favicon.png work. Mapped at the root so anything under the
+// volume (images/, files/, favicon.png) is reachable.
 var staticVolume = "/var/db/static";
 if (Directory.Exists(staticVolume))
 {
     app.UseStaticFiles(new Microsoft.AspNetCore.Builder.StaticFileOptions
     {
-        FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(
-            Path.Combine(staticVolume, "images")),
-        RequestPath = "/images"
-    });
-    app.UseStaticFiles(new Microsoft.AspNetCore.Builder.StaticFileOptions
-    {
-        FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(
-            Path.Combine(staticVolume, "files")),
-        RequestPath = "/files"
+        FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(staticVolume),
+        RequestPath = ""
     });
 }
 
