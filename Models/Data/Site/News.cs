@@ -1,5 +1,3 @@
-using Markdig;
-
 public partial class News
 {
     public long ID { get; set; }
@@ -17,11 +15,7 @@ public partial class News
 
     public virtual User? Author { get; set; }
 
-    public string RenderContents()
-    {
-        var pipeline = new MarkdownPipelineBuilder().UseEmphasisExtras().Build();
-        return Markdown.ToHtml(Contents, pipeline);
-    }
+    public string RenderContents() => MarkdownHelper.ToHtml(Contents);
     
     public static News GeneratePlaceholderPost(SiteConfig? siteConfig)
     {

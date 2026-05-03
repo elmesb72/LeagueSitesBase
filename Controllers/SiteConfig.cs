@@ -33,7 +33,9 @@ public class APISiteConfigController(LeagueSitesContext dbContext, IConfiguratio
             shortName = siteConfig.ShortName,
             home = new
             {
-                aboutBlurb = home.AboutBlurb,
+                // aboutBlurb is authored as Markdown but consumed by the
+                // homepage via {@html}, so render it here.
+                aboutBlurb = MarkdownHelper.ToHtml(home.AboutBlurb),
                 executives = home.Executives,
                 socials,
                 links = home.Links,
