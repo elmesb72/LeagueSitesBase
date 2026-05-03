@@ -15,6 +15,27 @@ public class APISiteFilesController(LeagueSitesContext dbContext) : ControllerBa
     // Matches any character that's not alphanumeric, dot, hyphen, or underscore.
     static readonly Regex UnsafeFilenameChars = new(@"[^A-Za-z0-9._-]", RegexOptions.Compiled);
 
+    // Extensions we allow webmasters to upload via Information Links.
+    // Intentionally conservative: common document, spreadsheet, image, and
+    // plain-text formats only. Archives, executables, and scripts are all
+    // rejected so a stray file dropped in the volume can't be turned into
+    // a drive-by install or a cross-site scripting vector.
+    //
+    // SVG is blocked alongside scripts because SVG can embed JavaScript
+    // that runs when the file is opened or rendered inline.
+    //
+    // TODO: extension-only validation is cheap but fools nobody — a binary
+    // renamed to .pdf still passes. When we care about hardening this
+    // further, add a magic-byte check for the common document types.
+    static readonly HashSet<string> AllowedExtensions = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ".pdf",
+        ".docx", ".xlsx", ".pptx",
+        ".doc", ".xls", ".ppt",
+        ".txt", ".csv", ".md",
+        ".png", ".jpg", ".jpeg", ".webp", ".gif"
+    };
+
     /// <summary>
     /// Uploads a file to the static files directory. Overwrites any existing
     /// file with the same (sanitized) name.
@@ -29,6 +50,13 @@ public class APISiteFilesController(LeagueSitesContext dbContext) : ControllerBa
         var sanitized = SanitizeFilename(file.FileName);
         if (string.IsNullOrEmpty(sanitized))
             return BadRequest("Filename is invalid or empty after sanitization.");
+
+        var extension = Path.GetExtension(sanitized);
+        if (!AllowedExtensions.Contains(extension))
+        {
+            var allowed = string.Join(", ", AllowedExtensions.OrderBy(e => e));
+            return BadRequest($"File type '{extension}' is not allowed. Allowed types: {allowed}.");
+        }
 
         Directory.CreateDirectory(FilesDirectory);
         var path = Path.Combine(FilesDirectory, sanitized);
