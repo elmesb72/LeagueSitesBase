@@ -83,13 +83,34 @@ public class APISiteConfigController(LeagueSitesContext dbContext, IConfiguratio
             // Non-fatal: if we can't read the dir, just return an empty list
         }
 
+        // List uploaded social icon platform keys (filename without the
+        // .webp extension). Used by the Webmaster UI to preview existing
+        // icons alongside each Social Links row.
+        var socialImagesOnDisk = new List<string>();
+        try
+        {
+            if (Directory.Exists("/var/db/static/images/social"))
+            {
+                socialImagesOnDisk = [.. Directory.GetFiles("/var/db/static/images/social", "*.webp")
+                    .Select(Path.GetFileNameWithoutExtension)
+                    .Where(n => !string.IsNullOrEmpty(n))
+                    .Cast<string>()
+                    .OrderBy(n => n)];
+            }
+        }
+        catch
+        {
+            // Non-fatal
+        }
+
         return Ok(new
         {
             name = siteConfig.Name,
             shortName = siteConfig.ShortName,
             home,
             history,
-            files = filesOnDisk
+            files = filesOnDisk,
+            socialImages = socialImagesOnDisk
         });
     }
 
