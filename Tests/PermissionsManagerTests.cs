@@ -144,18 +144,20 @@ public class PermissionsManagerTests
     }
 
     [Fact]
-    public async Task TeamNotPassedToCreateAsync_TeamPermissionsNotLoaded()
+    public async Task TeamNotPassedToCreateAsync_DefaultsToAllInvitationTeams()
     {
         var user = TestDataHelper.GetFakeClaimsPrincipal(-1);
         var team = TestDataHelper.MakeTeam(-1);
         var dbMock = new Mock<LeagueSitesContext>();
         dbMock.Setup(x => x.Users).ReturnsDbSet(TestDataHelper.GetFakeUser([], new() { [-1] = "Manager" }));
 
-        // Don't pass teams — team permissions won't be loaded
+        // Don't pass teams — should default to every team the user has an invitation to,
+        // so gatekeeper-style checks (IncludeAnyScope, Allow) still see team-scoped roles.
         var permissions = await PermissionsManager.CreateAsync(user, dbMock.Object);
 
-        permissions.Include([PermissionsScope.Manager], team).Should().BeFalse();
-        // But Allow still checks team permissions from invitations
-        permissions.Allow("Post").Should().BeFalse("team permissions not loaded without passing teams");
+        permissions.Include([PermissionsScope.Manager], team).Should().BeTrue();
+        permissions.IncludeAnyScope([PermissionsScope.Manager]).Should().BeTrue();
+        permissions.Allow("Post").Should().BeTrue();
+        permissions.Allow("CreateGame").Should().BeTrue();
     }
 }

@@ -42,7 +42,16 @@ public class PermissionsManager
         }
 
         var sitePermissions = GetSitePermissions(siteUser);
-        var teamPermissions = GetTeamPermissions(siteUser, teams);
+        // When no specific teams are requested, default to every team the user has
+        // an invitation to. Otherwise gatekeeper checks like IncludeAnyScope and
+        // Allow() silently miss team-scoped roles (e.g. a team manager being
+        // Forbid'd from invitation endpoints despite managing the team).
+        var resolvedTeams = teams
+            ?? [.. siteUser.Invitations
+                .Select(i => i.Team)
+                .Where(t => t != null)
+                .Cast<Team>()];
+        var teamPermissions = GetTeamPermissions(siteUser, resolvedTeams);
         var username = siteUser.UserLogins.First(ul => ul.IsPrimary).Name;
         return new PermissionsManager(sitePermissions, teamPermissions, siteUser);
     }
