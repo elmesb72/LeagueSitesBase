@@ -181,6 +181,60 @@ public class APIExecutiveController(
         return CreatedAtAction(nameof(Dashboard), new { }, season);
     }
 
+    /// <summary>
+    /// Creates this year's playoffs season together with an empty tournament to hold its
+    /// brackets and pools, so an executive gets a single "start the playoffs" action.
+    /// </summary>
+    [HttpPost("Season/Playoffs")]
+    public async Task<IActionResult> CreatePlayoffs()
+    {
+        var regularSeason = await dbContext.Seasons
+            .FirstOrDefaultAsync(s => s.Subseason == "Regular Season" && s.Year == DateTime.Now.Year);
+
+        if (regularSeason is null)
+            return BadRequest($"Create the {DateTime.Now.Year} regular season before setting up playoffs.");
+
+        var existing = await dbContext.Seasons
+            .Include(s => s.Tournaments)
+            .FirstOrDefaultAsync(s => s.Subseason == "Playoffs" && s.Year == DateTime.Now.Year);
+
+        if (existing is not null)
+        {
+            // Idempotent: an existing playoffs season without a tournament still needs one.
+            var existingTournament = existing.Tournaments.FirstOrDefault();
+            if (existingTournament is not null)
+                return Conflict("Playoffs already exist for this year.");
+
+            var addedTournament = new Tournament { SeasonID = existing.ID };
+            dbContext.Tournaments.Add(addedTournament);
+            await dbContext.SaveChangesAsync();
+
+            return Ok(new { seasonID = existing.ID, tournamentID = addedTournament.ID });
+        }
+
+        var season = new Season
+        {
+            Year = DateTime.Now.Year,
+            Subseason = "Playoffs",
+            StartDate = DateTime.Now.Date,
+        };
+        dbContext.Seasons.Add(season);
+        await dbContext.SaveChangesAsync();
+
+        var tournament = new Tournament { SeasonID = season.ID };
+        dbContext.Tournaments.Add(tournament);
+        await dbContext.SaveChangesAsync();
+
+        var uid = Convert.ToInt64(User.Claims.First(c => c.Type == "UserID").Value);
+        dbContext.Events.Add(Event.Log(
+            EventType.Update, uid,
+            "/api/Executive/Season/Playoffs", "Created playoffs season",
+            new { season.ID, season.Year, TournamentID = tournament.ID }));
+        await dbContext.SaveChangesAsync();
+
+        return Ok(new { seasonID = season.ID, tournamentID = tournament.ID });
+    }
+
     [HttpPatch("Season/StartDate")]
     public async Task<IActionResult> UpdateSeasonStartDate([FromBody] SeasonStartDateDto dto)
     {

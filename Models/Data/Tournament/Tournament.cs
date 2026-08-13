@@ -51,9 +51,12 @@ public partial class Tournament
                     // Set Winner property on series if series is finished.
                     series.CheckForWinnerAndLoser();
 
-                    // Add Team info to spot details where based on initial seed
-                    if (series.Spots.Item1.Source == '#') series.Spots.Item1.Team = bracket.Seeds[series.Spots.Item1.Seed];
-                    if (series.Spots.Item2.Source == '#') series.Spots.Item2.Team = bracket.Seeds[series.Spots.Item2.Seed];
+                    // Add Team info to spot details where based on initial seed.
+                    // A seed can legitimately be unfilled if its source has not finished yet.
+                    if (series.Spots.Item1.Source == '#' && bracket.Seeds.TryGetValue(series.Spots.Item1.Seed, out var seed1Team))
+                        series.Spots.Item1.Team = seed1Team;
+                    if (series.Spots.Item2.Source == '#' && bracket.Seeds.TryGetValue(series.Spots.Item2.Seed, out var seed2Team))
+                        series.Spots.Item2.Team = seed2Team;
                 }
             }
         }
@@ -102,12 +105,18 @@ public partial class Tournament
                     if (series.Spots.Item2.Source == 'w') series.Spots.Item2.Team = allSeries?.FirstOrDefault(s => s.Number == series.Spots.Item2.Seed)?.Winner;
                     if (series.Spots.Item2.Source == 'l') series.Spots.Item2.Team = allSeries?.FirstOrDefault(s => s.Number == series.Spots.Item2.Seed)?.Loser;
 
-                    // If teams are set and team 2 initial rank is higher (aka lower index) than team 1, swap places
+                    // If teams are set and team 2 initial rank is higher (aka lower index) than team 1, swap places.
+                    // Teams that entered from another bracket may not appear in this bracket's seeds, in
+                    // which case there is no seed order to compare and the spots stay as they are.
                     if (series.Spots.Item1.Team != null && series.Spots.Item2.Team != null)
                     {
-                        var team1InitialSeed = bracket.Seeds.First(s => s.Value == series.Spots.Item1.Team!).Key;
-                        var team2InitialSeed = bracket.Seeds.First(s => s.Value == series.Spots.Item2.Team!).Key;
-                        if (team2InitialSeed < team1InitialSeed) series.Spots = (series.Spots.Item2, series.Spots.Item1);
+                        var team1SeedEntry = bracket.Seeds.FirstOrDefault(s => s.Value == series.Spots.Item1.Team!);
+                        var team2SeedEntry = bracket.Seeds.FirstOrDefault(s => s.Value == series.Spots.Item2.Team!);
+                        if (team1SeedEntry.Value != null && team2SeedEntry.Value != null
+                            && team2SeedEntry.Key < team1SeedEntry.Key)
+                        {
+                            series.Spots = (series.Spots.Item2, series.Spots.Item1);
+                        }
                     }
 
                     if (series.Spots.Item1.Source == 'r' && remainingTeams.Count > series.Spots.Item1.Seed - 1) series.Spots.Item1.Team = remainingTeams.ElementAt(series.Spots.Item1.Seed - 1).Value;

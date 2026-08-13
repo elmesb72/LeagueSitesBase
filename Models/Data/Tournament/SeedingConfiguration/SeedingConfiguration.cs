@@ -38,7 +38,12 @@ public static class SeedingConfiguration
                 var seedRankOutputEnd = Convert.ToInt32(seedRankOutputRangeSplit[1]);
                 for (int i = seedRankOutputStart; i <= seedRankOutputEnd; i++)
                 {
-                    seeds[i] = teams[i - seedRankOutputStart];
+                    // A source can be partially available: a round robin part way through, or a
+                    // round where only some series have finished. Fill the seeds we can and leave
+                    // the rest unassigned rather than failing the whole tournament.
+                    var sourceIndex = i - seedRankOutputStart;
+                    if (sourceIndex >= teams.Count) break;
+                    seeds[i] = teams[sourceIndex];
                 }
             }
         }

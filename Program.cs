@@ -26,6 +26,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
 builder.Services.AddScoped<IPermissionsService, PermissionsService>();
 builder.Services.AddScoped<ISeasonService, SeasonService>();
 builder.Services.AddScoped<IScheduleImportService, ScheduleImportService>();
+builder.Services.AddScoped<ITournamentService, TournamentService>();
 builder.Services.AddLeagueSitesAuthorization();
 
 builder.Services.AddControllers().AddJsonOptions(o =>

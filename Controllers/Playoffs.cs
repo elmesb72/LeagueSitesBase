@@ -51,7 +51,8 @@ public class APIPlayoffsController(LeagueSitesContext dbContext, ISeasonService 
             .ToListAsync();
 
         var tournament = playoffs.Tournaments.FirstOrDefault();
-        tournament?.Populate(playoffGames, dbContext);
+        if (tournament is not null)
+            await tournament.Populate(playoffGames, dbContext);
 
         if (tournament is null)
             return Ok(new PlayoffsDto(new SeasonSummaryDto(playoffs), [], []));
