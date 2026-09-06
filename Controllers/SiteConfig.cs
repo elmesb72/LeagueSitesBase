@@ -109,6 +109,11 @@ public class APISiteConfigController(LeagueSitesContext dbContext, IConfiguratio
             shortName = siteConfig.ShortName,
             home,
             history,
+            // Current standings rules with defaults filled in, plus the full
+            // comparator registry so the UI never hardcodes the choices.
+            standings = StandingsConfigService.Parse(siteConfig.StandingsJson),
+            standingsComparators = StandingsComparators.All
+                .Select(c => new { c.Name, c.Description, c.GroupRestricted }),
             files = filesOnDisk,
             socialImages = socialImagesOnDisk,
             hasLogo = System.IO.File.Exists("/var/db/static/images/logo.webp"),
@@ -130,10 +135,21 @@ public class APISiteConfigController(LeagueSitesContext dbContext, IConfiguratio
         if (string.IsNullOrWhiteSpace(dto.Name) || string.IsNullOrWhiteSpace(dto.ShortName))
             return BadRequest("Name and short name are required.");
 
+        // Standings rules are optional in the payload (older clients); when
+        // present they must be fully valid before anything is persisted.
+        if (dto.Standings is not null)
+        {
+            var problems = StandingsConfigService.Validate(dto.Standings);
+            if (problems.Count > 0)
+                return BadRequest(string.Join(" ", problems));
+        }
+
         siteConfig.Name = dto.Name.Trim();
         siteConfig.ShortName = dto.ShortName.Trim();
         siteConfig.HomeJson = System.Text.Json.JsonSerializer.Serialize(dto.Home, JsonOptions);
         siteConfig.HistoryJson = System.Text.Json.JsonSerializer.Serialize(dto.History ?? [], JsonOptions);
+        if (dto.Standings is not null)
+            siteConfig.StandingsJson = System.Text.Json.JsonSerializer.Serialize(dto.Standings, JsonOptions);
 
         dbContext.SiteConfigs.Update(siteConfig);
         await dbContext.SaveChangesAsync();
@@ -142,7 +158,7 @@ public class APISiteConfigController(LeagueSitesContext dbContext, IConfiguratio
         dbContext.Events.Add(Event.Log(
             EventType.Update, uid,
             "/api/Site/Config", "Updated site configuration",
-            new { siteConfig.Name, siteConfig.ShortName }));
+            new { siteConfig.Name, siteConfig.ShortName, Standings = dto.Standings }));
         await dbContext.SaveChangesAsync();
 
         return Ok();
@@ -155,4 +171,5 @@ public record SiteConfigUpdateDto(
     string Name,
     string ShortName,
     SiteHomeConfig Home,
-    List<SiteHistoryEntry>? History);
+    List<SiteHistoryEntry>? History,
+    StandingsConfig? Standings = null);

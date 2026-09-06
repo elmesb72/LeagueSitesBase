@@ -31,7 +31,9 @@ public interface ITournamentService
     Task ValidateSeedingSourcesAsync(IEnumerable<SeedGroupDto> seeding);
 }
 
-public class TournamentService(LeagueSitesContext dbContext) : ITournamentService
+public class TournamentService(
+    LeagueSitesContext dbContext,
+    IStandingsConfigService standingsConfigService) : ITournamentService
 {
     static readonly string[] ExcludedGameStatuses = ["Deleted"];
 
@@ -61,7 +63,7 @@ public class TournamentService(LeagueSitesContext dbContext) : ITournamentServic
             .Where(g => g.SeasonID == tournament.SeasonID)
             .ToListAsync();
 
-        await tournament.Populate(games, dbContext);
+        await tournament.Populate(games, dbContext, await standingsConfigService.GetAsync());
         return tournament;
     }
 
@@ -367,6 +369,9 @@ public class TournamentService(LeagueSitesContext dbContext) : ITournamentServic
             .AsNoTracking()
             .FirstOrDefaultAsync(s => s.Year == tournament.Season!.Year && s.Subseason == "Regular Season");
 
+    // Uses default StandingsConfig deliberately: only the COUNT of teams is
+    // read, which no configured rule (order, points, forfeit score) can
+    // change. See the configurable-standings-rules spec, Requirement 4.2.
     async Task<int> CountStandingsAsync(long seasonID)
     {
         var games = await dbContext.Games

@@ -47,6 +47,13 @@ public partial class RoundSeries
     }
 
     Standings? Results { get; set; }
+
+    // Uses default StandingsConfig deliberately: series are decided by game
+    // WINS per team (and run differential for Aggregate), read directly off
+    // the result sets — no configured ranking rule applies to a series. The
+    // Loser = results.Last() logic in CheckForWinnerAndLoser also relies on
+    // the default order, where the series winner always sorts first. See the
+    // configurable-standings-rules spec, Requirement 4.2.
     public Standings GetResults()
     {
         if (Results is null)

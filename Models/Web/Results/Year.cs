@@ -29,11 +29,11 @@ public class Year
     }
     public string? ExceptionYearDescription { get; set; }
 
-    public Year(long calendarYear, List<Season> seasons)
+    public Year(long calendarYear, List<Season> seasons, StandingsConfig? standingsConfig = null)
     {
         CalendarYear = calendarYear;
         Seasons = seasons;
-        RegularSeasonStandings = new Standings(RegularSeason?.Games ?? []);
+        RegularSeasonStandings = new Standings(RegularSeason?.Games ?? [], standingsConfig);
         if (RegularSeasonIsComplete())
         {
             var winner = RegularSeasonStandings.First();

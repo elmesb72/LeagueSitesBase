@@ -10,7 +10,12 @@ public static class SeedingConfiguration
         - Seeds 1-4 are based on the losers of BracketRound ID 15
         - Seeds 5-6 are based on the standings of BracketRound ID 16 ranks 1-2 (this would include winner and loser)
     */
-    public static async Task<Dictionary<int, Team>> Parse(string config, LeagueSitesContext dbContext)
+    /// <param name="standingsConfig">
+    /// League standings rules; standings-based sources rank teams with them,
+    /// so seeding follows the same configured tiebreakers as the standings
+    /// page. Null means default rules.
+    /// </param>
+    public static async Task<Dictionary<int, Team>> Parse(string config, LeagueSitesContext dbContext, StandingsConfig? standingsConfig = null)
     {
         Dictionary<int, Team> seeds = [];
         foreach (var seedGroup in config.Split(';'))
@@ -24,8 +29,8 @@ public static class SeedingConfiguration
             // Get teams
             ISeedingConfigurationSource source = seedResult switch
             {
-                "Standings" => new SeedingConfigurationStandingsSource(seedSource),
-                "Losers" => new SeedingConfigurationLosersSource(seedSource),
+                "Standings" => new SeedingConfigurationStandingsSource(seedSource, standingsConfig),
+                "Losers" => new SeedingConfigurationLosersSource(seedSource, standingsConfig),
                 _ => throw new Exception($"Unknown seed result string {seedResult}."),
             };
             var teams = (await source.GetTeamsAsync(dbContext)).ToList();

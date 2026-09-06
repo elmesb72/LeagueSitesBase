@@ -15,21 +15,25 @@ public partial class Tournament
     public ICollection<TournamentBracket> Brackets { get; set; }
     public ICollection<TournamentRoundRobin> RoundRobins { get; set; }
 
-    public async Task Populate(List<Game> playoffGames, LeagueSitesContext dbContext)
+    /// <param name="standingsConfig">
+    /// League standings rules, used wherever seeding or pool order depends on
+    /// a standings ranking. Null means default rules.
+    /// </param>
+    public async Task Populate(List<Game> playoffGames, LeagueSitesContext dbContext, StandingsConfig? standingsConfig = null)
     {
         // Map game objects to bracket game objects
         foreach (var bracket in Brackets)
         {
             if (!string.IsNullOrEmpty(bracket.SeedingConfiguration))
             {
-                bracket.Seeds = await SeedingConfiguration.Parse(bracket.SeedingConfiguration, dbContext);
+                bracket.Seeds = await SeedingConfiguration.Parse(bracket.SeedingConfiguration, dbContext, standingsConfig);
             }
             else
             {
                 // Regular season standings
                 var regularSeason = await dbContext.Seasons.FirstAsync(s => s.Year == Season!.Year && s.Subseason == "Regular Season");
-                var standings = new Standings(await dbContext.Games.Where(g => g.SeasonID == regularSeason.ID).ToListAsync());
-                bracket.Seeds = await SeedingConfiguration.Parse($"1-{standings.Count},Standings,Season:{regularSeason.ID}:1-{standings.Count}", dbContext);
+                var standings = new Standings(await dbContext.Games.Where(g => g.SeasonID == regularSeason.ID).ToListAsync(), standingsConfig);
+                bracket.Seeds = await SeedingConfiguration.Parse($"1-{standings.Count},Standings,Season:{regularSeason.ID}:1-{standings.Count}", dbContext, standingsConfig);
             }
             
             foreach (var round in bracket.Rounds)
@@ -128,21 +132,21 @@ public partial class Tournament
             }
         }
 
-        // Create standings for round robins
+        // Create standings for round robins (pool order follows league rules)
         foreach (var roundrobin in RoundRobins)
         {
-            roundrobin.Standings = new Standings(roundrobin.Games.Select(g => g.Game ?? new Game()));
+            roundrobin.Standings = new Standings(roundrobin.Games.Select(g => g.Game ?? new Game()), standingsConfig);
 
             if (!string.IsNullOrEmpty(roundrobin.SeedingConfiguration))
             {
-                roundrobin.Seeds = await SeedingConfiguration.Parse(roundrobin.SeedingConfiguration, dbContext);
+                roundrobin.Seeds = await SeedingConfiguration.Parse(roundrobin.SeedingConfiguration, dbContext, standingsConfig);
             }
             else
             {
                 // Regular season standings
                 var regularSeason = await dbContext.Seasons.FirstAsync(s => s.Year == Season!.Year && s.Subseason == "Regular Season");
-                var standings = new Standings(await dbContext.Games.Where(g => g.SeasonID == regularSeason.ID).ToListAsync());
-                roundrobin.Seeds = await SeedingConfiguration.Parse($"1-{standings.Count},Standings,Season:{regularSeason.ID}:1-{standings.Count}", dbContext);
+                var standings = new Standings(await dbContext.Games.Where(g => g.SeasonID == regularSeason.ID).ToListAsync(), standingsConfig);
+                roundrobin.Seeds = await SeedingConfiguration.Parse($"1-{standings.Count},Standings,Season:{regularSeason.ID}:1-{standings.Count}", dbContext, standingsConfig);
             }
         }
     }

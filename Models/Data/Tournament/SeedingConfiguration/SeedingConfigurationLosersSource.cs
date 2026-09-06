@@ -16,8 +16,11 @@ public class SeedingConfigurationLosersSource : ISeedingConfigurationSource
         "BracketRound:15:2-2" means:
         - Return second highest ranked series loser from round ID 15
     */
-    public SeedingConfigurationLosersSource(string source)
+    readonly StandingsConfig? standingsConfig;
+
+    public SeedingConfigurationLosersSource(string source, StandingsConfig? standingsConfig = null)
     {
+        this.standingsConfig = standingsConfig;
         var sourceSplit = source.Split(':');
         SourceType = sourceSplit[0];
         SourceID = Convert.ToInt64(sourceSplit[1]);
@@ -51,7 +54,7 @@ public class SeedingConfigurationLosersSource : ISeedingConfigurationSource
             // Since we no longer know what the original seedings were for the source round, we have to work it out again.
             // Then we can sort to keep the losers in the correct order.
             var originalSeedingConfiguration = roundSeries.First().Round!.Bracket!.SeedingConfiguration;
-            var originalSeeds = await SeedingConfiguration.Parse(originalSeedingConfiguration, dbContext);
+            var originalSeeds = await SeedingConfiguration.Parse(originalSeedingConfiguration, dbContext, standingsConfig);
             var loserSeeds = loserTeams.ToDictionary(l => originalSeeds.First(s => l == s.Value).Key, l => l);
             var sortedLoserTeams = loserSeeds.OrderBy(ls => ls.Key).Select(ls => ls.Value);
             teams.AddRange([.. sortedLoserTeams]);

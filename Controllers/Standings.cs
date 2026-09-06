@@ -3,7 +3,10 @@ using Microsoft.EntityFrameworkCore;
 
 [ApiController]
 [Route("api/Standings")]
-public class APIStandingsController(LeagueSitesContext dbContext, ISeasonService seasonService) : ControllerBase
+public class APIStandingsController(
+    LeagueSitesContext dbContext,
+    ISeasonService seasonService,
+    IStandingsConfigService standingsConfigService) : ControllerBase
 {
     [ResponseCache(Duration = 30)]
     [HttpGet]
@@ -33,7 +36,7 @@ public class APIStandingsController(LeagueSitesContext dbContext, ISeasonService
             .Where(g => g.Status!.Name != "Deleted")
             .ToListAsync();
 
-        var standings = new Standings(games);
+        var standings = new Standings(games, await standingsConfigService.GetAsync());
         standings.CalculateStreaks();
 
         return Ok(new

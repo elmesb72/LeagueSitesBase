@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 [ApiController]
 [Route("api/Teams")]
-public class APITeamsController(LeagueSitesContext context, ISeasonService seasonService, IPermissionsService permissionsService, IAuthorizationService authorizationService) : ControllerBase
+public class APITeamsController(LeagueSitesContext context, ISeasonService seasonService, IPermissionsService permissionsService, IAuthorizationService authorizationService, IStandingsConfigService standingsConfigService) : ControllerBase
 {
     readonly LeagueSitesContext dbContext = context;
 
@@ -116,7 +116,7 @@ public class APITeamsController(LeagueSitesContext context, ISeasonService seaso
         }).ToList();
 
         // Standings for record
-        var standings = new Standings(games.Where(g => g.Status?.Name == "Played").ToList());
+        var standings = new Standings(games.Where(g => g.Status?.Name == "Played").ToList(), await standingsConfigService.GetAsync());
         string record = standings.ContainsKey(team) ? standings[team].ToString() : "(0-0)";
 
         // Permissions

@@ -16,8 +16,11 @@ public class SeedingConfigurationStandingsSource : ISeedingConfigurationSource
         "BracketRound:16:1-2" means:
         - Return ranks 1-2 from BracketRound ID 16
     */
-    public SeedingConfigurationStandingsSource(string source)
+    readonly StandingsConfig? standingsConfig;
+
+    public SeedingConfigurationStandingsSource(string source, StandingsConfig? standingsConfig = null)
     {
+        this.standingsConfig = standingsConfig;
         var sourceSplit = source.Split(':');
         SourceType = sourceSplit[0];
         SourceID = Convert.ToInt64(sourceSplit[1]);
@@ -70,6 +73,8 @@ public class SeedingConfigurationStandingsSource : ISeedingConfigurationSource
                 .ToListAsync();
             games.AddRange(tournamentRoundRobin.SelectMany(trr => trr.Games).Select(trrg => trrg.Game!));
         }
-        return new Standings(games).Keys.Skip(SourceRankStart - 1).Take(SourceRankEnd - SourceRankStart + 1);
+        // Rank with the league's configured rules so a team seeded "3rd in
+        // the standings" is the same team the standings page shows 3rd.
+        return new Standings(games, standingsConfig).Keys.Skip(SourceRankStart - 1).Take(SourceRankEnd - SourceRankStart + 1);
     }
 }

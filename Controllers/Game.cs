@@ -7,7 +7,8 @@ using Microsoft.EntityFrameworkCore;
 public class APIGameController(
     LeagueSitesContext dbContext,
     IAuthorizationService authorizationService,
-    IPermissionsService permissionsService) : ControllerBase
+    IPermissionsService permissionsService,
+    IStandingsConfigService standingsConfigService) : ControllerBase
 {
     [HttpGet("{id:long}")]
     public async Task<IActionResult> Get([FromRoute] long id)
@@ -70,7 +71,8 @@ public class APIGameController(
                 && g.SeasonID == game.SeasonID
                 && g.Date <= game.Date)
             .ToListAsync();
-        var standings = new Standings(seasonGames);
+        // Config matters here for the forfeit score baked into W-L-T records.
+        var standings = new Standings(seasonGames, await standingsConfigService.GetAsync());
         string? hostRecord = standings.ContainsKey(game.HostTeam!) ? standings[game.HostTeam!].ToString() : null;
         string? visitorRecord = standings.ContainsKey(game.VisitingTeam!) ? standings[game.VisitingTeam!].ToString() : null;
 

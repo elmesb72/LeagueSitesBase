@@ -11,21 +11,27 @@ public class TeamResultSet
     public int RunDifferential => RunsScored - RunsAllowed;
     public string? Streak { get; private set; }
 
-    public TeamResultSet(Team team, IEnumerable<Game> games, int winsValue = 2, int tiesValue = 1, int lossesValue = 0)
+    /// <summary>
+    /// Aggregates one team's results. Point values and the forfeit score come
+    /// from the league's StandingsConfig; null means the historic defaults
+    /// (2/1/0 points, 7-0 forfeits).
+    /// </summary>
+    public TeamResultSet(Team team, IEnumerable<Game> games, StandingsConfig? config = null)
     {
+        config ??= new StandingsConfig();
         Points = 0;
 
         foreach (var g in games)
         {
             if (g?.Status?.Name == "Forfeit (Home)")
             {
-                g.ScoreVisitor = 7;
-                g.ScoreHost = 0;
+                g.ScoreVisitor = config.ForfeitWinnerScore;
+                g.ScoreHost = config.ForfeitLoserScore;
             }
             else if (g?.Status?.Name == "Forfeit (Away)")
             {
-                g.ScoreHost = 7;
-                g.ScoreVisitor = 0;
+                g.ScoreHost = config.ForfeitWinnerScore;
+                g.ScoreVisitor = config.ForfeitLoserScore;
             }
             else if (g?.ScoreHost is null || g?.ScoreVisitor is null)
             {
@@ -36,7 +42,7 @@ public class TeamResultSet
         Wins = Results.Count(r => r.Result == GameResult.Win);
         Losses = Results.Count(r => r.Result == GameResult.Loss);
         Ties = Results.Count(r => r.Result == GameResult.Tie);
-        Points = (Wins * winsValue) + (Ties * tiesValue) + (Losses * lossesValue);
+        Points = (Wins * config.WinsValue) + (Ties * config.TiesValue) + (Losses * config.LossesValue);
         RunsScored = Results.Sum(r => r.RunsScored);
         RunsAllowed = Results.Sum(r => r.RunsAllowed);
     }
@@ -64,8 +70,6 @@ public class TeamResultSet
         }
         Streak = streak.ToString()[..1] + length;
     }
-
-    /// TO DO: League scoring set via configuration and passed in
 
     public override string ToString() => "(" + Wins + "-" + Losses + "-" + Ties + ")";
 }
