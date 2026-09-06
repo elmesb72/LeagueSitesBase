@@ -483,6 +483,7 @@ $RECYCLE.BIN/
 # Vim temporary swap files
 *.swp
 
-# SQLite databases (except the empty template)
+# SQLite databases (the schema lives in Migrations/*.sql; databases are
+# created and upgraded at startup by DatabaseMigrator)
 *.db
-!Empty.db
+*.db.*.bak

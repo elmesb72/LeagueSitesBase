@@ -21,12 +21,18 @@ migration scripts. This includes:
 ## Schema migrations
 
 Schema changes (CREATE TABLE, ALTER TABLE, ADD COLUMN) that apply universally
-to all tenants are acceptable in the repo. Use the `Empty.db.sql` file as the
-canonical schema reference for new tenant databases.
+to all tenants are acceptable in the repo. They are written as sequential SQL
+files in `Migrations/` (`NNNN_description.sql`) and applied automatically at
+backend startup by `DatabaseMigrator`, which tracks the schema version in
+SQLite's `PRAGMA user_version`. `0001_baseline.sql` is the canonical full
+schema (plus universal seed rows) for new tenant databases; never edit an
+applied migration — add a new one. Do not include BEGIN/COMMIT in migration
+files; the runner wraps each file in its own transaction.
 
 For tenant-specific data seeding (e.g. populating a new SiteConfig row for a
 new tenant), use one of these approaches instead:
 
+- Set it through the site's admin UI (preferred)
 - Run SQL directly against the tenant's database via SSH
 - Build an admin API endpoint that seeds or updates the data
 - Include the seed step in the tenant onboarding runbook (in LeagueSitesTerraform/README.md)

@@ -25,6 +25,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
 
 builder.Services.AddScoped<IPermissionsService, PermissionsService>();
 builder.Services.AddScoped<ISeasonService, SeasonService>();
+builder.Services.AddScoped<IStandingsConfigService, StandingsConfigService>();
 builder.Services.AddScoped<IScheduleImportService, ScheduleImportService>();
 builder.Services.AddScoped<ITournamentService, TournamentService>();
 builder.Services.AddLeagueSitesAuthorization();
@@ -47,6 +48,16 @@ builder.WebHost.ConfigureKestrel((context, serverOptions) =>
 });
 
 var app = builder.Build();
+
+// Bring this tenant's database up to the current schema before serving
+// anything. Throws (and prevents startup) if a migration fails — a backend
+// with a broken schema must not serve traffic.
+if (!string.IsNullOrEmpty(connectionString))
+{
+    DatabaseMigrator.Migrate(
+        connectionString,
+        app.Services.GetRequiredService<ILogger<Program>>());
+}
 
 // Exception logging — must be early in pipeline to catch all downstream errors
 app.UseMiddleware<ExceptionLoggingMiddleware>();

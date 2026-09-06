@@ -36,6 +36,12 @@
     <Using Include="Xunit" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- SQL migrations are compiled into the assembly so the running app can
+         always bring its own database up to date (see DatabaseMigrator). -->
+    <EmbeddedResource Include="Migrations\*.sql" />
+  </ItemGroup>
+
   <!--<ItemGroup>
     <Content Include="wwwroot\.well-known\**">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
