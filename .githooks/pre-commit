@@ -1,6 +1,6 @@
 #!/bin/bash
 echo "Running tests..."
-dotnet test --no-restore --nologo -q
+dotnet test --no-restore --nologo --verbosity quiet
 if [ $? -ne 0 ]; then
     echo "Tests failed. Commit aborted."
     exit 1
