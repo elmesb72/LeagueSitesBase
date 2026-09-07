@@ -133,13 +133,26 @@ public class DatabaseMigratorTests : IDisposable
     }
 
     [Fact]
-    public void LegacyUpgrade_WritesAPreMigrationBackup()
+    public void LegacyUpgrade_WritesARestorablePreMigrationBackup()
     {
         CreateLegacyDatabase();
 
         Migrate(ConnectionString);
 
-        File.Exists($"{dbPath}.v1.bak").Should().BeTrue("the pre-upgrade state must be recoverable");
+        // The backup must be a valid database representing the pre-0002
+        // state: stamped as version 1, no StandingsJson column, data intact.
+        var backupPath = $"{dbPath}.v1.bak";
+        File.Exists(backupPath).Should().BeTrue("the pre-upgrade state must be recoverable");
+
+        using var backup = new SqliteConnection($"Data Source={backupPath};Pooling=False");
+        backup.Open();
+        using var command = backup.CreateCommand();
+        command.CommandText = "PRAGMA user_version;";
+        ((long)command.ExecuteScalar()!).Should().Be(1);
+        command.CommandText = "SELECT COUNT(*) FROM pragma_table_info('SiteConfig') WHERE name='StandingsJson';";
+        ((long)command.ExecuteScalar()!).Should().Be(0, "the backup predates migration 0002");
+        command.CommandText = "SELECT COUNT(*) FROM SiteConfig;";
+        ((long)command.ExecuteScalar()!).Should().Be(1, "seeded data must be present in the backup");
     }
 
     [Fact]

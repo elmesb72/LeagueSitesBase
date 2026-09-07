@@ -179,7 +179,15 @@ public static partial class DatabaseMigrator
         if (fromVersion == 0) return;
 
         var backupPath = $"{path}.v{fromVersion}.bak";
-        File.Copy(path, backupPath, overwrite: true);
+        // SQLite's online backup API rather than a file copy: it produces a
+        // consistent snapshot even when a WAL file with un-checkpointed
+        // transactions exists (e.g. after an unclean shutdown). Pooling is
+        // off so the handle releases immediately and the .bak can be moved.
+        using (var backup = new SqliteConnection($"Data Source={backupPath};Pooling=False"))
+        {
+            backup.Open();
+            connection.BackupDatabase(backup);
+        }
         logger.LogInformation("Pre-migration backup written to {BackupPath}.", backupPath);
     }
 
