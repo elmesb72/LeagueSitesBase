@@ -15,6 +15,10 @@ public class StandingsConfigService(
         PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase
     };
 
+    /// <summary>Serializes a config for storage in SiteConfig.StandingsJson (camelCase, matching Parse).</summary>
+    public static string Serialize(StandingsConfig config) =>
+        System.Text.Json.JsonSerializer.Serialize(config, JsonOptions);
+
     StandingsConfig? resolved;
 
     public async Task<StandingsConfig> GetAsync()
@@ -38,7 +42,7 @@ public class StandingsConfigService(
     }
 
     /// <summary>
-    /// Storage-time validation for the Webmaster save path. Returns every
+    /// Storage-time validation for the admin save path. Returns every
     /// violation (not just the first) so the UI can show them all at once.
     /// </summary>
     public static List<string> Validate(StandingsConfig config)

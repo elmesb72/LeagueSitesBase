@@ -2,6 +2,6 @@
 --
 -- Adds the per-tenant StandingsJson blob (point values, forfeit score,
 -- ordered tiebreakers) read by StandingsConfigService. '{}' means the
--- historic default rules; real rules are set in the Webmaster UI.
+-- historic default rules; real rules are set under Executive > League Settings.
 
 ALTER TABLE SiteConfig ADD COLUMN StandingsJson TEXT NOT NULL DEFAULT '{}';

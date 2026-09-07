@@ -306,6 +306,48 @@ public class APIExecutiveController(
     }
 
     /// <summary>
+    /// League standings rules: the current per-tenant config (defaults filled
+    /// in when unset) plus the comparator registry the UI offers as choices.
+    /// Standings rules are league policy, so they live here with the other
+    /// league settings rather than under site configuration.
+    /// </summary>
+    [HttpGet("StandingsRules")]
+    public async Task<IActionResult> StandingsRules()
+    {
+        var siteConfig = await dbContext.SiteConfigs.AsNoTracking().FirstOrDefaultAsync();
+        return Ok(new
+        {
+            standings = StandingsConfigService.Parse(siteConfig?.StandingsJson),
+            comparators = StandingsComparators.All
+                .Select(c => new { c.Name, c.Description, c.GroupRestricted })
+        });
+    }
+
+    [HttpPut("StandingsRules")]
+    public async Task<IActionResult> UpdateStandingsRules([FromBody] StandingsConfig dto)
+    {
+        var problems = StandingsConfigService.Validate(dto);
+        if (problems.Count > 0)
+            return BadRequest(string.Join(" ", problems));
+
+        var siteConfig = await dbContext.SiteConfigs.FirstOrDefaultAsync();
+        if (siteConfig is null)
+            return StatusCode(500, "Site configuration row is missing.");
+
+        siteConfig.StandingsJson = StandingsConfigService.Serialize(dto);
+        await dbContext.SaveChangesAsync();
+
+        var uid = Convert.ToInt64(User.Claims.First(c => c.Type == "UserID").Value);
+        dbContext.Events.Add(Event.Log(
+            EventType.Update, uid,
+            "/api/Executive/StandingsRules", "Updated standings rules",
+            dto));
+        await dbContext.SaveChangesAsync();
+
+        return Ok(dto);
+    }
+
+    /// <summary>
     /// Returns games with "Deleted" status (raccoon/recycle bin).
     /// </summary>
     [HttpGet("DeletedGames")]
