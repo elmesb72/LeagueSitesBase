@@ -68,10 +68,11 @@ public class DatabaseMigratorTests : IDisposable
     {
         var migrations = DatabaseMigrator.LoadEmbeddedMigrations();
 
-        migrations.Select(m => m.Version).Should().Equal(1, 2, 3);
+        migrations.Select(m => m.Version).Should().Equal(1, 2, 3, 4);
         migrations[0].Name.Should().Be("baseline");
         migrations[1].Name.Should().Be("standings_config");
         migrations[2].Name.Should().Be("per_season_standings");
+        migrations[3].Name.Should().Be("drop_site_standings");
         migrations.Should().OnlyContain(m => !string.IsNullOrWhiteSpace(m.Sql));
     }
 
@@ -82,11 +83,11 @@ public class DatabaseMigratorTests : IDisposable
 
         Migrate(ConnectionString);
 
-        UserVersion().Should().Be(3);
+        UserVersion().Should().Be(4);
         Scalar("SELECT COUNT(*) FROM SiteConfig").Should().Be(1, "the baseline seeds a placeholder config");
         Scalar("SELECT COUNT(*) FROM GameStatus").Should().BeGreaterThan(0, "statuses are universal seed data");
         Scalar("SELECT COUNT(*) FROM pragma_table_info('SiteConfig') WHERE name='StandingsJson'")
-            .Should().Be(1, "migration 0002 adds the site-level standings column");
+            .Should().Be(0, "the site-level standings column (0002) is dropped again by 0004");
         Scalar("SELECT COUNT(*) FROM pragma_table_info('Season') WHERE name='StandingsJson'")
             .Should().Be(1, "migration 0003 adds the per-season standings column");
     }
@@ -99,9 +100,9 @@ public class DatabaseMigratorTests : IDisposable
 
         Migrate(ConnectionString);
 
-        UserVersion().Should().Be(3);
+        UserVersion().Should().Be(4);
         Scalar("SELECT COUNT(*) FROM pragma_table_info('SiteConfig') WHERE name='StandingsJson'")
-            .Should().Be(1, "0002 should have run against the existing schema");
+            .Should().Be(0, "0002 added the column and 0004 dropped it");
         Scalar("SELECT COUNT(*) FROM pragma_table_info('Season') WHERE name='StandingsJson'")
             .Should().Be(1, "0003 should have run against the existing schema");
         Scalar("SELECT COUNT(*) FROM SiteConfig").Should().Be(1, "existing data must be preserved");
@@ -148,9 +149,9 @@ public class DatabaseMigratorTests : IDisposable
 
         Migrate(ConnectionString);
 
-        UserVersion().Should().Be(3);
+        UserVersion().Should().Be(4);
         Scalar("SELECT COUNT(*) FROM pragma_table_info('SiteConfig') WHERE name='StandingsJson'")
-            .Should().Be(1);
+            .Should().Be(0, "0004 drops the manually added column too");
     }
 
     [Fact]
@@ -164,7 +165,7 @@ public class DatabaseMigratorTests : IDisposable
 
         Migrate(ConnectionString);
 
-        UserVersion().Should().Be(3);
+        UserVersion().Should().Be(4);
         Directory.GetFiles(Path.GetDirectoryName(dbPath)!, Path.GetFileName(dbPath) + "*.bak")
             .Should().BeEmpty("an up-to-date database needs no backup");
     }
@@ -269,7 +270,6 @@ public class DatabaseMigratorTests : IDisposable
         using var context = new LeagueSitesContext(options);
 
         var siteConfig = context.SiteConfigs.Single();
-        siteConfig.StandingsJson.Should().Be("{}");
         siteConfig.Name.Should().Be("Empty Generic League");
         // The baseline seeds one hidden placeholder team backing the
         // bootstrap webmaster account.

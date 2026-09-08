@@ -16,13 +16,6 @@ public class SiteConfig
     /// Used by the History controller to supplement DB-derived season data.
     /// </summary>
     public string HistoryJson { get; set; } = "[]";
-
-    /// <summary>
-    /// JSON blob containing the standings rules: point values, forfeit
-    /// score, and ordered tiebreakers. Deserialized as StandingsConfig via
-    /// StandingsConfigService; '{}' or unparsable content means defaults.
-    /// </summary>
-    public string StandingsJson { get; set; } = "{}";
 }
 
 public class SiteHomeConfig
