@@ -150,11 +150,22 @@ public class APIExecutiveController(
         if (existing is not null)
             return Conflict("Season already exists for this year.");
 
+        // New seasons inherit the standings rules of the most recent season,
+        // so rules follow forward until an executive changes them.
+        var inheritedRules = await dbContext.Seasons
+            .AsNoTracking()
+            .OrderByDescending(s => s.StartDate)
+            .Select(s => s.StandingsJson)
+            .FirstOrDefaultAsync();
+
         var season = new Season
         {
             Year = DateTime.Now.Year,
             Subseason = "Regular Season",
-            StartDate = DateTime.Now.Date
+            StartDate = DateTime.Now.Date,
+            StandingsJson = string.IsNullOrWhiteSpace(inheritedRules)
+                ? StandingsConfigService.Serialize(new StandingsConfig())
+                : inheritedRules
         };
 
         dbContext.Seasons.Add(season);
@@ -217,6 +228,10 @@ public class APIExecutiveController(
             Year = DateTime.Now.Year,
             Subseason = "Playoffs",
             StartDate = DateTime.Now.Date,
+            // Playoffs share the year's rules: inherit from the regular season.
+            StandingsJson = string.IsNullOrWhiteSpace(regularSeason.StandingsJson)
+                ? StandingsConfigService.Serialize(new StandingsConfig())
+                : regularSeason.StandingsJson
         };
         dbContext.Seasons.Add(season);
         await dbContext.SaveChangesAsync();
@@ -306,45 +321,68 @@ public class APIExecutiveController(
     }
 
     /// <summary>
-    /// League standings rules: the current per-tenant config (defaults filled
-    /// in when unset) plus the comparator registry the UI offers as choices.
-    /// Standings rules are league policy, so they live here with the other
-    /// league settings rather than under site configuration.
+    /// Standings rules for one year's seasons (defaults filled in when
+    /// unset), plus the list of years with seasons and the comparator
+    /// registry the UI offers as choices. Rules are stored per season so
+    /// rule changes never re-rank historical seasons; both subseasons of a
+    /// year (regular season and playoffs) share the same rules.
     /// </summary>
     [HttpGet("StandingsRules")]
-    public async Task<IActionResult> StandingsRules()
+    public async Task<IActionResult> StandingsRules([FromQuery] int? year)
     {
-        var siteConfig = await dbContext.SiteConfigs.AsNoTracking().FirstOrDefaultAsync();
+        var years = await dbContext.Seasons
+            .AsNoTracking()
+            .Select(s => s.Year)
+            .Distinct()
+            .OrderByDescending(y => y)
+            .ToListAsync();
+
+        var selected = year ?? (years.Count > 0 ? years[0] : DateTime.Now.Year);
+        var standingsJson = await dbContext.Seasons
+            .AsNoTracking()
+            .Where(s => s.Year == selected)
+            .OrderBy(s => s.StartDate)
+            .Select(s => s.StandingsJson)
+            .FirstOrDefaultAsync();
+
         return Ok(new
         {
-            standings = StandingsConfigService.Parse(siteConfig?.StandingsJson),
+            years,
+            year = selected,
+            standings = StandingsConfigService.Parse(standingsJson),
             comparators = StandingsComparators.All
                 .Select(c => new { c.Name, c.Description, c.GroupRestricted })
         });
     }
 
     [HttpPut("StandingsRules")]
-    public async Task<IActionResult> UpdateStandingsRules([FromBody] StandingsConfig dto)
+    public async Task<IActionResult> UpdateStandingsRules([FromBody] StandingsRulesUpdateDto dto)
     {
-        var problems = StandingsConfigService.Validate(dto);
+        var problems = StandingsConfigService.Validate(dto.Standings);
         if (problems.Count > 0)
             return BadRequest(string.Join(" ", problems));
 
-        var siteConfig = await dbContext.SiteConfigs.FirstOrDefaultAsync();
-        if (siteConfig is null)
-            return StatusCode(500, "Site configuration row is missing.");
+        var seasons = await dbContext.Seasons
+            .Where(s => s.Year == dto.Year)
+            .ToListAsync();
+        if (seasons.Count == 0)
+            return NotFound($"No seasons exist for {dto.Year}.");
 
-        siteConfig.StandingsJson = StandingsConfigService.Serialize(dto);
+        var json = StandingsConfigService.Serialize(dto.Standings);
+        foreach (var season in seasons)
+        {
+            season.StandingsJson = json;
+        }
         await dbContext.SaveChangesAsync();
 
         var uid = Convert.ToInt64(User.Claims.First(c => c.Type == "UserID").Value);
         dbContext.Events.Add(Event.Log(
             EventType.Update, uid,
-            "/api/Executive/StandingsRules", "Updated standings rules",
+            "/api/Executive/StandingsRules", $"Updated {dto.Year} standings rules",
             dto));
         await dbContext.SaveChangesAsync();
 
-        return Ok(dto);
+        return Ok(dto.Standings);
     }
 
     /// <summary>
@@ -449,6 +487,8 @@ public class APIExecutiveController(
 }
 
 public record SeasonStartDateDto(string StartDate);
+
+public record StandingsRulesUpdateDto(int Year, StandingsConfig Standings);
 
 public record ScheduleImportConfirmDto(
     long SeasonID,

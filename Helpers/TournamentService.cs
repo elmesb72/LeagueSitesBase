@@ -31,9 +31,7 @@ public interface ITournamentService
     Task ValidateSeedingSourcesAsync(IEnumerable<SeedGroupDto> seeding);
 }
 
-public class TournamentService(
-    LeagueSitesContext dbContext,
-    IStandingsConfigService standingsConfigService) : ITournamentService
+public class TournamentService(LeagueSitesContext dbContext) : ITournamentService
 {
     static readonly string[] ExcludedGameStatuses = ["Deleted"];
 
@@ -63,7 +61,7 @@ public class TournamentService(
             .Where(g => g.SeasonID == tournament.SeasonID)
             .ToListAsync();
 
-        await tournament.Populate(games, dbContext, await standingsConfigService.GetAsync());
+        await tournament.Populate(games, dbContext);
         return tournament;
     }
 

@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 [ApiController]
 [Route("api/Teams")]
-public class APITeamsController(LeagueSitesContext context, ISeasonService seasonService, IPermissionsService permissionsService, IAuthorizationService authorizationService, IStandingsConfigService standingsConfigService) : ControllerBase
+public class APITeamsController(LeagueSitesContext context, ISeasonService seasonService, IPermissionsService permissionsService, IAuthorizationService authorizationService) : ControllerBase
 {
     readonly LeagueSitesContext dbContext = context;
 
@@ -115,8 +115,11 @@ public class APITeamsController(LeagueSitesContext context, ISeasonService seaso
             return $"Pending ({m.InvitationEmails.FirstOrDefault()?.Email ?? "Unknown"})";
         }).ToList();
 
-        // Standings for record
-        var standings = new Standings(games.Where(g => g.Status?.Name == "Played").ToList(), await standingsConfigService.GetAsync());
+        // Standings for record. Default rules deliberately: only the W-L-T
+        // record string is read, which no configured rule can change (order
+        // and point values are unused, and W/L/T counts don't depend on the
+        // forfeit score values). See configurable-standings-rules Req 4.2.
+        var standings = new Standings(games.Where(g => g.Status?.Name == "Played").ToList());
         string record = standings.ContainsKey(team) ? standings[team].ToString() : "(0-0)";
 
         // Permissions

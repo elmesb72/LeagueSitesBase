@@ -15,25 +15,26 @@ public partial class Tournament
     public ICollection<TournamentBracket> Brackets { get; set; }
     public ICollection<TournamentRoundRobin> RoundRobins { get; set; }
 
-    /// <param name="standingsConfig">
-    /// League standings rules, used wherever seeding or pool order depends on
-    /// a standings ranking. Null means default rules.
-    /// </param>
-    public async Task Populate(List<Game> playoffGames, LeagueSitesContext dbContext, StandingsConfig? standingsConfig = null)
+    // Standings rules resolve per season: seeding sources use the rules of
+    // the season that owns the games they rank, and pool standings use this
+    // tournament's own season's rules.
+    public async Task Populate(List<Game> playoffGames, LeagueSitesContext dbContext)
     {
         // Map game objects to bracket game objects
         foreach (var bracket in Brackets)
         {
             if (!string.IsNullOrEmpty(bracket.SeedingConfiguration))
             {
-                bracket.Seeds = await SeedingConfiguration.Parse(bracket.SeedingConfiguration, dbContext, standingsConfig);
+                bracket.Seeds = await SeedingConfiguration.Parse(bracket.SeedingConfiguration, dbContext);
             }
             else
             {
-                // Regular season standings
+                // Regular season standings (counted under that season's rules)
                 var regularSeason = await dbContext.Seasons.FirstAsync(s => s.Year == Season!.Year && s.Subseason == "Regular Season");
-                var standings = new Standings(await dbContext.Games.Where(g => g.SeasonID == regularSeason.ID).ToListAsync(), standingsConfig);
-                bracket.Seeds = await SeedingConfiguration.Parse($"1-{standings.Count},Standings,Season:{regularSeason.ID}:1-{standings.Count}", dbContext, standingsConfig);
+                var standings = new Standings(
+                    await dbContext.Games.Where(g => g.SeasonID == regularSeason.ID).ToListAsync(),
+                    StandingsConfigService.Parse(regularSeason.StandingsJson));
+                bracket.Seeds = await SeedingConfiguration.Parse($"1-{standings.Count},Standings,Season:{regularSeason.ID}:1-{standings.Count}", dbContext);
             }
             
             foreach (var round in bracket.Rounds)
@@ -132,21 +133,25 @@ public partial class Tournament
             }
         }
 
-        // Create standings for round robins (pool order follows league rules)
+        // Create standings for round robins (pool order follows the rules of
+        // the season this tournament belongs to)
+        var poolConfig = StandingsConfigService.Parse(Season?.StandingsJson);
         foreach (var roundrobin in RoundRobins)
         {
-            roundrobin.Standings = new Standings(roundrobin.Games.Select(g => g.Game ?? new Game()), standingsConfig);
+            roundrobin.Standings = new Standings(roundrobin.Games.Select(g => g.Game ?? new Game()), poolConfig);
 
             if (!string.IsNullOrEmpty(roundrobin.SeedingConfiguration))
             {
-                roundrobin.Seeds = await SeedingConfiguration.Parse(roundrobin.SeedingConfiguration, dbContext, standingsConfig);
+                roundrobin.Seeds = await SeedingConfiguration.Parse(roundrobin.SeedingConfiguration, dbContext);
             }
             else
             {
-                // Regular season standings
+                // Regular season standings (counted under that season's rules)
                 var regularSeason = await dbContext.Seasons.FirstAsync(s => s.Year == Season!.Year && s.Subseason == "Regular Season");
-                var standings = new Standings(await dbContext.Games.Where(g => g.SeasonID == regularSeason.ID).ToListAsync(), standingsConfig);
-                roundrobin.Seeds = await SeedingConfiguration.Parse($"1-{standings.Count},Standings,Season:{regularSeason.ID}:1-{standings.Count}", dbContext, standingsConfig);
+                var standings = new Standings(
+                    await dbContext.Games.Where(g => g.SeasonID == regularSeason.ID).ToListAsync(),
+                    StandingsConfigService.Parse(regularSeason.StandingsJson));
+                roundrobin.Seeds = await SeedingConfiguration.Parse($"1-{standings.Count},Standings,Season:{regularSeason.ID}:1-{standings.Count}", dbContext);
             }
         }
     }

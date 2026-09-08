@@ -6,8 +6,7 @@ using Microsoft.EntityFrameworkCore;
 [Route("api/Scores")]
 public class APIScoresController(
     LeagueSitesContext dbContext,
-    IAuthorizationService authorizationService,
-    IStandingsConfigService standingsConfigService) : ControllerBase
+    IAuthorizationService authorizationService) : ControllerBase
 {
     [HttpGet]
     public async Task<IActionResult> Get([FromQuery] string? day)
@@ -51,7 +50,12 @@ public class APIScoresController(
                     && g.SeasonID == currentSeason
                     && g.Date.Date <= date.Date)
                 .ToListAsync();
-            standings = new Standings(standingsGames, await standingsConfigService.GetAsync());
+            var standingsJson = await dbContext.Seasons
+                .AsNoTracking()
+                .Where(s => s.ID == currentSeason)
+                .Select(s => s.StandingsJson)
+                .FirstOrDefaultAsync();
+            standings = new Standings(standingsGames, StandingsConfigService.Parse(standingsJson));
         }
 
         return Ok(new { date, games = gameDtos, standings = standings?.ToDto() });

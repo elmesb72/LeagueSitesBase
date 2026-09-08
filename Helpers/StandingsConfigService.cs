@@ -1,45 +1,20 @@
-using Microsoft.EntityFrameworkCore;
-
-public interface IStandingsConfigService
-{
-    /// <summary>Resolved standings rules for this tenant (cached for the request scope).</summary>
-    Task<StandingsConfig> GetAsync();
-}
-
-public class StandingsConfigService(
-    LeagueSitesContext dbContext,
-    ILogger<StandingsConfigService> logger) : IStandingsConfigService
+/// <summary>
+/// Parsing, validation, and serialization for StandingsConfig blobs, which
+/// are stored per season in Season.StandingsJson. Pure static helpers: every
+/// caller already has the season row (or its json) in hand, so there is no
+/// resolution service — ranking code receives the config of the season that
+/// owns the games being ranked.
+/// </summary>
+public static class StandingsConfigService
 {
     static readonly System.Text.Json.JsonSerializerOptions JsonOptions = new()
     {
         PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase
     };
 
-    /// <summary>Serializes a config for storage in SiteConfig.StandingsJson (camelCase, matching Parse).</summary>
+    /// <summary>Serializes a config for storage in Season.StandingsJson (camelCase, matching Parse).</summary>
     public static string Serialize(StandingsConfig config) =>
         System.Text.Json.JsonSerializer.Serialize(config, JsonOptions);
-
-    StandingsConfig? resolved;
-
-    public async Task<StandingsConfig> GetAsync()
-    {
-        if (resolved is not null) return resolved;
-
-        string? json = null;
-        try
-        {
-            json = (await dbContext.SiteConfigs.AsNoTracking().FirstOrDefaultAsync())?.StandingsJson;
-        }
-        catch (Exception e)
-        {
-            // A tenant DB that predates the StandingsJson column must not take
-            // the site down; it just runs on default rules until migrated.
-            logger.LogError(e, "Could not read StandingsJson from SiteConfig; using default standings rules.");
-        }
-
-        resolved = Parse(json, logger);
-        return resolved;
-    }
 
     /// <summary>
     /// Storage-time validation for the admin save path. Returns every
@@ -96,8 +71,8 @@ public class StandingsConfigService(
     /// Defensive parse: absent, empty, or unparsable JSON — and unknown or
     /// empty tiebreaker lists — all resolve to workable defaults, so
     /// standings can always be computed. Storage-time validation
-    /// (Validate above) lives in the SiteConfig controller save path; this
-    /// is the safety net for whatever is actually in the database.
+    /// (Validate above) lives in the Executive save path; this is the safety
+    /// net for whatever is actually in the database.
     /// </summary>
     public static StandingsConfig Parse(string? json, ILogger? logger = null)
     {

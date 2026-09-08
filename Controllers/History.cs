@@ -3,15 +3,12 @@ using Microsoft.EntityFrameworkCore;
 
 [ApiController]
 [Route("api/History")]
-public class APIHistoryController(
-    LeagueSitesContext dbContext,
-    IStandingsConfigService standingsConfigService) : ControllerBase
+public class APIHistoryController(LeagueSitesContext dbContext) : ControllerBase
 {
     [ResponseCache(Duration = 30)]
     [HttpGet]
     public async Task<IActionResult> Get()
     {
-        var standingsConfig = await standingsConfigService.GetAsync();
         var seasons = await dbContext.Seasons
             .AsSplitQuery()
             .Include(s => s.Games)
@@ -32,7 +29,7 @@ public class APIHistoryController(
 
         var years = seasons
             .GroupBy(s => s.Year)
-            .Select(yg => new Year(yg.Key, [.. yg], standingsConfig))
+            .Select(yg => new Year(yg.Key, [.. yg]))
             .ToList();
 
         foreach (var year in years)
@@ -40,7 +37,7 @@ public class APIHistoryController(
             if (year.HasPlayoffs() && year.PlayoffsTournament != null
                 && year.Playoffs != null && year.RegularSeasonStandings != null)
             {
-                await year.PlayoffsTournament.Populate([.. year.Playoffs.Games], dbContext, standingsConfig);
+                await year.PlayoffsTournament.Populate([.. year.Playoffs.Games], dbContext);
             }
         }
 

@@ -16,7 +16,7 @@ public class StandingsConfigServiceTests
         config.LossesValue.Should().Be(0);
         config.ForfeitWinnerScore.Should().Be(7);
         config.ForfeitLoserScore.Should().Be(0);
-        config.Tiebreakers.Should().Equal("Points", "Wins", "RunDifferential");
+        config.Tiebreakers.Should().Equal("Points", "Wins", "HeadToHeadWins", "HeadToHeadRunDifferential");
     }
 
     [Theory]
@@ -43,7 +43,7 @@ public class StandingsConfigServiceTests
         config.WinsValue.Should().Be(3);
         config.TiesValue.Should().Be(1);
         config.ForfeitWinnerScore.Should().Be(7);
-        config.Tiebreakers.Should().Equal("Points", "Wins", "RunDifferential");
+        config.Tiebreakers.Should().Equal("Points", "Wins", "HeadToHeadWins", "HeadToHeadRunDifferential");
     }
 
     [Fact]
@@ -76,7 +76,7 @@ public class StandingsConfigServiceTests
     {
         var config = StandingsConfigService.Parse("{\"tiebreakers\":[\"Bogus\",\"AlsoNotReal\"]}");
 
-        config.Tiebreakers.Should().Equal("Points", "Wins", "RunDifferential");
+        config.Tiebreakers.Should().Equal("Points", "Wins", "HeadToHeadWins", "HeadToHeadRunDifferential");
     }
 
     [Theory]
@@ -85,7 +85,7 @@ public class StandingsConfigServiceTests
     public void EmptyOrNullTiebreakers_FallBackToDefaultRule(string json)
     {
         StandingsConfigService.Parse(json).Tiebreakers
-            .Should().Equal("Points", "Wins", "RunDifferential");
+            .Should().Equal("Points", "Wins", "HeadToHeadWins", "HeadToHeadRunDifferential");
     }
 
     [Fact]

@@ -16,11 +16,8 @@ public class SeedingConfigurationStandingsSource : ISeedingConfigurationSource
         "BracketRound:16:1-2" means:
         - Return ranks 1-2 from BracketRound ID 16
     */
-    readonly StandingsConfig? standingsConfig;
-
-    public SeedingConfigurationStandingsSource(string source, StandingsConfig? standingsConfig = null)
+    public SeedingConfigurationStandingsSource(string source)
     {
-        this.standingsConfig = standingsConfig;
         var sourceSplit = source.Split(':');
         SourceType = sourceSplit[0];
         SourceID = Convert.ToInt64(sourceSplit[1]);
@@ -31,6 +28,11 @@ public class SeedingConfigurationStandingsSource : ISeedingConfigurationSource
 
     public async Task<IEnumerable<Team>> GetTeamsAsync(LeagueSitesContext dbContext)
     {
+        // Standings rules are per-season: rank the source's games under the
+        // rules of the season those games belong to, so historical seeding
+        // never changes when a later season adopts different rules.
+        string? standingsJson = null;
+
         List<Game> games = [];
         if (SourceType == "Season")
         {
@@ -40,6 +42,11 @@ public class SeedingConfigurationStandingsSource : ISeedingConfigurationSource
                 .Include(g => g.Status)
                 .Where(g => g.SeasonID == SourceID)
                 .ToListAsync());
+            standingsJson = await dbContext.Seasons
+                .AsNoTracking()
+                .Where(s => s.ID == SourceID)
+                .Select(s => s.StandingsJson)
+                .FirstOrDefaultAsync();
         }
         else if (SourceType == "BracketRound")
         {
@@ -56,6 +63,11 @@ public class SeedingConfigurationStandingsSource : ISeedingConfigurationSource
                 .Where(rs => rs.RoundID == SourceID)
                 .ToListAsync();
             games.AddRange(roundSeries.SelectMany(sg => sg.Games).Select(sg => sg.Game!));
+            standingsJson = await dbContext.RoundSeries
+                .AsNoTracking()
+                .Where(rs => rs.RoundID == SourceID)
+                .Select(rs => rs.Round!.Bracket!.Tournament!.Season!.StandingsJson)
+                .FirstOrDefaultAsync();
         }
         else if (SourceType == "TournamentRoundRobin")
         {
@@ -72,9 +84,16 @@ public class SeedingConfigurationStandingsSource : ISeedingConfigurationSource
                 .Where(rs => rs.ID == SourceID)
                 .ToListAsync();
             games.AddRange(tournamentRoundRobin.SelectMany(trr => trr.Games).Select(trrg => trrg.Game!));
+            standingsJson = await dbContext.TournamentRoundRobins
+                .AsNoTracking()
+                .Where(rr => rr.ID == SourceID)
+                .Select(rr => rr.Tournament!.Season!.StandingsJson)
+                .FirstOrDefaultAsync();
         }
-        // Rank with the league's configured rules so a team seeded "3rd in
-        // the standings" is the same team the standings page shows 3rd.
-        return new Standings(games, standingsConfig).Keys.Skip(SourceRankStart - 1).Take(SourceRankEnd - SourceRankStart + 1);
+
+        // Rank with the owning season's rules so a team seeded "3rd in the
+        // standings" is the same team that season's standings page shows 3rd.
+        var config = StandingsConfigService.Parse(standingsJson);
+        return new Standings(games, config).Keys.Skip(SourceRankStart - 1).Take(SourceRankEnd - SourceRankStart + 1);
     }
 }

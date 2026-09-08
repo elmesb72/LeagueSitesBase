@@ -5,8 +5,7 @@ using Microsoft.EntityFrameworkCore;
 [Route("api/Playoffs")]
 public class APIPlayoffsController(
     LeagueSitesContext dbContext,
-    ISeasonService seasonService,
-    IStandingsConfigService standingsConfigService) : ControllerBase
+    ISeasonService seasonService) : ControllerBase
 {
     [ResponseCache(Duration = 30)]
     [HttpGet]
@@ -55,7 +54,7 @@ public class APIPlayoffsController(
 
         var tournament = playoffs.Tournaments.FirstOrDefault();
         if (tournament is not null)
-            await tournament.Populate(playoffGames, dbContext, await standingsConfigService.GetAsync());
+            await tournament.Populate(playoffGames, dbContext);
 
         if (tournament is null)
             return Ok(new PlayoffsDto(new SeasonSummaryDto(playoffs), [], []));

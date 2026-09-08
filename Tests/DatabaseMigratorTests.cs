@@ -68,9 +68,10 @@ public class DatabaseMigratorTests : IDisposable
     {
         var migrations = DatabaseMigrator.LoadEmbeddedMigrations();
 
-        migrations.Select(m => m.Version).Should().Equal(1, 2);
+        migrations.Select(m => m.Version).Should().Equal(1, 2, 3);
         migrations[0].Name.Should().Be("baseline");
         migrations[1].Name.Should().Be("standings_config");
+        migrations[2].Name.Should().Be("per_season_standings");
         migrations.Should().OnlyContain(m => !string.IsNullOrWhiteSpace(m.Sql));
     }
 
@@ -81,11 +82,13 @@ public class DatabaseMigratorTests : IDisposable
 
         Migrate(ConnectionString);
 
-        UserVersion().Should().Be(2);
+        UserVersion().Should().Be(3);
         Scalar("SELECT COUNT(*) FROM SiteConfig").Should().Be(1, "the baseline seeds a placeholder config");
         Scalar("SELECT COUNT(*) FROM GameStatus").Should().BeGreaterThan(0, "statuses are universal seed data");
         Scalar("SELECT COUNT(*) FROM pragma_table_info('SiteConfig') WHERE name='StandingsJson'")
-            .Should().Be(1, "migration 0002 adds the standings column");
+            .Should().Be(1, "migration 0002 adds the site-level standings column");
+        Scalar("SELECT COUNT(*) FROM pragma_table_info('Season') WHERE name='StandingsJson'")
+            .Should().Be(1, "migration 0003 adds the per-season standings column");
     }
 
     [Fact]
@@ -96,10 +99,44 @@ public class DatabaseMigratorTests : IDisposable
 
         Migrate(ConnectionString);
 
-        UserVersion().Should().Be(2);
+        UserVersion().Should().Be(3);
         Scalar("SELECT COUNT(*) FROM pragma_table_info('SiteConfig') WHERE name='StandingsJson'")
-            .Should().Be(1, "only 0002 should have run against the existing schema");
+            .Should().Be(1, "0002 should have run against the existing schema");
+        Scalar("SELECT COUNT(*) FROM pragma_table_info('Season') WHERE name='StandingsJson'")
+            .Should().Be(1, "0003 should have run against the existing schema");
         Scalar("SELECT COUNT(*) FROM SiteConfig").Should().Be(1, "existing data must be preserved");
+    }
+
+    [Fact]
+    public void ExistingSeasons_AreStampedWithTheCanonicalRules()
+    {
+        CreateLegacyDatabase();
+        using (var connection = new SqliteConnection(ConnectionString))
+        {
+            connection.Open();
+            using var insert = connection.CreateCommand();
+            insert.CommandText =
+                "INSERT INTO Season (Year, Subseason, StartDate) VALUES (2025, 'Regular Season', '2025-05-01');";
+            insert.ExecuteNonQuery();
+        }
+
+        Migrate(ConnectionString);
+
+        using var check = new SqliteConnection(ConnectionString);
+        check.Open();
+        using var command = check.CreateCommand();
+        command.CommandText = "SELECT StandingsJson FROM Season;";
+        var stamped = (string)command.ExecuteScalar()!;
+
+        // The retroactive stamp freezes every pre-existing season on the
+        // corrected canonical rules (head-to-head tiebreaks, no overall run
+        // differential), explicit so future default changes can't re-rank it.
+        var parsed = StandingsConfigService.Parse(stamped);
+        parsed.Tiebreakers.Should().Equal(
+            "Points", "Wins", "HeadToHeadWins", "HeadToHeadRunDifferential");
+        parsed.WinsValue.Should().Be(2);
+        parsed.ForfeitWinnerScore.Should().Be(7);
+        stamped.Should().NotBeNullOrWhiteSpace("the stamp must be explicit, not inherited defaults");
     }
 
     [Fact]
@@ -111,7 +148,7 @@ public class DatabaseMigratorTests : IDisposable
 
         Migrate(ConnectionString);
 
-        UserVersion().Should().Be(2);
+        UserVersion().Should().Be(3);
         Scalar("SELECT COUNT(*) FROM pragma_table_info('SiteConfig') WHERE name='StandingsJson'")
             .Should().Be(1);
     }
@@ -127,7 +164,7 @@ public class DatabaseMigratorTests : IDisposable
 
         Migrate(ConnectionString);
 
-        UserVersion().Should().Be(2);
+        UserVersion().Should().Be(3);
         Directory.GetFiles(Path.GetDirectoryName(dbPath)!, Path.GetFileName(dbPath) + "*.bak")
             .Should().BeEmpty("an up-to-date database needs no backup");
     }

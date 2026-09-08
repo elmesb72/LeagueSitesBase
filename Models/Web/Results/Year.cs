@@ -29,11 +29,15 @@ public class Year
     }
     public string? ExceptionYearDescription { get; set; }
 
-    public Year(long calendarYear, List<Season> seasons, StandingsConfig? standingsConfig = null)
+    public Year(long calendarYear, List<Season> seasons)
     {
         CalendarYear = calendarYear;
         Seasons = seasons;
-        RegularSeasonStandings = new Standings(RegularSeason?.Games ?? [], standingsConfig);
+        // Ranked under the rules the season was played under, so rule
+        // changes in later years never rewrite a historical pennant.
+        RegularSeasonStandings = new Standings(
+            RegularSeason?.Games ?? [],
+            StandingsConfigService.Parse(RegularSeason?.StandingsJson));
         if (RegularSeasonIsComplete())
         {
             var winner = RegularSeasonStandings.First();

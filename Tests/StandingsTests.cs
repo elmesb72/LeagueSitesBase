@@ -302,14 +302,16 @@ public class StandingsConfigurableRulesTests
             TestDataHelper.MakeGame(TeamD, TeamC, "Played", scoreHost: 5, scoreVisitor: 0),
         };
 
-        // Default rules: run differential decides — A above B.
+        // Default (canonical) rules break the tie head-to-head: B beat A.
         var byDefault = new Standings(games);
-        byDefault.Keys.ElementAt(1).Should().Be(TeamA, "default rules break the tie by overall run differential");
+        byDefault.Keys.ElementAt(1).Should().Be(TeamB, "default rules rank the head-to-head winner first");
+        byDefault.Keys.ElementAt(2).Should().Be(TeamA);
 
-        // Head-to-head rules: B beat A, so B ranks above A.
-        var byHeadToHead = new Standings(games, RuleOf("Points", "Wins", "HeadToHeadPoints"));
-        byHeadToHead.Keys.ElementAt(1).Should().Be(TeamB, "B won the meeting between the tied teams");
-        byHeadToHead.Keys.ElementAt(2).Should().Be(TeamA);
+        // A season stored with the pre-2026 rules keeps its old ordering:
+        // overall run differential puts A above B.
+        var byOldRules = new Standings(games, RuleOf("Points", "Wins", "RunDifferential"));
+        byOldRules.Keys.ElementAt(1).Should().Be(TeamA, "the old explicit rules break the tie by overall run differential");
+        byOldRules.Keys.ElementAt(2).Should().Be(TeamB);
     }
 
     [Fact]

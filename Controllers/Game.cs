@@ -7,8 +7,7 @@ using Microsoft.EntityFrameworkCore;
 public class APIGameController(
     LeagueSitesContext dbContext,
     IAuthorizationService authorizationService,
-    IPermissionsService permissionsService,
-    IStandingsConfigService standingsConfigService) : ControllerBase
+    IPermissionsService permissionsService) : ControllerBase
 {
     [HttpGet("{id:long}")]
     public async Task<IActionResult> Get([FromRoute] long id)
@@ -71,8 +70,11 @@ public class APIGameController(
                 && g.SeasonID == game.SeasonID
                 && g.Date <= game.Date)
             .ToListAsync();
-        // Config matters here for the forfeit score baked into W-L-T records.
-        var standings = new Standings(seasonGames, await standingsConfigService.GetAsync());
+        // Ranked under this game's season's rules (the season is already
+        // loaded). Only the W-L-T record strings are read here, which no
+        // configured rule can change, but season-scoped is the principled
+        // default for anything built from a Standings.
+        var standings = new Standings(seasonGames, StandingsConfigService.Parse(game.Season?.StandingsJson));
         string? hostRecord = standings.ContainsKey(game.HostTeam!) ? standings[game.HostTeam!].ToString() : null;
         string? visitorRecord = standings.ContainsKey(game.VisitingTeam!) ? standings[game.VisitingTeam!].ToString() : null;
 

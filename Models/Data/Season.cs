@@ -18,6 +18,14 @@
     }
     public DateTime StartDate { get; set; }
 
+    /// <summary>
+    /// This season's standings rules (StandingsConfig JSON), frozen at
+    /// creation by copying the latest season's rules. Scoped per season so
+    /// later rule changes never re-rank historical seasons. Empty string
+    /// means platform defaults; parse via StandingsConfigService.Parse.
+    /// </summary>
+    public string StandingsJson { get; set; } = "";
+
     public virtual ICollection<Game> Games { get; set; }
     public virtual ICollection<Tournament> Tournaments { get; set; }
 

@@ -6,8 +6,7 @@ using Microsoft.EntityFrameworkCore;
 public class APIHomeController(
     LeagueSitesContext dbContext,
     ISeasonService seasonService,
-    IPermissionsService permissionsService,
-    IStandingsConfigService standingsConfigService) : ControllerBase
+    IPermissionsService permissionsService) : ControllerBase
 {
     [HttpGet]
     public async Task<IActionResult> Get()
@@ -45,7 +44,7 @@ public class APIHomeController(
                 .Where(g => g.SeasonID == closestSeason.ID)
                 .Where(g => g.Status!.Name != "Deleted")
                 .ToListAsync();
-            standings = new Standings(seasonGames, await standingsConfigService.GetAsync());
+            standings = new Standings(seasonGames, StandingsConfigService.Parse(closestSeason.StandingsJson));
             standings.CalculateStreaks();
 
             isPlayoffs = await dbContext.Seasons

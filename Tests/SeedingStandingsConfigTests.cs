@@ -5,9 +5,10 @@ using Moq.EntityFrameworkCore;
 namespace LeagueSitesBackend.Tests;
 
 /// <summary>
-/// The motivating scenario for configurable standings rules: playoff seeding
-/// must rank teams with the league's configured tiebreakers, so the team the
-/// standings page shows in a rank is the team seeded at that rank.
+/// Playoff seeding must rank teams under the standings rules OF THE SEASON
+/// the ranked games belong to (Season.StandingsJson), so seeding always
+/// matches that season's standings page — and historical seeding never
+/// changes when a later season adopts different rules.
 /// </summary>
 public class SeedingStandingsConfigTests
 {
@@ -22,7 +23,7 @@ public class SeedingStandingsConfigTests
     /// D sweeps; C loses out. A and B are tied on points and wins — A has the
     /// far better overall run differential, but B won the head-to-head game.
     /// </summary>
-    static Mock<LeagueSitesContext> MockSeasonGames()
+    static Mock<LeagueSitesContext> MockSeason(string standingsJson)
     {
         var games = new List<Game>
         {
@@ -33,46 +34,54 @@ public class SeedingStandingsConfigTests
         };
         games.ForEach(g => g.SeasonID = SeasonID);
 
+        var season = new Season
+        {
+            ID = SeasonID,
+            Year = 2025,
+            Subseason = "Regular Season",
+            StartDate = new DateTime(2025, 5, 1),
+            StandingsJson = standingsJson,
+        };
+
         var dbMock = new Mock<LeagueSitesContext>();
         dbMock.Setup(x => x.Games).ReturnsDbSet(games);
+        dbMock.Setup(x => x.Seasons).ReturnsDbSet(new List<Season> { season });
         return dbMock;
     }
 
     [Fact]
-    public async Task StandingsSource_DefaultRules_RanksByRunDifferential()
+    public async Task StandingsSource_UsesTheSeasonsOwnRules()
     {
+        // A season stamped with the pre-2026 rules (overall run differential)
+        // must keep seeding by them, regardless of what the current platform
+        // defaults are — that is the historical-freeze guarantee.
+        var oldRules = "{\"tiebreakers\":[\"Points\",\"Wins\",\"RunDifferential\"]}";
         var source = new SeedingConfigurationStandingsSource($"Season:{SeasonID}:1-4");
 
-        var teams = (await source.GetTeamsAsync(MockSeasonGames().Object)).ToList();
+        var teams = (await source.GetTeamsAsync(MockSeason(oldRules).Object)).ToList();
 
-        teams.Should().Equal(TeamD, TeamA, TeamB, TeamC);
+        teams.Should().Equal([TeamD, TeamA, TeamB, TeamC],
+            "this season's stored rules break the A/B tie by overall run differential");
     }
 
     [Fact]
-    public async Task StandingsSource_HeadToHeadRules_RanksMeetingWinnerAhead()
+    public async Task StandingsSource_UnsetRules_UseHeadToHeadDefaults()
     {
-        var config = new StandingsConfig
-        {
-            Tiebreakers = ["Points", "Wins", "HeadToHeadPoints"]
-        };
-        var source = new SeedingConfigurationStandingsSource($"Season:{SeasonID}:1-4", config);
+        // An unset StandingsJson means the platform's canonical rules, which
+        // break ties head-to-head: B beat A, so B seeds ahead.
+        var source = new SeedingConfigurationStandingsSource($"Season:{SeasonID}:1-4");
 
-        var teams = (await source.GetTeamsAsync(MockSeasonGames().Object)).ToList();
+        var teams = (await source.GetTeamsAsync(MockSeason("").Object)).ToList();
 
         teams.Should().Equal([TeamD, TeamB, TeamA, TeamC],
-            "seeds must follow the configured head-to-head tiebreaker, not the default run differential");
+            "default rules rank the head-to-head winner ahead of the tied team");
     }
 
     [Fact]
-    public async Task Parse_ThreadsConfigThroughToSeedAssignment()
+    public async Task Parse_AssignsSeedsUnderTheSeasonsRules()
     {
-        var config = new StandingsConfig
-        {
-            Tiebreakers = ["Points", "Wins", "HeadToHeadPoints"]
-        };
-
         var seeds = await SeedingConfiguration.Parse(
-            $"1-4,Standings,Season:{SeasonID}:1-4", MockSeasonGames().Object, config);
+            $"1-4,Standings,Season:{SeasonID}:1-4", MockSeason("").Object);
 
         seeds[1].Should().Be(TeamD);
         seeds[2].Should().Be(TeamB, "the head-to-head winner takes the higher seed");
