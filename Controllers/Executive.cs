@@ -358,6 +358,11 @@ public class APIExecutiveController(
     [HttpPut("StandingsRules")]
     public async Task<IActionResult> UpdateStandingsRules([FromBody] StandingsRulesUpdateDto dto)
     {
+        // A payload without the year wrapper (e.g. an older client) binds
+        // Standings as null; reject cleanly rather than throwing.
+        if (dto.Standings is null)
+            return BadRequest("A year and standings rules are required.");
+
         var problems = StandingsConfigService.Validate(dto.Standings);
         if (problems.Count > 0)
             return BadRequest(string.Join(" ", problems));
