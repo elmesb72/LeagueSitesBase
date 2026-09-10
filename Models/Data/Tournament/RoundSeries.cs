@@ -48,6 +48,15 @@ public partial class RoundSeries
 
     Standings? Results { get; set; }
 
+    // A game counts toward a series once it has a result: played, or awarded by
+    // forfeit. Forfeits were excluded here, which left a series won on one with
+    // no Winner at all — and since the next round's w/l/r spots are resolved
+    // from series winners, a single forfeit stalled the rest of the bracket.
+    // Upcoming/Cancelled/Postponed/Deleted are still ignored, including when
+    // they carry a stale score; TeamResultSet substitutes the league's
+    // configured forfeit score for the two forfeit statuses.
+    static readonly string[] DecidedStatuses = ["Played", "Forfeit (Home)", "Forfeit (Away)"];
+
     // Uses default StandingsConfig deliberately: series are decided by game
     // WINS per team (and run differential for Aggregate), read directly off
     // the result sets — no configured ranking rule applies to a series. The
@@ -59,8 +68,8 @@ public partial class RoundSeries
         if (Results is null)
         {
             var games = Games.Select(g => g.Game).WhereNotNull();
-            var playedGames = games.Where(g => g?.Status?.Name == "Played");
-            Results = new Standings(playedGames);
+            var decidedGames = games.Where(g => DecidedStatuses.Contains(g?.Status?.Name));
+            Results = new Standings(decidedGames);
         }
         return Results!;
     }

@@ -93,13 +93,27 @@ public partial class Tournament
         foreach (var bracket in Brackets)
         {
             if (!bracket.Seeds.Any()) continue;
-            
+
+            // Order rounds first: the widest round (most series) is round one.
+            // This has to happen before anything reads "the opening round"
+            // below, otherwise the re-seed pool gets built from whichever
+            // round EF happened to load first.
+            bracket.Rounds = bracket.Rounds.OrderByDescending(r => r.Series.Count).ToList();
+
             var seriesSpots = bracket.Rounds.First().Series.Select(s => s.Spots);
             var remainingTeams = seriesSpots.ToDictionary(s => s.Item1.Seed, s => s.Item1.Team).Union(
                 seriesSpots.ToDictionary(s => s.Item2.Seed, s => s.Item2.Team)
                 ).OrderBy(t => t.Key)
                 .ToDictionary(t => t.Key, t => t.Value);
-            bracket.Rounds = bracket.Rounds.OrderByDescending(r => r.Series.Count).ToList(); // Ensure rounds are in order
+
+            // Re-seed ('r') spots are read positionally out of remainingTeams,
+            // so they only mean anything while that pool is still complete.
+            // As soon as a round holds an undecided series, that series' loser
+            // has already been dropped from the pool while its winner is not
+            // yet known, so every rank below the gap would slide onto the
+            // wrong team. Leave those spots unresolved until the round is
+            // finished; they render as "#n remaining".
+            var remainingTeamsComplete = true;
 
             foreach (var round in bracket.Rounds)
             {
@@ -124,11 +138,15 @@ public partial class Tournament
                         }
                     }
 
-                    if (series.Spots.Item1.Source == 'r' && remainingTeams.Count > series.Spots.Item1.Seed - 1) series.Spots.Item1.Team = remainingTeams.ElementAt(series.Spots.Item1.Seed - 1).Value;
-                    if (series.Spots.Item2.Source == 'r' && remainingTeams.Count > series.Spots.Item2.Seed - 1) series.Spots.Item2.Team = remainingTeams.ElementAt(series.Spots.Item2.Seed - 1).Value;
+                    if (remainingTeamsComplete)
+                    {
+                        if (series.Spots.Item1.Source == 'r' && remainingTeams.Count > series.Spots.Item1.Seed - 1) series.Spots.Item1.Team = remainingTeams.ElementAt(series.Spots.Item1.Seed - 1).Value;
+                        if (series.Spots.Item2.Source == 'r' && remainingTeams.Count > series.Spots.Item2.Seed - 1) series.Spots.Item2.Team = remainingTeams.ElementAt(series.Spots.Item2.Seed - 1).Value;
+                    }
                 }
 
                 var winners = round.Series.Where(s => s.Winner != null).Select(s => s.Winner);
+                remainingTeamsComplete = round.Series.All(s => s.Winner != null);
                 remainingTeams = remainingTeams.Where(t => winners.Any(w => w?.ID == t.Value?.ID)).ToDictionary(t => t.Key, t => t.Value);
             }
         }
@@ -138,7 +156,20 @@ public partial class Tournament
         var poolConfig = StandingsConfigService.Parse(Season?.StandingsJson);
         foreach (var roundrobin in RoundRobins)
         {
-            roundrobin.Standings = new Standings(roundrobin.Games.Select(g => g.Game ?? new Game()), poolConfig);
+            // Pool slots are created before the games that fill them, so an
+            // unassigned slot is a normal intermediate state. It used to be
+            // substituted with a blank Game, which Standings rejects for
+            // having no teams — taking the entire playoffs response down with
+            // it and surfacing as "the playoffs have not yet started".
+            // Cancelled and Deleted games are dropped as well, so the table
+            // counts exactly the games the pool's game list displays.
+            string[] excludedStatuses = ["Cancelled", "Deleted"];
+            roundrobin.Standings = new Standings(
+                roundrobin.Games
+                    .Select(g => g.Game)
+                    .WhereNotNull()
+                    .Where(g => !excludedStatuses.Contains(g.Status?.Name ?? "")),
+                poolConfig);
 
             if (!string.IsNullOrEmpty(roundrobin.SeedingConfiguration))
             {
