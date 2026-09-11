@@ -3,14 +3,20 @@ public record PlayoffsDto(
     List<BracketDto> Brackets,
     List<RoundRobinDto> RoundRobins);
 
+/// <param name="Historical">True when this bracket's winner is the league champion shown on the History page.</param>
+/// <param name="Winner">The bracket winner once every series is decided (the same test History applies), otherwise null.</param>
 public record BracketDto(
     string Name,
     string Format,
+    bool Historical,
+    TeamSummaryDto? Winner,
     List<BracketRoundDto> Rounds)
 {
     public static BracketDto From(TournamentBracket bracket) => new(
         bracket.Name,
         bracket.Format,
+        bracket.Historical,
+        bracket.IsDecided() ? new TeamSummaryDto(bracket.GetWinner()) : null,
         bracket.Rounds.Select(r => BracketRoundDto.From(r, bracket.Seeds)).ToList());
 }
 
