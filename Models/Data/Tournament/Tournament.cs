@@ -18,24 +18,39 @@ public partial class Tournament
     // Standings rules resolve per season: seeding sources use the rules of
     // the season that owns the games they rank, and pool standings use this
     // tournament's own season's rules.
+    /// <summary>
+    /// Seeds for a bracket or pool with no stored SeedingConfiguration (rows
+    /// from before seeding rules existed, 2024 and earlier): everyone in this
+    /// year's regular season, in standings order under that season's rules.
+    ///
+    /// The games must be loaded with their teams and status. Standings throws
+    /// on a game without both teams, and TeamResultSet reads Status.Name to
+    /// score forfeits. Without the Includes this only worked when something
+    /// earlier in the same request happened to have tracked those games with
+    /// their navigations (History does; the Playoffs endpoint does not), which
+    /// is why /api/Playoffs?year= 500ed for every legacy year.
+    /// </summary>
+    async Task<Dictionary<int, Team>> RegularSeasonSeedsAsync(LeagueSitesContext dbContext)
+    {
+        var regularSeason = await dbContext.Seasons.FirstAsync(s => s.Year == Season!.Year && s.Subseason == "Regular Season");
+        var games = await dbContext.Games
+            .Include(g => g.HostTeam)
+            .Include(g => g.VisitingTeam)
+            .Include(g => g.Status)
+            .Where(g => g.SeasonID == regularSeason.ID)
+            .ToListAsync();
+        var standings = new Standings(games, StandingsConfigService.Parse(regularSeason.StandingsJson));
+        return await SeedingConfiguration.Parse($"1-{standings.Count},Standings,Season:{regularSeason.ID}:1-{standings.Count}", dbContext);
+    }
+
     public async Task Populate(List<Game> playoffGames, LeagueSitesContext dbContext)
     {
         // Map game objects to bracket game objects
         foreach (var bracket in Brackets)
         {
-            if (!string.IsNullOrEmpty(bracket.SeedingConfiguration))
-            {
-                bracket.Seeds = await SeedingConfiguration.Parse(bracket.SeedingConfiguration, dbContext);
-            }
-            else
-            {
-                // Regular season standings (counted under that season's rules)
-                var regularSeason = await dbContext.Seasons.FirstAsync(s => s.Year == Season!.Year && s.Subseason == "Regular Season");
-                var standings = new Standings(
-                    await dbContext.Games.Where(g => g.SeasonID == regularSeason.ID).ToListAsync(),
-                    StandingsConfigService.Parse(regularSeason.StandingsJson));
-                bracket.Seeds = await SeedingConfiguration.Parse($"1-{standings.Count},Standings,Season:{regularSeason.ID}:1-{standings.Count}", dbContext);
-            }
+            bracket.Seeds = !string.IsNullOrEmpty(bracket.SeedingConfiguration)
+                ? await SeedingConfiguration.Parse(bracket.SeedingConfiguration, dbContext)
+                : await RegularSeasonSeedsAsync(dbContext);
             
             foreach (var round in bracket.Rounds)
             {
@@ -157,19 +172,9 @@ public partial class Tournament
         foreach (var roundrobin in RoundRobins)
         {
             // Who is in the pool, resolved first so the table below can seat them.
-            if (!string.IsNullOrEmpty(roundrobin.SeedingConfiguration))
-            {
-                roundrobin.Seeds = await SeedingConfiguration.Parse(roundrobin.SeedingConfiguration, dbContext);
-            }
-            else
-            {
-                // Regular season standings (counted under that season's rules)
-                var regularSeason = await dbContext.Seasons.FirstAsync(s => s.Year == Season!.Year && s.Subseason == "Regular Season");
-                var standings = new Standings(
-                    await dbContext.Games.Where(g => g.SeasonID == regularSeason.ID).ToListAsync(),
-                    StandingsConfigService.Parse(regularSeason.StandingsJson));
-                roundrobin.Seeds = await SeedingConfiguration.Parse($"1-{standings.Count},Standings,Season:{regularSeason.ID}:1-{standings.Count}", dbContext);
-            }
+            roundrobin.Seeds = !string.IsNullOrEmpty(roundrobin.SeedingConfiguration)
+                ? await SeedingConfiguration.Parse(roundrobin.SeedingConfiguration, dbContext)
+                : await RegularSeasonSeedsAsync(dbContext);
 
             // Pool slots are created before the games that fill them, so an
             // unassigned slot is a normal intermediate state. It used to be
