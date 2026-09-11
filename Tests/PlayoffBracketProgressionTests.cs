@@ -102,6 +102,19 @@ public class PlayoffBracketProgressionTests
                 : [quarterFinals, semiFinals, finals],
         };
 
+        // Back-references, as EF would fix them up. The Losers seeding source
+        // walks series -> round -> bracket to recover the original seeds.
+        foreach (var round in bracket.Rounds)
+        {
+            round.Bracket = bracket;
+            round.BracketID = bracket.ID;
+            foreach (var s in round.Series)
+            {
+                s.Round = round;
+                s.RoundID = round.ID;
+            }
+        }
+
         return new Tournament
         {
             ID = 1,
@@ -110,6 +123,20 @@ public class PlayoffBracketProgressionTests
             Brackets = [bracket],
         };
     }
+
+    /// <summary>
+    /// Every quarter-final decided with the higher seed advancing, one of them
+    /// on a forfeit — the live CLFB state once the forfeit fix shipped.
+    /// </summary>
+    static List<Game> QuarterFinalsDecided(Dictionary<long, RoundSeries> series) =>
+    [
+        .. Sweep(series[1], 101, Seed(1), Seed(8)),
+        .. Sweep(series[2], 111, Seed(2), Seed(7)),
+        AddGame(series[3], 121, Seed(3), Seed(6), "Forfeit (Away)"),
+        AddGame(series[3], 122, Seed(6), Seed(3), "Played", 5, 2),
+        AddGame(series[3], 123, Seed(3), Seed(6), "Played", 9, 5),
+        .. Sweep(series[4], 131, Seed(4), Seed(5)),
+    ];
 
     /// <summary>
     /// Attaches a game to a series and returns it so it can be handed to
@@ -225,18 +252,7 @@ public class PlayoffBracketProgressionTests
     {
         var tournament = MakeTournament(out var series, shuffleRounds);
 
-        // Every higher seed advances, one of them on a forfeit.
-        List<Game> games =
-        [
-            .. Sweep(series[1], 101, Seed(1), Seed(8)),
-            .. Sweep(series[2], 111, Seed(2), Seed(7)),
-            AddGame(series[3], 121, Seed(3), Seed(6), "Forfeit (Away)"),
-            AddGame(series[3], 122, Seed(6), Seed(3), "Played", 5, 2),
-            AddGame(series[3], 123, Seed(3), Seed(6), "Played", 9, 5),
-            .. Sweep(series[4], 131, Seed(4), Seed(5)),
-        ];
-
-        await Run(tournament, games);
+        await Run(tournament, QuarterFinalsDecided(series));
 
         // Best remaining seed plays the worst: 1v4 and 2v3.
         series[5].Spots.Item1.Team.Should().Be(Seed(1));
@@ -278,5 +294,94 @@ public class PlayoffBracketProgressionTests
         series[6].Spots.Item1.Team.Should().BeNull();
         series[6].Spots.Item2.Team.Should().BeNull(
             "a team from a decided series must not slide up into a rank it has not earned");
+    }
+
+    // ------------------------------------------------------- Bracket champion
+
+    [Fact]
+    public async Task BracketIsNotDecided_WhileLaterRoundsAreUnplayed()
+    {
+        // With only the quarter-finals in, four teams each own one series win.
+        // The executive pages used to declare "Won by" whichever of them came
+        // first — a champion named before the semi-finals had been played.
+        var tournament = MakeTournament(out var series);
+
+        var bracket = await Run(tournament, QuarterFinalsDecided(series));
+
+        bracket.Rounds.SelectMany(r => r.Series).Count(s => s.Winner != null)
+            .Should().Be(4, "sanity: every quarter-final has a winner");
+        bracket.IsDecided().Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task BracketIsDecided_OnceTheFinalIsPlayed()
+    {
+        var tournament = MakeTournament(out var series);
+
+        // Higher seed wins throughout: semis are 1v4 and 2v3, the final is 1v2.
+        List<Game> games =
+        [
+            .. QuarterFinalsDecided(series),
+            .. Sweep(series[5], 141, Seed(1), Seed(4)),
+            .. Sweep(series[6], 151, Seed(2), Seed(3)),
+            .. Sweep(series[7], 161, Seed(1), Seed(2)),
+        ];
+
+        var bracket = await Run(tournament, games);
+
+        bracket.IsDecided().Should().BeTrue();
+        bracket.GetWinner().Should().Be(Seed(1));
+    }
+
+    [Fact]
+    public async Task EmptyBracket_IsNotDecided()
+    {
+        var bracket = new TournamentBracket { Name = "Empty", Format = "Fixed", Historical = false };
+
+        bracket.IsDecided().Should().BeFalse("a bracket with no series has nothing to have won");
+    }
+
+    // ------------------------------------------------------ Consolation pool
+
+    [Fact]
+    public async Task ConsolationPool_SeatsEveryKnockedOutTeam_BeforeTheirGamesExist()
+    {
+        // The "B side": a pool seeded from the quarter-final losers. All four
+        // quarter-finals are done, but only one pool game has been scheduled so
+        // far, between two of the four losers. Built from games alone, the pool
+        // table showed just those two — so the other two teams knocked out
+        // could not see themselves in the B side, and the exec's add-game team
+        // list (fed by the same table) only offered the same two.
+        var tournament = MakeTournament(out var series);
+        var bracket = tournament.Brackets.First();
+        var quarterFinals = bracket.Rounds.First(r => r.Name == "Quarter-finals");
+
+        var pool = new TournamentRoundRobin
+        {
+            ID = 1,
+            Name = "B Side",
+            Historical = false,
+            SeedingConfiguration = $"1-4,Losers,BracketRound:{quarterFinals.ID}:1-4",
+            Games = [],
+        };
+        tournament.RoundRobins = [pool];
+
+        var games = QuarterFinalsDecided(series);
+        var poolGame = TestDataHelper.MakeGame(Seed(5), Seed(7), "Upcoming");
+        poolGame.ID = 201;
+        pool.Games.Add(new RoundRobinGame { ID = 1, TournamentRoundRobinID = pool.ID, GameID = poolGame.ID, Game = poolGame });
+        games.Add(poolGame);
+
+        var db = MockContext();
+        db.Setup(x => x.RoundSeries).ReturnsDbSet(quarterFinals.Series.ToList());
+        await tournament.Populate(games, db.Object);
+
+        pool.Seeds.Values.Should().BeEquivalentTo([Seed(5), Seed(6), Seed(7), Seed(8)],
+            "the four quarter-final losers, in original seed order");
+
+        var standings = pool.Standings!;
+        standings.Keys.Should().BeEquivalentTo([Seed(5), Seed(6), Seed(7), Seed(8)],
+            "every entrant has a row, not just the two with a game scheduled");
+        standings.Values.Should().OnlyContain(r => r.GamesPlayed == 0, "the one pool game is still upcoming");
     }
 }

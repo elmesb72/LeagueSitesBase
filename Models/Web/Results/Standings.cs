@@ -10,11 +10,23 @@
 /// </summary>
 public class Standings : Dictionary<Team, TeamResultSet>
 {
-    public Standings(IEnumerable<Game> games, StandingsConfig? config = null)
+    /// <param name="games">The games that produce the records.</param>
+    /// <param name="config">Ranking rules; null means the platform defaults.</param>
+    /// <param name="teams">
+    /// Teams that belong in the table whether or not they have played yet, such
+    /// as the entrants seeded into a playoff pool. They get a 0-0-0 row and are
+    /// ranked alongside everyone else, so membership is visible from the start
+    /// instead of appearing one team at a time as games are scheduled.
+    /// </param>
+    public Standings(IEnumerable<Game> games, StandingsConfig? config = null, IEnumerable<Team>? teams = null)
     {
         config ??= new StandingsConfig();
 
         var teamGamesSet = new Dictionary<Team, List<Game>>();
+        foreach (var t in teams ?? [])
+        {
+            teamGamesSet.TryAdd(t, []);
+        }
         foreach (var g in games)
         {
             if (g.HostTeam is null || g.VisitingTeam is null)

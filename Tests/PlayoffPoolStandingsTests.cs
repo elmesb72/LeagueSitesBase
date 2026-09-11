@@ -106,13 +106,44 @@ public class PlayoffPoolStandingsTests
     }
 
     [Fact]
-    public async Task PoolWithNoGamesAssignedYet_ProducesEmptyStandings()
+    public async Task PoolWithNoGamesAssignedYet_SeatsEveryEntrantAtZero()
     {
+        // Membership comes from the seeding, not from the games. A pool whose
+        // games have not been scheduled is still a pool of known teams.
         Game?[] slots = [null, null];
 
         var standings = await Run(MakePool(slots), slots);
 
-        standings.Should().BeEmpty();
+        standings.Keys.Should().BeEquivalentTo([TeamA, TeamB]);
+        standings.Values.Should().OnlyContain(r => r.GamesPlayed == 0 && r.Points == 0);
+    }
+
+    [Fact]
+    public async Task PoolStandings_RankPlayedTeamsAboveUnplayedOnes()
+    {
+        // A pool seeded 1-3 where only A and B have met so far: A leads on
+        // points, and C (no games) still holds a row rather than vanishing.
+        var teamC = TestDataHelper.MakeTeam(3, "Gammas", "GAM");
+        var tournament = MakePool(PoolGame(201, "Played", 6, 2));
+        tournament.RoundRobins.First().SeedingConfiguration = $"1-3,Standings,Season:{SeasonID}:1-3";
+
+        var db = MockContext();
+        var regularSeason = new List<Game>
+        {
+            TestDataHelper.MakeGame(TeamA, TeamB, "Played", scoreHost: 1, scoreVisitor: 0),
+            TestDataHelper.MakeGame(TeamB, teamC, "Played", scoreHost: 1, scoreVisitor: 0),
+        };
+        regularSeason.ForEach(g => g.SeasonID = SeasonID);
+        db.Setup(x => x.Games).ReturnsDbSet(regularSeason);
+
+        var poolGame = tournament.RoundRobins.First().Games.First().Game!;
+        await tournament.Populate([poolGame], db.Object);
+        var standings = tournament.RoundRobins.First().Standings!;
+
+        standings.Keys.Should().HaveCount(3);
+        standings.Keys.First().Should().Be(TeamA, "the only team with a win ranks first");
+        standings[teamC].GamesPlayed.Should().Be(0);
+        standings.Keys.Should().Contain(teamC, "a seeded team with no games yet still has a row");
     }
 
     [Fact]

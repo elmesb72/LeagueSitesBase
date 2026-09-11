@@ -156,21 +156,7 @@ public partial class Tournament
         var poolConfig = StandingsConfigService.Parse(Season?.StandingsJson);
         foreach (var roundrobin in RoundRobins)
         {
-            // Pool slots are created before the games that fill them, so an
-            // unassigned slot is a normal intermediate state. It used to be
-            // substituted with a blank Game, which Standings rejects for
-            // having no teams — taking the entire playoffs response down with
-            // it and surfacing as "the playoffs have not yet started".
-            // Cancelled and Deleted games are dropped as well, so the table
-            // counts exactly the games the pool's game list displays.
-            string[] excludedStatuses = ["Cancelled", "Deleted"];
-            roundrobin.Standings = new Standings(
-                roundrobin.Games
-                    .Select(g => g.Game)
-                    .WhereNotNull()
-                    .Where(g => !excludedStatuses.Contains(g.Status?.Name ?? "")),
-                poolConfig);
-
+            // Who is in the pool, resolved first so the table below can seat them.
             if (!string.IsNullOrEmpty(roundrobin.SeedingConfiguration))
             {
                 roundrobin.Seeds = await SeedingConfiguration.Parse(roundrobin.SeedingConfiguration, dbContext);
@@ -184,6 +170,29 @@ public partial class Tournament
                     StandingsConfigService.Parse(regularSeason.StandingsJson));
                 roundrobin.Seeds = await SeedingConfiguration.Parse($"1-{standings.Count},Standings,Season:{regularSeason.ID}:1-{standings.Count}", dbContext);
             }
+
+            // Pool slots are created before the games that fill them, so an
+            // unassigned slot is a normal intermediate state. It used to be
+            // substituted with a blank Game, which Standings rejects for
+            // having no teams — taking the entire playoffs response down with
+            // it and surfacing as "the playoffs have not yet started".
+            // Cancelled and Deleted games are dropped as well, so the table
+            // counts exactly the games the pool's game list displays.
+            //
+            // Every seeded entrant gets a row from the outset. Built from games
+            // alone, the table only ever showed teams that already had a pool
+            // game scheduled — so a team knocked out into the pool was invisible
+            // (publicly, and in the exec's pool page and its add-game team list)
+            // until someone scheduled its first game, even though the seeding
+            // had already placed it.
+            string[] excludedStatuses = ["Cancelled", "Deleted"];
+            roundrobin.Standings = new Standings(
+                roundrobin.Games
+                    .Select(g => g.Game)
+                    .WhereNotNull()
+                    .Where(g => !excludedStatuses.Contains(g.Status?.Name ?? "")),
+                poolConfig,
+                roundrobin.Seeds.OrderBy(s => s.Key).Select(s => s.Value));
         }
     }
 

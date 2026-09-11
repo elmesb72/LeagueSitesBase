@@ -125,7 +125,10 @@ public class TournamentService(LeagueSitesContext dbContext) : ITournamentServic
             [.. seeding.Select(SeedGroupDto.From)],
             BuildResolvedSeeds(bracket.Seeds),
             [.. bracket.Rounds.Select(BuildRound)],
-            allSeries.Any(s => s.Winner is not null)
+            // "Won by …" only once the whole bracket is decided. Testing for *any*
+            // series winner here declared a champion as soon as the quarter-finals
+            // were in — whichever first-round winner GetWinner happened to pick.
+            bracket.IsDecided()
                 ? new TeamSummaryDto(bracket.GetWinner())
                 : null,
             CanDelete: !allSeries.SelectMany(s => s.Games).Any(g => g.GameID is not null));
