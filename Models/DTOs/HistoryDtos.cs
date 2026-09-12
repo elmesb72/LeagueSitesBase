@@ -20,24 +20,26 @@ public record HistoryYearDto(
         }
         else if (year.PlayoffsAreComplete() && year.PlayoffsTournament != null)
         {
-            var historicalBrackets = year.PlayoffsTournament.Brackets.Where(b => b.Historical);
-            var historicalRoundRobins = year.PlayoffsTournament.RoundRobins.Where(r => r.Historical);
+            // Only brackets and pools the league has flagged Historical count,
+            // the same rule the public Playoffs page uses for its champion
+            // banner. One flagged: its winner is the champion. Several: each is
+            // listed by name. None: no champion is recorded for the year.
+            var winners = year.PlayoffsTournament.Brackets
+                .Where(b => b.Historical)
+                .Select(b => (b.Name, Team: b.GetWinner()))
+                .Concat(year.PlayoffsTournament.RoundRobins
+                    .Where(r => r.Historical && r.Standings is { Count: > 0 })
+                    .Select(r => (r.Name, Team: r.Standings!.Keys.First())))
+                .ToList();
 
-            if (historicalBrackets.Count() + historicalRoundRobins.Count() > 1)
+            if (winners.Count == 1)
             {
-                var bracketWinners = historicalBrackets
-                    .ToDictionary(b => b.Name, b => b.GetWinner());
-                var roundRobinWinners = historicalRoundRobins
-                    .ToDictionary(b => b.Name, b => b.Standings!.Keys.First());
-                champion = string.Join("; ",
-                    bracketWinners.Select(w => $"{w.Key}: {w.Value.FullName}")
-                    .Concat(roundRobinWinners.Select(w => $"{w.Key}: {w.Value.FullName}")));
+                champion = winners[0].Team.FullName;
+                championAbbr = winners[0].Team.Abbreviation;
             }
-            else if (year.PlayoffsTournament.Brackets.Any())
+            else if (winners.Count > 1)
             {
-                var winner = year.PlayoffsTournament.Brackets.First().GetWinner();
-                champion = winner.FullName;
-                championAbbr = winner.Abbreviation;
+                champion = string.Join("; ", winners.Select(w => $"{w.Name}: {w.Team.FullName}"));
             }
         }
 
