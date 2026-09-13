@@ -22,6 +22,25 @@ public class APITournamentController(
         return Ok(await tournamentService.BuildDetailAsync(tournament));
     }
 
+    /// <summary>
+    /// The tournament shown for a season, by season id — the same choice the public
+    /// Playoffs page makes (the season's first tournament). Lets an executive jump from
+    /// the public page for any year straight to its editor; the class-level policy
+    /// doubles as the "may edit" check, so callers treat 403 as "no button".
+    /// </summary>
+    [HttpGet("ForSeason/{seasonId:long}")]
+    public async Task<IActionResult> ForSeason([FromRoute] long seasonId)
+    {
+        var tournamentId = await dbContext.Tournaments
+            .Where(t => t.SeasonID == seasonId)
+            .OrderBy(t => t.ID)
+            .Select(t => (long?)t.ID)
+            .FirstOrDefaultAsync();
+        if (tournamentId is null) return NotFound($"Season {seasonId} has no tournament.");
+
+        return Ok(new { id = tournamentId.Value });
+    }
+
     /// <summary>Default seeding rule to offer when adding a bracket or pool.</summary>
     [HttpGet("{id:long}/DefaultSeeding")]
     public async Task<IActionResult> DefaultSeeding([FromRoute] long id)

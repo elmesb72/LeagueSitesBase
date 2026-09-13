@@ -291,7 +291,7 @@ public class TournamentService(LeagueSitesContext dbContext) : ITournamentServic
     /// Every place an executive can draw teams from, described in plain language so the UI
     /// can present seeding as a choice from a list rather than a configuration string.
     /// </summary>
-    static List<SeedingSourceOptionDto> BuildSeedingSources(
+    internal static List<SeedingSourceOptionDto> BuildSeedingSources(
         Tournament tournament, Season? regularSeason, int regularSeasonTeamCount)
     {
         var sources = new List<SeedingSourceOptionDto>();
@@ -327,9 +327,15 @@ public class TournamentService(LeagueSitesContext dbContext) : ITournamentServic
 
         foreach (var roundRobin in tournament.RoundRobins)
         {
+            // A pool can feed as many teams as its seeding rules define, even before
+            // any of them resolve — a B-side final is set up right after the pool,
+            // long before the round that fills the pool has been played. (Bracket
+            // rounds above count series the same way, structurally.)
+            var configured = TournamentFormats.ParseSeeding(roundRobin.SeedingConfiguration)
+                .Sum(g => g.OutputEnd - g.OutputStart + 1);
             var available = Math.Max(
-                roundRobin.Standings?.Count ?? 0,
-                roundRobin.Seeds?.Count ?? 0);
+                configured,
+                Math.Max(roundRobin.Standings?.Count ?? 0, roundRobin.Seeds?.Count ?? 0));
 
             sources.Add(new SeedingSourceOptionDto(
                 SeedGroup.SourceRoundRobin, roundRobin.ID,
